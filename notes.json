@@ -1,0 +1,298 @@
+{
+  "irrelevance_162": {
+    "title": "工具能力不匹配时，用猜测替代适用性判断",
+    "analysis": "五个 baseline 的所选轨迹都尝试把博物馆艺术家查询工具套到舞者问题上。GPTQ、BitDistiller、On-Policy QAD 和 QeRL 自行选定卢浮宫或大都会博物馆；EfficientQAT 的实际调用甚至没有填写必填的 museum_name。它们的推理中出现了“也许艺术家包括舞者”“虽然牵强，但只有这个工具”的假设。BF16 和 Ours 则保留工具无法满足请求的判断，没有强行调用。可观察的分歧发生在看到工具列表后的第一条回复：从识别工具限制，转向用没有依据的假设为调用找理由。",
+    "methods": {
+      "BF16": "指出工具未明确支持舞者查询，而且缺少博物馆名称，没有发起调用。",
+      "GPTQ": "承认查询舞者有些牵强，仍自行选定 Louvre Museum 和 France。",
+      "EfficientQAT": "假设艺术家结果可能包含舞者，实际调用只有 period 和 country，缺少 museum_name。",
+      "BitDistiller": "自行选择 Louvre，希望结果包含舞者。",
+      "On-Policy QAD": "把舞者扩大解释为工具里的艺术家，并自行选择 Metropolitan Museum of Art。",
+      "QeRL": "承认工具未提到舞蹈，仍以只有这一个工具为理由强行调用。",
+      "Ours": "识别到现有工具不适合回答该问题，没有调用任务工具。"
+    }
+  },
+  "irrelevance_44": {
+    "title": "工具需要 mutation_rate 和 evolution_duration；用户没有提供这些必填条件，评分要求先澄清，而不是自行设定模拟参数。",
+    "analysis": "工具需要 mutation_rate 和 evolution_duration；用户没有提供这些必填条件，评分要求先澄清，而不是自行设定模拟参数。",
+    "methods": {}
+  },
+  "live_irrelevance_222-34-11": {
+    "title": "用户问奶油色何时补货，但未指定商品；产品搜索工具也没有声明补货时间查询能力。评分要求澄清，五个 baseline 仍发起调用。",
+    "analysis": "用户问奶油色何时补货，但未指定商品；产品搜索工具也没有声明补货时间查询能力。评分要求澄清，五个 baseline 仍发起调用。",
+    "methods": {}
+  },
+  "live_irrelevance_307-76-5": {
+    "title": "用户意图不完整时，擅自补全任务并生成请求",
+    "analysis": "五个 baseline 的所选轨迹都把半句话扩展成了查询詹姆斯资料的任务，并生成了不同的 URL、请求参数或请求头。BF16 和 Ours 没有发起请求，先要求澄清意图。这个 case 展示的是面对不完整请求时，是否过早替用户确定目标；评分失败依据是该任务要求澄清，而非 HTTP GET 在一般情况下不能检索人物资料。",
+    "methods": {
+      "BF16": "识别到句子不完整，要求用户说明想了解什么。",
+      "GPTQ": "先承认请求不完整，随后自行决定查询 Wikipedia，并添加 JSON 请求头和格式参数。",
+      "EfficientQAT": "自行构造 NBA 积分榜接口和 2023-24 赛季参数，偏离尚未明确的人物问题。",
+      "BitDistiller": "直接把不完整请求解释成读取 Wikipedia 人物页面。",
+      "On-Policy QAD": "生成 Sportsdata 接口地址，还填入占位的 Authorization 请求头。",
+      "QeRL": "自行选择人物页面和格式参数，URL 中还出现 LeBron_Jamess。",
+      "Ours": "指出原句缺少明确问题，没有根据猜测发起 GET。"
+    }
+  },
+  "live_irrelevance_530-164-0": {
+    "title": "用户没有提供自己的姓名，工具却需要 spouse_of。关键是先询问身份还是用猜测或占位值调用。",
+    "analysis": "用户没有提供自己的姓名，工具却需要 spouse_of。关键是先询问身份还是用猜测或占位值调用。",
+    "methods": {}
+  },
+  "live_irrelevance_578-181-0": {
+    "title": "把未声明的工具能力当成可用能力",
+    "analysis": "五个 baseline 的所选轨迹都调用了规格查询工具，把 ACHD 当作某种零件编号。推理中的关键跳转是从“用户要价格，工具给规格”，转成“规格也许包含价格，所以先试一下”。BF16 和 Ours 则依据工具声明指出无法取得价格，没有发起不匹配的调用。该 case 的特点是工具限制已经进入推理，却没有约束最终动作；这里不涉及数据库状态变化，也不需要假设错误不可逆。",
+    "methods": {
+      "BF16": "指出现有工具只提供规格，不能完成价格查询，没有调用任务工具。",
+      "GPTQ": "假设规格可能包含价格，把 ACHD 当作 PartNumber 调用。",
+      "EfficientQAT": "以规格里也许有价格为理由，将 ACHD 作为 PartNumber 查询。",
+      "BitDistiller": "已经区分价格与规格，仍假设返回结果可能顺带包含价格，使用 MPN 查询。",
+      "On-Policy QAD": "把“也许规格包含价格”作为继续调用的依据，使用 MPN 查询。",
+      "QeRL": "先猜 ACHD 是 MPN，再希望规格结果中包含价格。",
+      "Ours": "没有扩展工具未声明的能力，说明现有工具不能提供价格。"
+    }
+  },
+  "live_irrelevance_593-188-0": {
+    "title": "用户只说想听歌，没有指定歌曲或明确筛选条件。该题参考答案要求先澄清，baseline 选择了调用分支；这反映该题的澄清规则，不意味着所有推荐歌曲的调用都普遍错误。",
+    "analysis": "用户只说想听歌，没有指定歌曲或明确筛选条件。该题参考答案要求先澄清，baseline 选择了调用分支；这反映该题的澄清规则，不意味着所有推荐歌曲的调用都普遍错误。",
+    "methods": {}
+  },
+  "live_irrelevance_620-196-1": {
+    "title": "把日期灵活误当成可以省略必填行程信息",
+    "analysis": "关键不是去程日期能否灵活，而是航线的起终点缺失。GPTQ、BitDistiller、On-Policy QAD 和 QeRL 仍用返程日期及人数调用查询，省略必填机场；EfficientQAT 则自行编造 NYC 到 SFO 以及去程日期。GPTQ 和 On-Policy QAD 的 CoT 已经说应询问机场，动作仍进入查询分支。BF16 和 Ours 先澄清，不发起缺少航线的调用。",
+    "methods": {
+      "BF16": "询问缺失行程信息。",
+      "GPTQ": "推理要求澄清，实际只传返程日期和人数。",
+      "EfficientQAT": "编造 NYC 到 SFO 的航线以及 2023-03-01 去程日期。",
+      "BitDistiller": "把可灵活安排扩展成省略机场，只传日期、人数和航空公司偏好。",
+      "On-Policy QAD": "识别缺少机场后仍发起查询。",
+      "QeRL": "关注日期和人数，实际调用没有机场。",
+      "Ours": "保留澄清分支，没有强行查票。"
+    }
+  },
+  "live_irrelevance_623-196-4": {
+    "title": "已经发现必填信息缺失，仍强行生成工具调用",
+    "analysis": "问题不是选错了航班查询工具，而是缺少出发地时是否继续执行。五个 baseline 的所选轨迹都识别到需要补充信息，却仍生成调用：GPTQ 用 <missing> 占位，EfficientQAT、BitDistiller、QeRL 传入空字符串，On-Policy QAD 则把目的地洛杉矶同时当作出发地。BF16 和 Ours 没有调用查询工具，先要求补充信息。关键分歧位于看到工具列表后的第一条回复从“需要询问用户”的推理转向实际 tool_call 的地方。日期字段在此工具中可以省略，因此这里的确定性问题是缺失必填的出发地，不能把所有日期未填写都说成错误。",
+    "methods": {
+      "BF16": "没有在出发地缺失时发起查询。",
+      "GPTQ": "CoT 最后说应该请求缺失信息，实际却传入 origin_airport=<missing>。",
+      "EfficientQAT": "明知出发地必填，仍传入空字符串，同时填入用户没有提供的日期。",
+      "BitDistiller": "CoT 计划先询问出发地，实际调用的 origin_airport 仍为空。",
+      "On-Policy QAD": "把 Los Angeles 同时填作出发地和目的地，改变了用户请求。",
+      "QeRL": "推理中反复讨论应先询问，最终仍用空出发地调用。",
+      "Ours": "保留补充信息的分支，没有强行调用查询工具。"
+    }
+  },
+  "live_irrelevance_875-360-0": {
+    "title": "用户给出了 Anaheim 出发地和日期，但没有目的地。缺少行程信息时仍调用，未满足该题要求的澄清分支。",
+    "analysis": "用户给出了 Anaheim 出发地和日期，但没有目的地。缺少行程信息时仍调用，未满足该题要求的澄清分支。",
+    "methods": {}
+  },
+  "live_irrelevance_876-361-0": {
+    "title": "推理要求补全行程，动作却虚构或省略出发地和目的地",
+    "analysis": "五种 baseline 的所选轨迹在推理中都发现缺少出发地和目的地，最终却发起 FindTrains 调用。GPTQ 自行选择旧金山到洛杉矶，On-Policy QAD 自行选择波士顿到纽约；EfficientQAT 和 BitDistiller 省略必填城市，QeRL 把城市设为空字符串。BF16 和 Ours 先询问缺失信息。共同分歧发生在看到工具列表后的第一条回复：推理中的澄清结论没有约束实际动作。这不是因为用户没有指定舱位，舱位本来就可以不填。",
+    "methods": {
+      "BF16": "没有在行程城市缺失时调用订票或查票工具。",
+      "GPTQ": "CoT 说需要询问城市，动作却使用 San Francisco, CA 和 Los Angeles, CA。",
+      "EfficientQAT": "只传日期，省略必填的 _from 和 to。",
+      "BitDistiller": "只传日期和 dontcare 舱位，未提供必填的出发地和目的地。",
+      "On-Policy QAD": "CoT 说城市未知，动作却自行设为 Boston, MA 到 New York, NY。",
+      "QeRL": "出发地和目的地传空字符串，还自行设定一名成人。",
+      "Ours": "先补充询问行程信息，没有强行查票。"
+    }
+  },
+  "live_multiple_1031-259-0": {
+    "title": "用户要求获取 dashing 仪表盘。五个 baseline 的评分记录没有得到符合要求的调用数量；具体是未调用还是额外调用，见逐方法动作序列。",
+    "analysis": "用户要求获取 dashing 仪表盘。五个 baseline 的评分记录没有得到符合要求的调用数量；具体是未调用还是额外调用，见逐方法动作序列。",
+    "methods": {}
+  },
+  "live_multiple_142-55-0": {
+    "title": "GPTQ 的调用数量不匹配；其余四种方法将国家写为 UK，参考答案接受 GB。这是国家代码的匹配差异，不能据此说它们查询了不同城市。",
+    "analysis": "GPTQ 的调用数量不匹配；其余四种方法将国家写为 UK，参考答案接受 GB。这是国家代码的匹配差异，不能据此说它们查询了不同城市。",
+    "methods": {}
+  },
+  "live_multiple_386-137-4": {
+    "title": "五个 baseline 都写 San Francisco，评分接受 San Francisco, CA。这里是地点字符串的严格匹配差异，不能仅据此断言发生实质决策错误。",
+    "analysis": "五个 baseline 都写 San Francisco，评分接受 San Francisco, CA。这里是地点字符串的严格匹配差异，不能仅据此断言发生实质决策错误。",
+    "methods": {}
+  },
+  "live_multiple_500-148-10": {
+    "title": "识别默认规则后又用编造日期覆盖默认值",
+    "analysis": "七种方法都选中了正确的活动查询工具，区别出在是否填写日期。五个 baseline 的所选轨迹把“今天”写成了上下文没有提供的具体日期，其中四个写成 2023-10-05，EfficientQAT 写成 2026-10-05。BF16 和 Ours 保留工具的默认日期，因此通过。可观察的分歧在看到工具列表后的第一条回复生成 date 参数的位置；它不是工具名选错或 JSON 解析失败，而是已经读到默认规则，仍增加了没有依据的限制。该案例没有测量 token 概率，不能仅据此断定量化误差的具体数值或排除采样影响。",
+    "methods": {
+      "BF16": "CoT 明确说明 date 可省略并默认查询当天，最终调用省略 date。",
+      "GPTQ": "CoT 读到了默认查询当天的规则，最终仍填入 date=2023-10-05。",
+      "EfficientQAT": "在推理中直接断言今天是 2026-10-05，并把它写进参数。",
+      "BitDistiller": "先说默认当前日期可用，随后假设今天是 2023-10-05，并实际传入该日期。",
+      "On-Policy QAD": "用没有来源的 2023-10-05 代表今天，覆盖了正确默认值。",
+      "QeRL": "把用户说“今天”理解成必须显式填写日期，随后编造 2023-10-05。",
+      "Ours": "明确决定不填写 date，使用工具默认的今天。"
+    }
+  },
+  "live_multiple_557-154-3": {
+    "title": "GPTQ 的调用数量不匹配；其余四种方法写 10:00 AM，评分要求 10:00。时间含义相同，失败来自格式匹配。",
+    "analysis": "GPTQ 的调用数量不匹配；其余四种方法写 10:00 AM，评分要求 10:00。时间含义相同，失败来自格式匹配。",
+    "methods": {}
+  },
+  "live_multiple_853-180-1": {
+    "title": "四种方法的调用数量不匹配；EfficientQAT 使用 2024-03-07，而参考答案为 2023-03-07。原问题没有给出年份，因此年份差异本身不能证明理解错误。",
+    "analysis": "四种方法的调用数量不匹配；EfficientQAT 使用 2024-03-07，而参考答案为 2023-03-07。原问题没有给出年份，因此年份差异本身不能证明理解错误。",
+    "methods": {}
+  },
+  "live_parallel_multiple_4-3-0": {
+    "title": "EfficientQAT 的调用数量不匹配；其他方法使用 Paris, FR 等地点写法，参考答案接受完整国家名称。应区分字符串匹配失败与真实查询对象错误。",
+    "analysis": "EfficientQAT 的调用数量不匹配；其他方法使用 Paris, FR 等地点写法，参考答案接受完整国家名称。应区分字符串匹配失败与真实查询对象错误。",
+    "methods": {}
+  },
+  "live_simple_31-8-1": {
+    "title": "sortBy 应按参考答案填写 DESC；baseline 填入 LastUpdatedDateTime 或拼接方向的字符串，排序参数编码没有匹配参考接口。",
+    "analysis": "sortBy 应按参考答案填写 DESC；baseline 填入 LastUpdatedDateTime 或拼接方向的字符串，排序参数编码没有匹配参考接口。",
+    "methods": {}
+  },
+  "multi_turn_base_134": {
+    "title": "取消待处理订单这一步没有完成：多数 baseline 的订单 12446 仍为 Pending，参考状态为 Cancelled；On-Policy QAD 在该用户轮没有可执行任务调用。",
+    "analysis": "取消待处理订单这一步没有完成：多数 baseline 的订单 12446 仍为 Pending，参考状态为 Cancelled；On-Policy QAD 在该用户轮没有可执行任务调用。",
+    "methods": {}
+  },
+  "multi_turn_base_189": {
+    "title": "不同方法失败在不同子任务：部分没有形成参考订票记录或扣款状态，部分没有形成要求的推文状态。不能把五种方法都概括成同一个订票错误。",
+    "analysis": "不同方法失败在不同子任务：部分没有形成参考订票记录或扣款状态，部分没有形成要求的推文状态。不能把五种方法都概括成同一个订票错误。",
+    "methods": {}
+  },
+  "multi_turn_base_39": {
+    "title": "多文件任务的内容映射和后续执行步骤丢失",
+    "analysis": "GPTQ 把 styles.css 和 index.html 的两段内容交换；EfficientQAT 在 echo 失败后只 touch 创建了前两个文件，没有补写内容；BitDistiller 漏写 index.html；On-Policy QAD 创建后只反复写 styles.css，另外两个文件仍为空。QeRL 的文件创建是正确的，但在用户要求按系统顺序查第二个文件时没有执行查询，且随后读取 index.html 而非该环境顺序中的首个 styles.css。BF16 和 Ours 均能在首次 echo 报文件不存在后补 touch、重做写入，完成全部文件和后续查询。不同 baseline 的首处分歧不全在同一轮，不能把 QeRL 描述成创建文件失败。",
+    "methods": {
+      "BF16": "根据文件不存在的反馈，创建文件后补写，之后 ls 并读取 styles.css。",
+      "GPTQ": "首次写入便把 styles.css 内容设成 Hi World!，随后把 Hello World! 写入 index.html。",
+      "EfficientQAT": "前两个文件的 echo 失败后只创建空文件，没有重新写入。",
+      "BitDistiller": "touch index.html 后直接处理 script.js，漏掉中间的内容写入。",
+      "On-Policy QAD": "创建 index.html 和 script.js 后又写 styles.css，遗漏另外两次写入。",
+      "QeRL": "创建内容正确，后续没有 ls，读取的首个文件又选成 index.html。",
+      "Ours": "补齐每次创建后的写入，并执行 ls 与正确的首文件读取。"
+    }
+  },
+  "multi_turn_long_context_39": {
+    "title": "GPTQ 和 EfficientQAT 的文件系统状态不符合要求；其他三种 baseline 在后续用户轮缺少任务调用。具体文件内容和轮次见各自评分证据。",
+    "analysis": "GPTQ 和 EfficientQAT 的文件系统状态不符合要求；其他三种 baseline 在后续用户轮缺少任务调用。具体文件内容和轮次见各自评分证据。",
+    "methods": {}
+  },
+  "multi_turn_long_context_49": {
+    "title": "不同 baseline 分别缺少目录列表、文件末尾内容或最后的计算结果；评分按轮检查执行返回，不能将它们归为同一个数学错误。",
+    "analysis": "不同 baseline 分别缺少目录列表、文件末尾内容或最后的计算结果；评分按轮检查执行返回，不能将它们归为同一个数学错误。",
+    "methods": {}
+  },
+  "multi_turn_miss_func_127": {
+    "title": "部分 baseline 在购买或详情查询轮没有调用；EfficientQAT 的订单状态不匹配。缺少可用工具时的澄清轮和后续实际执行轮需要分开看。",
+    "analysis": "部分 baseline 在购买或详情查询轮没有调用；EfficientQAT 的订单状态不匹配。缺少可用工具时的澄清轮和后续实际执行轮需要分开看。",
+    "methods": {}
+  },
+  "multi_turn_miss_func_151": {
+    "title": "五种 baseline 的推文状态没有达到参考要求，具体内容、提及对象或推文数量差异保留在评分状态对照中。",
+    "analysis": "五种 baseline 的推文状态没有达到参考要求，具体内容、提及对象或推文数量差异保留在评分状态对照中。",
+    "methods": {}
+  },
+  "multi_turn_miss_func_181": {
+    "title": "四种 baseline 的 ticket_queue 未达到参考状态；QeRL 的首个评分失败涉及信用卡状态。各方法的失败阶段不同。",
+    "analysis": "四种 baseline 的 ticket_queue 未达到参考状态；QeRL 的首个评分失败涉及信用卡状态。各方法的失败阶段不同。",
+    "methods": {}
+  },
+  "multi_turn_miss_func_47": {
+    "title": "先猜具体文件名，查询为空后未在当前轮修正检索条件",
+    "analysis": "五个 baseline 的所选轨迹在第一轮都猜测文件名为 student_records，find 返回空结果。它们没有在该轮改用更宽的关键词或正确文件名重新完成 find 定位。BF16 用 student 做部分匹配，Ours 用空名称检索当前目录，均得到目标文件。这里的共同分歧在首次 find 的 name 参数，后续问题是空结果没有促成当前任务内的有效修正。部分 baseline 后来通过 ls 看到了文件，或在下一轮用户明确给出文件名后成功读取；所以该案例说明第一轮定位要求失败，不能说它们此后始终找不到文件或数学计算全部错误。",
+    "methods": {
+      "BF16": "用 name=student 查询，成功匹配 student_record.txt。",
+      "GPTQ": "先猜 student_records，随后仍未得到有效 find 匹配；通过 ls 看到了文件，但未在该轮修正 find 查询。",
+      "EfficientQAT": "student_records 返回空结果后改用 ls，没有补上成功的 find 定位。",
+      "BitDistiller": "第一轮仅查询 student_records；下一轮用户给出明确文件名后才改用正确名称。",
+      "On-Policy QAD": "先猜 student_records，随后查看目录，但未在当前轮修正 find 的 name。",
+      "QeRL": "第一轮以 student_records 查询后停止；下一轮得到文件名提示才重新 find。",
+      "Ours": "不预设完整文件名，用空 name 检索得到目标文件，再完成后续统计任务。"
+    }
+  },
+  "multi_turn_miss_param_111": {
+    "title": "GPTQ、On-Policy QAD、QeRL 的消息 inbox 状态不符；EfficientQAT 和 BitDistiller 的关注股票列表不符，属于不同子任务的执行差异。",
+    "analysis": "GPTQ、On-Policy QAD、QeRL 的消息 inbox 状态不符；EfficientQAT 和 BitDistiller 的关注股票列表不符，属于不同子任务的执行差异。",
+    "methods": {}
+  },
+  "multi_turn_miss_param_117": {
+    "title": "失败分布在关注列表、股票列表查询、账户交易状态和缺失调用，不能统一说成首次股票查询出错。",
+    "analysis": "失败分布在关注列表、股票列表查询、账户交易状态和缺失调用，不能统一说成首次股票查询出错。",
+    "methods": {}
+  },
+  "multi_turn_miss_param_127": {
+    "title": "把已下单当作已完成后续订单详情查询",
+    "analysis": "五个 baseline 的所选轨迹都成功执行了购买，但在最后用户要求最新订单详情时没有调用 get_order_details；On-Policy QAD 还在更早的关注列表查询轮次省略了 get_watchlist。下单返回 Pending，只说明订单已提交，不能代替之后的详情查询。BF16 和 Ours 使用下单返回的订单号 12446 查询详情，得到当前订单信息。可观察的共同分歧在购买后的下一轮：是沿用旧下单结果直接答复，还是重新获取用户要求的最新详情。",
+    "methods": {
+      "BF16": "购买后用订单号 12446 查询详情。",
+      "GPTQ": "完成购买，最后一轮没有详情工具调用。",
+      "EfficientQAT": "成功提交订单，随后省略详情查询。",
+      "BitDistiller": "下单动作正确，但没有取得最新订单详情。",
+      "On-Policy QAD": "漏查关注列表，购买后也没有查询订单详情。",
+      "QeRL": "购买成功后停留在自然语言回答，没有调用详情接口。",
+      "Ours": "按流程取得价格、购买，再查询该订单的详情。"
+    }
+  },
+  "multi_turn_miss_param_152": {
+    "title": "GPTQ 在后续用户轮没有任务调用；其他方法的订票记录或信用卡扣款状态不同于参考结果。",
+    "analysis": "GPTQ 在后续用户轮没有任务调用；其他方法的订票记录或信用卡扣款状态不同于参考结果。",
+    "methods": {}
+  },
+  "multi_turn_miss_param_26": {
+    "title": "部分方法未能进入 tmp 并完成列表查询；另一些已完成前面步骤，但新建同内容 docx 的执行结果或文件状态不符。",
+    "analysis": "部分方法未能进入 tmp 并完成列表查询；另一些已完成前面步骤，但新建同内容 docx 的执行结果或文件状态不符。",
+    "methods": {}
+  },
+  "parallel_191": {
+    "title": "后续相似调用出现工具名或 facilities 字段漂移；其中换行、Fiction section 等匹配差异不应一概解释成真实设施查询错误。",
+    "analysis": "后续相似调用出现工具名或 facilities 字段漂移；其中换行、Fiction section 等匹配差异不应一概解释成真实设施查询错误。",
+    "methods": {}
+  },
+  "parallel_93": {
+    "title": "首次调用正确，后续相似调用中函数或参数漂移",
+    "analysis": "七种方法的第一次调用都正确。分歧从第二次调用开始：GPTQ 把 estimate_time 写成不存在的 estimated_time；BitDistiller、On-Policy QAD 和 QeRL 把必填字段 end_location 改成 end；EfficientQAT 跳过第二条纽约出发的路线，并把第三次调用的经停站清空。BF16 和 Ours 完整保留三条路线及工具接口。部分 baseline 注意到字段名错误，但只在下一条路线改正，没有重新提交已经出错的第二条路线。非多轮 BFCL 这里返回模拟成功消息，因此本例说明不能把模拟返回成功当作接口正确的证据；它不是一次真实出行服务的运行结果。",
+    "methods": {
+      "BF16": "依次使用正确函数和字段提交三种路线。",
+      "GPTQ": "第二次调用变成 route.estimated_time，第三次虽恢复函数名，却没有重做第二次。",
+      "EfficientQAT": "第二次提前提交费城出发路线，第三次又遗漏华盛顿经停，纽约出发的第二种方案没有正确查询。",
+      "BitDistiller": "第二条路线把 end_location 写成 end；后来发现错误，仅在第三条使用正确字段。",
+      "On-Policy QAD": "第二条使用 end，随后受模拟成功响应影响，第三条继续使用 end。",
+      "QeRL": "第二条使用 end，第三条恢复 end_location，但没有补交第二条。",
+      "Ours": "三次调用都保持正确函数名、参数名和路线内容。"
+    }
+  },
+  "parallel_multiple_144": {
+    "title": "正确列出多项计划，却未把计划完整转成工具执行",
+    "analysis": "四个子任务及对应参数在各方法的初始推理中基本已经明确。GPTQ、EfficientQAT、BitDistiller 和 QeRL 的所选轨迹只执行了第一个科学家查询，之后用自然语言描述还要调用哪些工具，没有实际完成剩余调用。On-Policy QAD 虽然执行了所需查询，却在后面重复查询 DNA、调用无关的 get_weather，并进入对错误工具文本的重复纠正，导致调用集合错误。BF16 完成四项查询；Ours 在最后一项曾把外层 call_tool 写成 call/Tool，收到错误后改正，最终完成四项。这里体现的是计划到执行之间的断裂以及出错后的恢复差异，不能把我们的轨迹描述成从未出错，也不能把模拟工具响应当作真实科学数据。",
+    "methods": {
+      "BF16": "四个子任务均有对应的正确工具调用。",
+      "GPTQ": "第一项查询后，只在文字中宣称将执行剩余三项，没有生成相应工具调用。",
+      "EfficientQAT": "CoT 明确四项任务，实际只执行相对论科学家查询。",
+      "BitDistiller": "推理列清两个森林预测及 DNA 查询，实际仅完成首项。",
+      "On-Policy QAD": "后续重复 DNA 查询，并生成不相关的 get_weather 请求，调用集合多出错误项。",
+      "QeRL": "只执行第一项，剩余任务停留在计划中。",
+      "Ours": "完成两种森林预测；DNA 查询的外层工具名写错后，根据错误反馈修正，完成全部任务。"
+    }
+  },
+  "parallel_multiple_156": {
+    "title": "GPTQ 调用数量不匹配；其他 baseline 改变了 t 检验输入数据，例如把 group2 最后一项 32 写成 30 或 33，实际计算对象因此变化。",
+    "analysis": "GPTQ 调用数量不匹配；其他 baseline 改变了 t 检验输入数据，例如把 group2 最后一项 32 写成 30 或 33，实际计算对象因此变化。",
+    "methods": {}
+  },
+  "parallel_multiple_75": {
+    "title": "涉及路线地点写法、函数名和调用数量差异。城市与俱乐部名称的匹配问题需按具体参数解读，不能把所有排列匹配失败都看作路线顺序错误。",
+    "analysis": "涉及路线地点写法、函数名和调用数量差异。城市与俱乐部名称的匹配问题需按具体参数解读，不能把所有排列匹配失败都看作路线顺序错误。",
+    "methods": {}
+  },
+  "simple_python_130": {
+    "title": "GPTQ 将现金流数字写成字符串，违反参数类型；其余四种方法增加 years=[0,1,2,3,4,5]，参考答案要求省略或空列表。后者不等同于已证明 NPV 数值算错。",
+    "analysis": "GPTQ 将现金流数字写成字符串，违反参数类型；其余四种方法增加 years=[0,1,2,3,4,5]，参考答案要求省略或空列表。后者不等同于已证明 NPV 数值算错。",
+    "methods": {}
+  },
+  "simple_python_395": {
+    "title": "评分接受 Central Park, NY；多数 baseline 使用 Central Park, New York，EfficientQAT 使用 Central Park。主要是地点字符串匹配差异，不能声称多数方法找错了城市。",
+    "analysis": "评分接受 Central Park, NY；多数 baseline 使用 Central Park, New York，EfficientQAT 使用 Central Park。主要是地点字符串匹配差异，不能声称多数方法找错了城市。",
+    "methods": {}
+  }
+}
