@@ -1,5 +1,32 @@
 # SteerDistill
 
+**Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation**
+
+[Getting started](#requirements) · [Training](#method-flow) · [Models and benchmarks](benchmarks/README.md) · [Case studies](case_studies/bfcl_v4_40_cases/README.md) · [Reproducibility](REPRODUCIBILITY.md)
+
+Train a W4A16 agent with teacher guidance during training, then run the
+quantized agent without a teacher or steering at inference time.
+
+| Models | Benchmarks | Quantization |
+| --- | --- | --- |
+| Qwen3-8B, Qwen3.5-4B, Gemma 4 12B-it | BFCL V4, tau^2-Bench, WebShop, ALFWorld, Search QA | W4A16, group size 64 |
+
+## Start here
+
+| Goal | Entry point |
+| --- | --- |
+| Install dependencies and prepare the environment | [Requirements](#requirements) and [environment versions](REPRODUCIBILITY.md) |
+| Configure BF16 models and download benchmark data | [Model paths and benchmark setup](benchmarks/README.md) |
+| Prepare calibration data and the initial W4 runtime | [Quantization preparation](prepare_quant_assets.sh) and [runtime preparation](prepare_initial_runtime.sh) |
+| Run online trajectory distillation | [Benchmark launcher](run_benchmark.sh) and [online training](run_online.sh) |
+| Find benchmark-specific evaluation commands | [Benchmark guide](benchmarks/README.md) |
+| Inspect reasoning, actions, and failure cases | [40 cases with seven-method comparisons](case_studies/bfcl_v4_40_cases/README.md) |
+
+The case collection includes original tasks, 280 selected trajectories, readable
+reasoning and tool responses, scores, and per-case divergence analyses.
+
+## Overview
+
 SteerDistill implements online teacher-steered trajectory distillation for
 BFCL V4, tau^2-Bench, WebShop, ALFWorld, and Search QA with Qwen3-8B,
 Qwen3.5-4B, and Gemma 4 12B-it. It trains a W4A16 policy from the clipped initial W4
@@ -14,6 +41,21 @@ runtime layout here; no GPTQ calibration or second quantization search is
 performed.
 
 ## Method flow
+
+```mermaid
+flowchart LR
+    A[BF16 checkpoint] --> B[Calibration and CLIP]
+    B --> C[Initial W4 policy]
+    C --> D[Student rollouts]
+    D --> E[Verification and teacher steering]
+    E --> F[Retained trajectories]
+    F --> G[Distillation update]
+    G --> H[Export INT4 runtime]
+    H --> D
+```
+
+<details>
+<summary><strong>Online update, repair acceptance, and context handling</strong></summary>
 
 For each online optimizer step:
 
@@ -101,6 +143,8 @@ Native rollouts acquire a shared lock; tool-environment rollouts and parameter
 updates acquire an exclusive lock. `TRAIN_GPU_IDS` selects the training devices.
 External calibration and evaluation jobs sharing this GPU pool must also hold
 the shared lock and use disjoint devices, or run outside these online jobs.
+
+</details>
 
 ## Requirements
 
