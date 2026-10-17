@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>消息和关注列表，各自漏了一步 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 029 / BFCL V4</p><h1>消息和关注列表，各自漏了一步</h1><p class="task-id">multi_turn_miss_param_111</p><p class="intro">GPTQ、On-Policy QAD、QeRL 的消息 inbox 状态不符；EfficientQAT 和 BitDistiller 的关注股票列表不符，属于不同子任务的执行差异。。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>I want to keep track of a specific company stock activities, so it would be helpful to have its stock added to my watchlist.</p>
+</div>
+<div><span class="source">用户 · 第 2 轮</span>
+<p>The company name is Zeta Corp</p>
+</div>
+<div><span class="source">用户 · 第 3 轮</span>
+<p>I&#x27;ve recently placed an order but can&#x27;t seem to recall the details. It would be useful if you could retrieve the specifics of my last order to aid in planning my next investment move.</p>
+</div>
+<div><span class="source">用户 · 第 4 轮</span>
+<p>Considering the latest developments, I (user id USR001) need to quickly communicate with Jane, one of my business partners, regarding the new stock inclusion and the status of my current order. Send the message &#x27;What are the new stock inclusion and the status of my current order?&#x27;?</p>
+</div>
+<div><span class="source">用户 · 第 5 轮</span>
+<p>Post sending that message to Jane, I would prefer to review all the messages I&#x27;ve sent, as there might be relevant follow-up or advice from my network concerning the stock and order decisions.</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+Next, I constructed the call to mcp_tool_send_message with receiver_id set to USR002 and the message content as specified. The response indicated success, confirming the message was sent.
+
+Now, the user&#x27;s task is complete. I should acknowledge the successful delivery and offer further assistance. Let me make sure the response is concise and confirms the action taken.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 22</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 inbox[5].USR002：实际为 What are the new stock inclusion and the status of my current order?\`，参考为 What are the new stock inclusion and the status of my current order?。</p>
+<blockquote class="reasoning"><p>…
+Therefore, the answer is to ask the user for the company name. However, the initial setup says that the user&#x27;s task is to add the stock to the watchlist, so the assistant must infer that the user has the company name in mind but hasn&#x27;t provided it yet. Therefore, the assistant should ask for the company name to proceed.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_symbol_by_name(</mark>
+<mark>  name=&quot;Company X&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 watch_list[2]：实际为 AAPL，参考为 null。</p>
+<blockquote class="reasoning"><p>…
+However, according to the problem&#x27;s instructions, the assistant must use the tools. Therefore, the correct step is to call mcp_tool_add_to_watchlist with the stock symbol. But without the symbol, this is impossible.
+
+Hence, the answer is that the required information is missing, and the assistant can&#x27;t proceed.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>add_to_watchlist(</mark>
+<mark>  stock=&quot;AAPL&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 watch_list[2]：实际为 AAPL，参考为 null。</p>
+<blockquote class="reasoning"><p>…
+However, the problem&#x27;s instructions state that the assistant can ask for clarification if the task requires more info. Therefore, the assistant should now ask the user for the company name. But the user hasn&#x27;t provided it yet. So the assistant responds by saying something like &quot;Please provide the company name so I can add its stock to your watchlist.&quot;</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_symbol_by_name(</mark>
+<mark>  name=&quot;Apple&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 inbox[5].USR002：实际为 What are the new stock inclusion and the status of my current order?\`，参考为 What are the new stock inclusion and the status of my current order?。</p>
+<blockquote class="reasoning"><p>…
+First, I called the mcp_tool_get_user_id with &quot;Jane&quot; as the user name, and got her user ID as USR002. Now, I need to use the mcp_tool_send_message to send the specified message to her. The message content is &quot;What are the new stock inclusion and the status of my current order?&quot; and the receiver_id is USR002. Let me structure the call correctly with those parameters.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 20</p>
+<pre><code><mark>send_message(&quot;{\&quot;receiver_id\&quot;: \&quot;USR002\&quot;, \&quot;message\&quot;: \&quot;What are the new stock inclusion and the status of my current order?\\`}&quot;)</mark></code></pre>
+<p class="source">首次动作差异：第 4 个用户轮，第 2 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 inbox[5].USR002：实际为 What are the new stock inclusion and the status of my current order?\`，参考为 What are the new stock inclusion and the status of my current order?。</p>
+<blockquote class="reasoning"><p>…
+But according to the earlier rule, if the task requires more information, the assistant can ask the user. So, the conclusion is that the assistant needs to ask the user for the stock symbol to proceed with adding it to the watchlist.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_symbol_by_name(</mark>
+<mark>  name=&quot;&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>消息和关注列表，各自漏了一步</h2><p>GPTQ、On-Policy QAD、QeRL 的消息 inbox 状态不符；EfficientQAT 和 BitDistiller 的关注股票列表不符，属于不同子任务的执行差异。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="028.html"><small>← 上一个案例</small>猜了一个文件名，空结果没能纠正它</a>
+<a href="030.html"><small>下一个案例 →</small>股票任务中的多种断点</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

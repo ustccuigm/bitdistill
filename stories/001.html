@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>查舞者，为什么选了卢浮宫？ | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 001 / BFCL V4</p><h1>查舞者，为什么选了卢浮宫？</h1><p class="task-id">irrelevance_162</p><p class="intro">五个 baseline 的所选轨迹都尝试把博物馆艺术家查询工具套到舞者问题上。GPTQ、BitDistiller、On-Policy QAD 和 QeRL 自行选定卢浮宫或大都会博物馆；EfficientQAT 的实际调用甚至没有填写必填的 museum_name。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>Who are the famous dancers of the 19th Century?</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>指出工具未明确支持舞者查询，而且缺少博物馆名称，没有发起调用。</p>
+<blockquote class="reasoning"><p>…
+Alternatively, since the tool doesn&#x27;t mention anything about dancers specifically, maybe it&#x27;s not suitable. The user&#x27;s query might require a different tool that&#x27;s not available here. Therefore, the correct response would be to inform the user that the existing tools can&#x27;t answer their question accurately.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>识别到现有工具不适合回答该问题，没有调用任务工具。</p>
+<blockquote class="reasoning"><p>…
+But according to the rules, I need to attempt to use the available tools. However, if the tool isn&#x27;t appropriate, I should indicate that. So perhaps after checking the tools, I realize that the available tool isn&#x27;t suited for finding dancers, hence cannot fulfill the request. Therefore, I should respond that none of the available functions can answer the question.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>承认查询舞者有些牵强，仍自行选定 Louvre Museum 和 France。</p>
+<blockquote class="reasoning"><p>…
+Alternatively, use a US-based museum. But the user might not have specified, so I need to make assumptions. Let&#x27;s go with the Louvre in France. So the arguments would be museum_name: &quot;Louvre Museum&quot;, period: &quot;19th Century&quot;, country: &quot;France&quot;. Hopefully, this returns relevant artists who were dancers. Though it&#x27;s a stretch, this is the only tool available.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_museum_artists(</mark>
+<mark>  museum_name=&quot;Louvre Museum&quot;,</mark>
+<mark>  period=&quot;19th Century&quot;,</mark>
+<mark>  country=&quot;France&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>假设艺术家结果可能包含舞者，实际调用只有 period 和 country，缺少 museum_name。</p>
+<blockquote class="reasoning"><p>…
+Another angle: maybe the term &quot;artists&quot; includes performers like dancers. So using this tool might yield names of prominent dancers who were also recognized as artists. Examples could be someone like Anna Pavlova or others from that era.
+
+Alright, proceeding with the call using the assumed museum and period.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_museum_artists(</mark>
+<mark>  period=&quot;19th Century&quot;,</mark>
+<mark>  country=&quot;France&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>自行选择 Louvre，希望结果包含舞者。</p>
+<blockquote class="reasoning"><p>…
+Let&#x27;s go with &quot;Louvre&quot; as the museum_name. That should fetch artists from that era. Hopefully, it includes dancers. If not, maybe the answer is that the tool doesn&#x27;t capture dancers specifically. But according to the tool&#x27;s description, it&#x27;s about artists, so maybe it&#x27;s limited. Still, this is the only available tool, so proceed.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_museum_artists(</mark>
+<mark>  museum_name=&quot;Louvre&quot;,</mark>
+<mark>  period=&quot;19th Century&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>把舞者扩大解释为工具里的艺术家，并自行选择 Metropolitan Museum of Art。</p>
+<blockquote class="reasoning"><p>…
+Maybe I can assume a well-known museum in the USA, like the Metropolitan Museum of Art. So, I&#x27;ll set museum_name to &quot;Metropolitan Museum of Art&quot;, period as &quot;19th Century&quot;, and country defaults to USA. Let&#x27;s try calling that tool. If it returns artists, perhaps they include notable dancers. If not, maybe there&#x27;s no suitable tool, and I&#x27;d have to explain that.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_museum_artists(</mark>
+<mark>  museum_name=&quot;Metropolitan Museum of Art&quot;,</mark>
+<mark>  period=&quot;19th Century&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>承认工具未提到舞蹈，仍以只有这一个工具为理由强行调用。</p>
+<blockquote class="reasoning"><p>…
+Perhaps the best approach is to proceed with the available tool, using the period as &#x27;19th Century&#x27;, and maybe set the museum to a well-known one like Metropolitan Museum of Art in NYC. Country defaults to USA. Let&#x27;s try that. The user might accept this as a closest approximation.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_museum_artists(</mark>
+<mark>  museum_name=&quot;Metropolitan Museum of Art&quot;,</mark>
+<mark>  period=&quot;19th Century&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>工具能力不匹配时，用猜测替代适用性判断</h2><p>它们的推理中出现了“也许艺术家包括舞者”“虽然牵强，但只有这个工具”的假设。BF16 和 Ours 则保留工具无法满足请求的判断，没有强行调用。可观察的分歧发生在看到工具列表后的第一条回复：从识别工具限制，转向用没有依据的假设为调用找理由。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="002.html"><small>下一个案例 →</small>没有模拟条件，却开始推演鲸的进化</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

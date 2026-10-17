@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>同一个旧金山，两种地点写法 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 014 / BFCL V4</p><h1>同一个旧金山，两种地点写法</h1><p class="task-id">live_multiple_386-137-4</p><p class="intro">五个 baseline 都写 San Francisco，评分接受 San Francisco, CA。这里是地点字符串的严格匹配差异，不能仅据此断言发生实质决策错误。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>I need to get my hair done. Please find a salon in San Francisco.</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+Wait, the default might be false, but since it&#x27;s optional, perhaps better to not include it unless specified. So the arguments would be just the city. Let me double-check the parameters: city is required, is_unisex is optional. Alright, I&#x27;ll call FindProvider with city set to San Francisco, CA.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>Services_1_FindProvider(
+  city=&quot;San Francisco, CA&quot;
+)</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+So the city parameter should be &#x27;San Francisco, CA&#x27;. Therefore, I&#x27;ll call FindProvider with city=&#x27;San Francisco, CA&#x27; and omit is_unisex unless needed. That should give the user a list of salons in SF. Then, once the provider is found, the next step would be booking an appointment. But the immediate task is to find the salon, so the correct tool here is FindProvider.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>Services_1_FindProvider(
+  city=&quot;San Francisco, CA&quot;
+)</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;city&#x27;: &#x27;San Francisco&#x27;. Expected one of [&#x27;San Francisco, CA&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+Alternatively, maybe setting is_unisex to false to get non-unisex options? Wait, no—the parameter is optional, so omitting it means the default behavior is probably to return all types. Better to just provide the city and let the tool handle the rest. So the correct function call here is to use FindProvider with city: &quot;San Francisco&quot;.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>Services_1_FindProvider(
+<mark>  city=&quot;San Francisco&quot;</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;city&#x27;: &#x27;San Francisco&#x27;. Expected one of [&#x27;San Francisco, CA&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+So the correct function call would be to use mcp_tool_Services_1_FindProvider with the city parameter set to &quot;San Francisco.&quot; There&#x27;s no mention of needing to filter by gender, so the is_unisex parameter isn&#x27;t necessary unless the user specifies it. Therefore, the appropriate action is to call that tool with the city parameter.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>Services_1_FindProvider(
+<mark>  city=&quot;San Francisco&quot;</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;city&#x27;: &#x27;San Francisco&#x27;. Expected one of [&#x27;San Francisco, CA&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+But the user&#x27;s request was simply &quot;San Francisco,&quot; so maybe the tool can accept just the city name. To avoid errors, perhaps I should use &quot;San Francisco&quot; as the city value. Let me go ahead and call the FindProvider tool with city set to &quot;San Francisco&quot; and leave is_unisex unspecified since it&#x27;s optional. That should fetch the necessary information.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>Services_1_FindProvider(
+<mark>  city=&quot;San Francisco&quot;</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;city&#x27;: &#x27;San Francisco&#x27;. Expected one of [&#x27;San Francisco, CA&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+That should return a list of stylists or salons in that area. Once that info is retrieved, the next step would be to present it to the user. But according to the rules, after calling the tool, I should provide the answer based on the results. Since I don&#x27;t have actual data, I&#x27;ll simulate the response.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>Services_1_FindProvider(
+<mark>  city=&quot;San Francisco&quot;</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;city&#x27;: &#x27;San Francisco&#x27;. Expected one of [&#x27;San Francisco, CA&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+Alternatively, maybe the tool defaults to non-unisex if not provided. Hmm. Well, the main thing is to call FindProvider with the city as San Francisco. Let me structure the call with the city parameter set to &quot;San Francisco&quot; and omit is_unisex since it&#x27;s optional and not specified. That should return relevant salons.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>Services_1_FindProvider(
+<mark>  city=&quot;San Francisco&quot;</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>同一个旧金山，两种地点写法</h2><p>五个 baseline 都写 San Francisco，评分接受 San Francisco, CA。这里是地点字符串的严格匹配差异，不能仅据此断言发生实质决策错误。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="013.html"><small>← 上一个案例</small>London 没选错，国家代码没有匹配</a>
+<a href="015.html"><small>下一个案例 →</small>“今天”被替换成了编造的日期</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

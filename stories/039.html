@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>现金流的类型，与多填的年份参数 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 039 / BFCL V4</p><h1>现金流的类型，与多填的年份参数</h1><p class="task-id">simple_python_130</p><p class="intro">GPTQ 将现金流数字写成字符串，违反参数类型；其余四种方法增加 years=[0,1,2,3,4,5]，参考答案要求省略或空列表。后者不等同于已证明 NPV 数值算错。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>What&#x27;s the NPV (Net Present Value) of a series of cash flows: [-50000, 10000, 15000, 20000, 25000, 30000] discounted at 8% annually?</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+I need to structure the arguments correctly. The cash_flows array is straightforward. The discount_rate is 8%, so 0.08 as a decimal. No years array is needed here. So the arguments should be {&quot;cash_flows&quot;: [-50000, 10000, 15000, 20000, 25000, 30000], &quot;discount_rate&quot;: 0.08}.
+
+Now, I should call the tool with these parameters to get the NPV result.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>finance_calculator.npv(
+  cash_flows=[-50000, 10000, 15000, 20000, 25000, 30000],
+  discount_rate=0.08
+)</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+So I&#x27;ll prepare the arguments with cash_flows and discount_rate. No need to include years unless specified.
+
+Now, format the JSON for call_tool with tool_name set to &quot;mcp_tool_finance_calculator.npv&quot; and the arguments as a JSON string containing cash_flows and discount_rate. Make sure the JSON is properly formatted without markdown.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>finance_calculator.npv(
+  cash_flows=[-50000, 10000, 15000, 20000, 25000, 30000],
+  discount_rate=0.08
+)</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>评分指出：Nested type checking failed for parameter &#x27;cash_flows&#x27;. Expected outer type array with inner type &lt;class &#x27;int&#x27;&gt;. Parameter value: [&#x27;-50000&#x27;, &#x27;10000&#x27;, &#x27;15000&#x27;, &#x27;20000&#x27;, &#x27;25000&#x27;, &#x27;30000&#x27;].</p>
+<blockquote class="reasoning"><p>…
+But the user didn&#x27;t specify the years, so maybe just provide the cash flows and discount rate. The years parameter isn&#x27;t mandatory, so I can omit it.
+
+Thus, the arguments would be:
+cash_flows: [-50000, 10000, 15000, 20000, 25000, 30000]
+discount_rate: 0.08
+
+No need to include years unless specified. Let me format the JSON correctly.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>finance_calculator.npv(
+<mark>  cash_flows=[&quot;-50000&quot;, &quot;10000&quot;, &quot;15000&quot;, &quot;20000&quot;, &quot;25000&quot;, &quot;30000&quot;],</mark>
+  discount_rate=0.08
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;years&#x27;: [0, 1, 2, 3, 4, 5]. Expected one of [&#x27;&#x27;, []].</p>
+<blockquote class="reasoning"><p>…
+Cash_flows is the list given, discount_rate is 0.08, and years is [0,1,2,3,4,5]. The tool doesn&#x27;t mention needing a date format, just numbers. So passing these parameters should work. No other parameters are needed. Let me make sure there are no typos in the JSON. Everything looks good. Time to call the tool with these arguments.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>finance_calculator.npv(
+  cash_flows=[-50000, 10000, 15000, 20000, 25000, 30000],
+<mark>  discount_rate=0.08,</mark>
+<mark>  years=[0, 1, 2, 3, 4, 5]</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;years&#x27;: [0, 1, 2, 3, 4, 5]. Expected one of [&#x27;&#x27;, []].</p>
+<blockquote class="reasoning"><p>…
+Thus, the parameters would be:
+cash_flows: [-50000, 10000, 15000, 20000, 25000, 30000]
+discount_rate: 0.08
+years: [0,1,2,3,4,5]
+
+I need to format the arguments correctly as JSON. Also, the tool may require the years array, but since it&#x27;s optional, maybe omitting it would still work. However, including it ensures accuracy. Let me proceed to call the tool with these parameters.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>finance_calculator.npv(
+  cash_flows=[-50000, 10000, 15000, 20000, 25000, 30000],
+<mark>  discount_rate=0.08,</mark>
+<mark>  years=[0, 1, 2, 3, 4, 5]</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;years&#x27;: [0, 1, 2, 3, 4, 5]. Expected one of [&#x27;&#x27;, []].</p>
+<blockquote class="reasoning"><p>…
+Now, structure the arguments for the tool. Cash flows are the list given, discount_rate is 0.08, and years as above. So the JSON args would be:
+
+{
+  &quot;cash_flows&quot;: [-50000, 10000, 15000, 20000, 25000, 30000],
+  &quot;discount_rate&quot;: 0.08,
+  &quot;years&quot;: [0,1,2,3,4,5]
+}
+
+I need to format this into the call_tool arguments properly.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>finance_calculator.npv(
+  cash_flows=[-50000, 10000, 15000, 20000, 25000, 30000],
+<mark>  discount_rate=0.08,</mark>
+<mark>  years=[0, 1, 2, 3, 4, 5]</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;years&#x27;: [0, 1, 2, 3, 4, 5]. Expected one of [&#x27;&#x27;, []].</p>
+<blockquote class="reasoning"><p>…
+{
+  &quot;cash_flows&quot;: [-50000, 10000, 15000, 20000, 25000, 30000],
+  &quot;discount_rate&quot;: 0.08,
+  &quot;years&quot;: [0,1,2,3,4,5]
+}
+
+I need to make sure that the JSON is properly formatted and passed as a string. Also, verify that the parameters match the expected types. Discount_rate is a number, cash_flows is an array, and years is an array. All looks good. Now, generate the tool_call.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>finance_calculator.npv(
+  cash_flows=[-50000, 10000, 15000, 20000, 25000, 30000],
+<mark>  discount_rate=0.08,</mark>
+<mark>  years=[0, 1, 2, 3, 4, 5]</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>现金流的类型，与多填的年份参数</h2><p>GPTQ 将现金流数字写成字符串，违反参数类型；其余四种方法增加 years=[0,1,2,3,4,5]，参考答案要求省略或空列表。后者不等同于已证明 NPV 数值算错。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="038.html"><small>← 上一个案例</small>城市、俱乐部和路线，在调用中混在一起</a>
+<a href="040.html"><small>下一个案例 →</small>Central Park：地点理解与字符串评分的差别</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

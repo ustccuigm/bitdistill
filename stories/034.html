@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>第三次查询，接口开始漂移 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 034 / BFCL V4</p><h1>第三次查询，接口开始漂移</h1><p class="task-id">parallel_191</p><p class="intro">后续相似调用出现工具名或 facilities 字段漂移；其中换行、Fiction section 等匹配差异不应一概解释成真实设施查询错误。。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>Can you help me find public libraries in New York, NY that have a Reading Room and Fiction section, and then in Los Angeles, CA that offer Wi-Fi and have a Children Section, and finally in Chicago, IL that have a Cafe and a Reading Room?</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<pre><code>public_library.find_nearby(
+  location=&quot;Chicago, IL&quot;,
+  facilities=[&quot;Cafe&quot;, &quot;Reading Room&quot;]
+)</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+So, the arguments should be location: &quot;Chicago, IL&quot; and facilities: [&quot;Cafe&quot;, &quot;Reading Room&quot;]. I need to format this into a JSON string correctly. Make sure the quotes are proper and the array elements are strings.
+
+Also, check if previous responses had any issues. The prior calls worked, so likely this one will too. Just execute the call with the given parameters.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 8</p>
+<pre><code>public_library.find_nearby(
+  location=&quot;Chicago, IL&quot;,
+  facilities=[&quot;Cafe&quot;, &quot;Reading Room&quot;]
+)</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [2] of model output for index 2 of possible answers.</p>
+<pre><code><mark>mikipedia_tool_public_library.find_nearby(</mark>
+  location=&quot;Chicago, IL&quot;,
+  facilities=[&quot;Cafe&quot;, &quot;Reading Room&quot;]
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 3 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [0, 1, 2] of model output for index 0 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+Since the user asked for all three cities, I need to perform three distinct searches. Let me structure each call properly with the right parameters. Make sure the JSON format is correct for each tool invocation. No overlapping issues here; just three separate calls with the respective locations and facility lists.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>public_library.find_nearby(
+  location=&quot;New York, NY&quot;,
+<mark>  facilities=[&quot;Reading Room&quot;, &quot;Fiction section&quot;]</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [2] of model output for index 2 of possible answers.</p>
+<pre><code><mark>m_c_p_tool_public_library.find_nearby(</mark>
+  location=&quot;Chicago, IL&quot;,
+  facilities=[&quot;Cafe&quot;, &quot;Reading Room&quot;]
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 3 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [2] of model output for index 2 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+Now, the last part is Chicago, IL needing a Cafe and Reading Room. I need to call the same tool again with the updated parameters. Let me check the tool&#x27;s parameters: location is required, and facilities as an array. So, setting location to &quot;Chicago, IL&quot; and facilities to [&quot;Cafe&quot;, &quot;Reading Room&quot;]. Make sure the JSON is correctly formatted. No mistakes here. Execute the call.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 8</p>
+<pre><code>public_library.find_nearby(
+  location=&quot;Chicago, IL&quot;,
+<mark>  facilities=[&quot;Cafe&quot;, &quot;Reading&quot;]</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 3 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [2] of model output for index 2 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+Need to make sure the JSON syntax is correct. Also, the tool name is consistent, so just change the location and facilities array.
+
+No issues detected in the prior steps, so proceeding with the third call for Chicago. Make sure to escape the quotes properly in the JSON string. Alright, that should cover all three cities as requested.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 8</p>
+<pre><code><mark>public_library.find_nearby(&quot;{\&quot;location\&quot;: \&quot;Chicago, IL\&quot;, \&quot;facilities\&quot;: [\&quot;Cafe\&quot;, \&quot;Reading\nRoom\&quot;]}&quot;)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 3 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>第三次查询，接口开始漂移</h2><p>后续相似调用出现工具名或 facilities 字段漂移；其中换行、Fiction section 等匹配差异不应一概解释成真实设施查询错误。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="033.html"><small>← 上一个案例</small>进入临时目录之后，还要复制文件内容</a>
+<a href="035.html"><small>下一个案例 →</small>第一次路线正确，第二次函数名变了</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>股票任务中的多种断点 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 030 / BFCL V4</p><h1>股票任务中的多种断点</h1><p class="task-id">multi_turn_miss_param_117</p><p class="intro">失败分布在关注列表、股票列表查询、账户交易状态和缺失调用，不能统一说成首次股票查询出错。。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>I&#x27;d like some assistance today with my investment portfolio. If a specific company is part of my watchlist, please remove it for me. The market trends for their extractions are concerning me recently.</p>
+</div>
+<div><span class="source">用户 · 第 2 轮</span>
+<p>That specific company is Zeta Corp.</p>
+</div>
+<div><span class="source">用户 · 第 3 轮</span>
+<p>With my watchlist refreshed, please retrieve the current stocks still listed. I need a clear view of what remains on my radar.</p>
+</div>
+<div><span class="source">用户 · 第 4 轮</span>
+<p>I&#x27;m intrigued by the recent advancements in technology and wish to explore investment opportunities there. Could you provide a list of available technology stock symbols?</p>
+</div>
+<div><span class="source">用户 · 第 5 轮</span>
+<p>I&#x27;ve been observing Microsoft&#x27;s stock performance and I find it quite compelling. Could you give me a detailed update on its current status and trends?</p>
+</div>
+<div><span class="source">用户 · 第 6 轮</span>
+<p>I&#x27;m ready to act on my analysis. Please purchase 50 shares of Microsoft at $320 each, given today&#x27;s indicators.</p>
+</div>
+<div><span class="source">用户 · 第 7 轮</span>
+<p>Finally, before the end of the trading day, I intend to deposit 10 times the prices of OMEG rounded to nearest thousands into my trading account to secure liquidity for forthcoming ventures.</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+But they haven&#x27;t named it. So I need to ask the user to specify which company they want to remove. Otherwise, I can&#x27;t perform the action. Therefore, the appropriate response is to request the company&#x27;s name or symbol so that we can check the watchlist and take further action.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+But since the user hasn&#x27;t provided the stock symbol, the assistant can&#x27;t do anything else. Therefore, the assistant should prompt the user for the company&#x27;s name or symbol. So the final decision is to ask the user for the specific company&#x27;s name or stock symbol to proceed with removing it from the watchlist.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>get_watchlist(
+
+)</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 watch_list[0]：实际为 null，参考为 NVDA。</p>
+<blockquote class="reasoning"><p>…
+1. Use mcp_tool_get_watchlist to get the current watchlist.
+2. Analyze each stock in the watchlist for market trends.
+3. Remove any stock that meets the concerning criteria.
+
+But the user hasn&#x27;t provided the company names, so step 1 is essential. Let&#x27;s execute that now.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_watchlist(</mark>
+<mark></mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>评分未找到该轮要求的执行返回：[&quot;{\&quot;stock_list\&quot;: [\&quot;AAPL\&quot;, \&quot;GOOG\&quot;, \&quot;MSFT\&quot;, \&quot;NVDA\&quot;]}&quot;]</p>
+<blockquote class="reasoning"><p>…
+However, the problem&#x27;s setup requires the assistant to use tools. Therefore, the assistant must conclude that the task can&#x27;t be completed with the current information and must ask for clarification. Despite the restrictions, the correct answer is to ask for the company name.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_watchlist(</mark>
+<mark></mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 account_info.balance：实际为 16000.0，参考为 21000.0。</p>
+<blockquote class="reasoning"><p>…
+I should use the mcp_tool_place_order with those parameters. Let me structure the JSON correctly. Order type is Buy, symbol is MSFT, price is 320, amount is 50.
+
+Double-checking the parameters: yes, all required fields are present. No optional parameters mentioned. Alright, that should do it.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 24</p>
+<pre><code><mark>place_order(</mark>
+<mark>  order_type=&quot;Buy&quot;,</mark>
+<mark>  symbol=&quot;MSFT&quot;,</mark>
+<mark>  price=320,</mark>
+<mark>  amount=50</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 6 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 watch_list[1]：实际为 ZETA，参考为 null。</p>
+<blockquote class="reasoning"><p>…
+However, without explicit metrics for &quot;concerning&quot; trends, this might require further clarification. But following the tools provided, the best approach is to first get the watchlist, then check each stock&#x27;s details, and act accordingly.
+
+Since the user hasn&#x27;t provided specific companies, initiating with the watchlist retrieval makes sense. Proceeding with that now.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_watchlist(</mark>
+<mark></mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>第 2 个用户轮没有任务工具调用，未完成这一轮要求的操作。</p>
+<blockquote class="reasoning"><p>…
+But since the tools don&#x27;t include a dedicated trend checker, step 2 might not be feasible. The user might assume that being on the watchlist implies concern, so proceed to remove them. Alternatively, clarify with the user if they have specific companies in mind. However, per instructions, I must use tools. Hence, proceed with getting the watchlist first.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_watchlist(</mark>
+<mark></mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>失败分布在关注列表、股票列表查询、账户交易状态和缺失调用，不能统一说成首次股票查询出错。</h2><p>失败分布在关注列表、股票列表查询、账户交易状态和缺失调用，不能统一说成首次股票查询出错。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="029.html"><small>← 上一个案例</small>消息和关注列表，各自漏了一步</a>
+<a href="031.html"><small>下一个案例 →</small>下单成功，不等于查到了最新详情</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

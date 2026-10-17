@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>工具缺失之后，后续操作没有接上 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 025 / BFCL V4</p><h1>工具缺失之后，后续操作没有接上</h1><p class="task-id">multi_turn_miss_func_127</p><p class="intro">部分 baseline 在购买或详情查询轮没有调用；EfficientQAT 的订单状态不匹配。缺少可用工具时的澄清轮和后续实际执行轮需要分开看。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>I’m re-evaluating my current investment portfolio and need to make informed decisions. Could you display the current stocks I am monitoring?</p>
+</div>
+<div><span class="source">用户 · 第 2 轮</span>
+</div>
+<div><span class="source">用户 · 第 3 轮</span>
+<p>Some stocks are underperforming and I wish to streamline my choices. Could we eliminate BDX from my observed list?</p>
+</div>
+<div><span class="source">用户 · 第 4 轮</span>
+<p>I have decided to take decisive action. Let&#x27;s acquire 150 shares of BDX at the existing market value.</p>
+</div>
+<div><span class="source">用户 · 第 5 轮</span>
+<p>Upon completion, please furnish a detailed summary regarding the most recent order details on my account.</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+Let me confirm. The parameters for that tool are none, so it just returns account details. If that includes the watchlist, then that&#x27;s the right tool. Otherwise, perhaps there&#x27;s no direct tool, and I need to inform the user. But since the user is asking to display the stocks they&#x27;re monitoring, the most likely candidate is mcp_tool_get_account_info. Let&#x27;s proceed with that.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>get_account_info(
+
+)</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+Alternatively, maybe the user&#x27;s action implies adding a stock to the watchlist, but without the ability to list them, we can&#x27;t proceed.
+
+So the conclusion is that the available tools do not include a function to retrieve the current stocks being monitored. Therefore, the assistant should explain that the functionality isn&#x27;t available with the existing tools.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>第 4 个用户轮没有任务工具调用，未完成这一轮要求的操作。</p>
+<blockquote class="reasoning"><p>…
+There&#x27;s also &quot;notify_price_change&quot; which takes a list of stocks, but that&#x27;s for notifications. No other tools seem to access the user&#x27;s personal watchlist. Therefore, the conclusion is that there&#x27;s no tool currently available to get the list of stocks the user is monitoring. Hence, I need to tell the user that the necessary tool isn&#x27;t available yet.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_order_history(</mark>
+
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 orders.12446.order_type：实际为 BUY，参考为 Buy。</p>
+<blockquote class="reasoning"><p>…
+The user hasn&#x27;t provided a username or password, so logging in isn&#x27;t necessary unless required. But since the user has already been logged in as per the initial setup, perhaps the tool can be used directly.
+
+Therefore, the next step is to call mcp_tool_get_watchlist with no arguments. That should retrieve the list of stocks the user is monitoring.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_watchlist(</mark>
+
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>第 5 个用户轮没有任务工具调用，未完成这一轮要求的操作。</p>
+<blockquote class="reasoning"><p>…
+But without a tool to retrieve the watchlist, I can&#x27;t proceed. The user&#x27;s request can&#x27;t be fulfilled with the current tools. Therefore, I should inform them that the necessary tool isn&#x27;t available and ask for clarification or check if there&#x27;s another way.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_order_history(</mark>
+
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>第 4 个用户轮没有任务工具调用，未完成这一轮要求的操作。</p>
+<blockquote class="reasoning"><p>…
+From the list_tools response, there&#x27;s a tool called mcp_tool_get_watchlist with no parameters. Since the user is asking about their monitored stocks, this tool likely retrieves their watchlist. No arguments needed, so I can call it directly. Let me check if there are other relevant tools, but this seems like the right one. Alright, time to call mcp_tool_get_watchlist.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_watchlist(</mark>
+
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>第 5 个用户轮没有任务工具调用，未完成这一轮要求的操作。</p>
+<blockquote class="reasoning"><p>…
+Therefore, the correct approach would be to inform the user that the order is still pending and offer to provide the details again or check the status. Also, ensure that the user knows how to proceed if they need updates. So, the response should mention the current status and offer assistance with retrieving the details again or checking the order&#x27;s progress.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 22</p>
+<pre><code><mark>没有对应任务调用</mark></code></pre>
+<p class="source">首次动作差异：第 5 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>工具缺失之后，后续操作没有接上</h2><p>部分 baseline 在购买或详情查询轮没有调用；EfficientQAT 的订单状态不匹配。缺少可用工具时的澄清轮和后续实际执行轮需要分开看。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="024.html"><small>← 上一个案例</small>从列目录到做计算，遗漏发生在不同轮</a>
+<a href="026.html"><small>下一个案例 →</small>推文发出之后，状态仍不符合要求</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>城市、俱乐部和路线，在调用中混在一起 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 038 / BFCL V4</p><h1>城市、俱乐部和路线，在调用中混在一起</h1><p class="task-id">parallel_multiple_75</p><p class="intro">涉及路线地点写法、函数名和调用数量差异。城市与俱乐部名称的匹配问题需按具体参数解读，不能把所有排列匹配失败都看作路线顺序错误。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>&quot;Can you help me plan my day? I want to start from my home in New York and go to a chess club named &#x27;Knight Gambit&#x27; located in Boston. I want to take the fastest route. After that, I want to go to another chess club named &#x27;Rook Corner&#x27; in Philadelphia, again taking the fastest route. Finally, I want to return home, but this time I want to take the shortest route. Can you also provide me with the details of the events hosted by both chess clubs?&quot;</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+Also, need to collect all the necessary data: each route&#x27;s details and the event info for both clubs. Once all tool calls are made, compile the results into a coherent response for the user.
+
+Let me structure each tool call step by step, making sure to use the correct parameters for each segment.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>route_planner.calculate_route(
+  start=&quot;New York&quot;,
+  destination=&quot;Boston&quot;,
+  method=&quot;fastest&quot;
+)</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+Need to ensure each tool call is correctly formatted. For example, the route planner needs start, destination, and method. The chess club tool needs name and city, with event optional.
+
+Proceeding step by step, first handle the three route calculations, then the two event detail queries.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>route_planner.calculate_route(
+  start=&quot;New York&quot;,
+  destination=&quot;Boston&quot;,
+  method=&quot;fastest&quot;
+)</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [0, 1, 2, 3, 4] of model output for index 0 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+So the third leg is from Philadelphia to New York, choosing the shortest path.
+
+Each route calculation will involve three steps. Then, for the event details, two separate calls to the chess club detail tool. Need to make sure each step uses the right parameters. Let&#x27;s structure the function calls step by step.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>route_planner.calculate_route(
+<mark>  start=&quot;Home in New York&quot;,</mark>
+<mark>  destination=&quot;Knight Gambit, Boston&quot;,</mark>
+  method=&quot;fastest&quot;
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [0, 1, 2, 3, 4] of model output for index 0 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+But the order matters. Each step depends on prior results. Like, after getting the first route, then the club details, etc. So need to execute these in sequence.
+
+Now, considering the tool calls. First, the user hasn&#x27;t provided any data yet, so the assistant needs to trigger the necessary tool calls step by step. Starting with the first route calculation.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>route_planner.calculate_route(
+<mark>  start=&quot;Home&quot;,</mark>
+<mark>  destination=&quot;Knight Gambit Chess Club&quot;,</mark>
+  method=&quot;fastest&quot;
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [0, 1, 2, 3, 4] of model output for index 0 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+4. Calculate route from Boston to Philadelphia (start: Boston, dest: Philadelphia, method: fastest).
+5. Calculate route from Philadelphia to New York (start: Philadelphia, dest: New York, method: shortest).
+
+Each of these steps requires individual tool calls. Now, generate the appropriate calls in sequence.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>chess_club_details.find(</mark>
+<mark>  name=&quot;Knight Gambit&quot;,</mark>
+<mark>  city=&quot;Boston&quot;</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [0, 1, 2, 3, 4] of model output for index 0 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+However, the parameter is optional, so maybe just omit it unless specified. Alternatively, the tool might default to providing event info if possible.
+
+So, for each chess club, call find with name and city. That should give the necessary details. Then compile all the route results and event details into a coherent plan for the user.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>route_planner.calculate_route(
+  start=&quot;New York&quot;,
+<mark>  destination=&quot;Knight Gambit&quot;,</mark>
+  method=&quot;fastest&quot;
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>实际调用数量与本题要求不符，未形成完整且匹配的工具调用集合。</p>
+<blockquote class="reasoning"><p>…
+Plan fastest route from NYC to Boston (using the club&#x27;s address).
+3. Find the location of Rook Corner in Philadelphia.
+4. Plan fastest route from Boston to Philadelphia (using Rook&#x27;s address).
+5. Plan shortest route from Philadelphia back to NYC.
+6. Retrieve event details for both clubs.
+
+Each step involves using the appropriate tools. Now, implement these steps sequentially.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>chess_club_details.find(</mark>
+<mark>  name=&quot;Knight Gambit&quot;,</mark>
+<mark>  city=&quot;Boston&quot;</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>城市、俱乐部和路线，在调用中混在一起</h2><p>涉及路线地点写法、函数名和调用数量差异。城市与俱乐部名称的匹配问题需按具体参数解读，不能把所有排列匹配失败都看作路线顺序错误。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="037.html"><small>← 上一个案例</small>做的是同一个检验，输入数字却变了</a>
+<a href="039.html"><small>下一个案例 →</small>现金流的类型，与多填的年份参数</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

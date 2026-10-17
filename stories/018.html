@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>巴黎没变，国家名称变成了缩写 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 018 / BFCL V4</p><h1>巴黎没变，国家名称变成了缩写</h1><p class="task-id">live_parallel_multiple_4-3-0</p><p class="intro">EfficientQAT 的调用数量不匹配；其他方法使用 Paris, FR 等地点写法，参考答案接受完整国家名称。应区分字符串匹配失败与真实查询对象错误。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>Could you provide me with the latest news report for Paris, France, in English and also for Letterkenny, Ireland, focusing on technology news again in English?</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+Next, the category is Technology, and the language is English (&#x27;en&#x27;). The tool allows optional parameters, so I can specify category and language. I&#x27;ll make two separate calls: one for each city. Each call will have the respective location, category set to Technology, and language to en. That should cover both requests.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>get_news_report(
+  location=&quot;Paris, France&quot;,
+  category=&quot;Technology&quot;,
+  language=&quot;en&quot;
+)</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+So for Paris, France, it&#x27;s &quot;Paris, France&quot;; for Letterkenny, Ireland, it&#x27;s &quot;Letterkenny, Ireland&quot;.
+
+Also, the category is optional but the user wants technology news, so set category to &#x27;Technology&#x27;. Language is &#x27;en&#x27;.
+
+Therefore, two calls to mcp_tool_get_news_report with the respective locations, category Technology, and language en.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>get_news_report(
+  location=&quot;Paris, France&quot;,
+  category=&quot;Technology&quot;,
+  language=&quot;en&quot;
+)</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [0, 1] of model output for index 0 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+So for Paris, since it&#x27;s a city in France, using &#x27;Paris, FR&#x27; should work. Same for Letterkenny, Ireland. The category is Technology, and language is en. Need to make sure the JSON structure is correct for each call. Two separate calls needed for each location. Let me verify the parameters again. Yes, that should do it.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>get_news_report(
+<mark>  location=&quot;Paris, FR&quot;,</mark>
+  category=&quot;Technology&quot;,
+  language=&quot;en&quot;
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>实际调用数量与本题要求不符，未形成完整且匹配的工具调用集合。</p>
+<blockquote class="reasoning"><p>…
+Two separate tool calls were generated to cover both cities. The responses from the tool executions confirmed successful data retrieval.
+
+Now, compiling the results into a clear answer for the user, ensuring both locations&#x27; news are presented accurately in English, focused on technology.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 6</p>
+<pre><code><mark>没有对应任务调用</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 2 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [0, 1] of model output for index 0 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+Check if the category &#x27;Technology&#x27; is allowed. According to the tool&#x27;s description, allowed values include &#x27;Technology&#x27;, so that&#x27;s good. Language &#x27;en&#x27; is also allowed.
+
+So, first call for Paris, then another for Letterkenny. Each call will have location, category, and language set appropriately. No issues here. Proceed to generate the tool calls.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>get_news_report(
+<mark>  location=&quot;Paris, FR&quot;,</mark>
+  category=&quot;Technology&quot;,
+  language=&quot;en&quot;
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [0, 1] of model output for index 0 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+The location parameter specifies &quot;City, State (abbr)&quot; or &quot;City, Country&quot;. So for Paris, France, it&#x27;s &quot;Paris, FR&quot; (country code). For Letterkenny, Ireland, &quot;Letterkenny, IE&quot;. That makes sense.
+
+So two calls: one for Paris,FR with category Technology and language en; another for Letterkenny,IE same category and language. That should cover both requests.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>get_news_report(
+<mark>  location=&quot;Paris, FR&quot;,</mark>
+  category=&quot;Technology&quot;,
+  language=&quot;en&quot;
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>评分指出：Could not find a matching function among index [0, 1] of model output for index 0 of possible answers.</p>
+<blockquote class="reasoning"><p>…
+I need to make two separate calls to the get_news_report tool with these parameters. Each call will have the respective location. Check if the parameters are correctly formatted. The user specified English, so language is &#x27;en&#x27;. The category is explicitly Technology.
+
+No other tools are relevant here. Weather isn&#x27;t needed. So two call_tool actions are necessary here.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>get_news_report(
+<mark>  location=&quot;Paris, FR&quot;,</mark>
+  category=&quot;Technology&quot;,
+  language=&quot;en&quot;
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>巴黎没变，国家名称变成了缩写</h2><p>EfficientQAT 的调用数量不匹配；其他方法使用 Paris, FR 等地点写法，参考答案接受完整国家名称。应区分字符串匹配失败与真实查询对象错误。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="017.html"><small>← 上一个案例</small>三月七日，没有说是哪一年</a>
+<a href="019.html"><small>下一个案例 →</small>要求降序，参数却写成了字段名</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

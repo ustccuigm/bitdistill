@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>已经想到要问出发地，动作却仍然发出 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 009 / BFCL V4</p><h1>已经想到要问出发地，动作却仍然发出</h1><p class="task-id">live_irrelevance_623-196-4</p><p class="intro">问题不是选错了航班查询工具，而是缺少出发地时是否继续执行。五个 baseline 的所选轨迹都识别到需要补充信息，却仍生成调用：GPTQ 用 &lt;missing&gt; 占位，EfficientQAT、BitDistiller、QeRL 传入空字符串，On-Policy QAD 则把目的地洛杉矶同时当作出发地。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>I have a plan for a trip to Los Angeles for which I want to search for a round trip flight. I am comfortable with Economy seats in Delta Airlines flight. Find me the suitable one.</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>没有在出发地缺失时发起查询。</p>
+<blockquote class="reasoning"><p>…
+Hmm, the tool requires origin_airport, so I need that info. Also, the departure and return dates aren&#x27;t mentioned. Since the user hasn&#x27;t provided these details yet, I should ask them for clarification. Without the origin city/airport and the travel dates, I can&#x27;t make the tool call. So the next step is to prompt the user for missing information.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>保留补充信息的分支，没有强行调用查询工具。</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>CoT 最后说应该请求缺失信息，实际却传入 origin_airport=&lt;missing&gt;。</p>
+<blockquote class="reasoning"><p>…
+But wait, the initial instructions said to use the tools even if info is missing. But if the tool requires mandatory parameters, then the assistant can&#x27;t call it without them. Therefore, the correct action is to request the missing details from the user.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Flights_4_SearchRoundtripFlights(</mark>
+<mark>  origin_airport=&quot;&lt;missing&gt;&quot;,</mark>
+<mark>  destination_airport=&quot;Los Angeles&quot;,</mark>
+<mark>  departure_date=&quot;&lt;missing&gt;&quot;,</mark>
+<mark>  return_date=&quot;&lt;missing&gt;&quot;,</mark>
+<mark>  seating_class=&quot;Economy&quot;,</mark>
+<mark>  airlines=&quot;Delta Airlines&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>明知出发地必填，仍传入空字符串，同时填入用户没有提供的日期。</p>
+<blockquote class="reasoning"><p>…
+However, since the parameter is required, this would fail. Therefore, the assistant must ask for the origin. But per instructions, continue using tools. So, proceed to call the tool with the given info and hope for the best.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Flights_4_SearchRoundtripFlights(</mark>
+<mark>  origin_airport=&quot;&quot;,</mark>
+<mark>  destination_airport=&quot;Los Angeles&quot;,</mark>
+<mark>  departure_date=&quot;2023-12-08&quot;,</mark>
+<mark>  return_date=&quot;2023-12-16&quot;,</mark>
+<mark>  seating_class=&quot;Economy&quot;,</mark>
+<mark>  airlines=&quot;Delta Airlines&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>CoT 计划先询问出发地，实际调用的 origin_airport 仍为空。</p>
+<blockquote class="reasoning"><p>…
+The user hasn&#x27;t provided dates yet, so I should prompt them for both departure and return dates. Let me make sure I use the correct parameters. The origin airport isn&#x27;t specified either, so I need to ask the user where they&#x27;re departing from. Alright, collect the missing details and then call the tool with the provided info.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Flights_4_SearchRoundtripFlights(</mark>
+<mark>  origin_airport=&quot;&quot;,</mark>
+<mark>  destination_airport=&quot;Los Angeles&quot;,</mark>
+<mark>  departure_date=&quot;&quot;,</mark>
+<mark>  return_date=&quot;&quot;,</mark>
+<mark>  seating_class=&quot;Economy&quot;,</mark>
+<mark>  airlines=&quot;Delta Airlines&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>把 Los Angeles 同时填作出发地和目的地，改变了用户请求。</p>
+<blockquote class="reasoning"><p>…
+However, the initial thought process considered that the tool&#x27;s parameters are optional. So perhaps the assistant can proceed to call the tool with the given info, omitting dates. But that might not work. To resolve this, the best course is to ask the user for the dates because they&#x27;re essential for booking. Hence, the next step is to request the departure and return dates.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Flights_4_SearchRoundtripFlights(</mark>
+<mark>  origin_airport=&quot;Los Angeles&quot;,</mark>
+<mark>  destination_airport=&quot;Los Angeles&quot;,</mark>
+<mark>  seating_class=&quot;Economy&quot;,</mark>
+<mark>  airlines=&quot;Delta Airlines&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>推理中反复讨论应先询问，最终仍用空出发地调用。</p>
+<blockquote class="reasoning"><p>…
+However, the initial setup says to call the tools. This leads to conflicting requirements. To adhere strictly to the instructions, the assistant should call the tool, even if parameters are incomplete. But logically, that&#x27;s not feasible. Therefore, the answer is to request the missing information.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Flights_4_SearchRoundtripFlights(</mark>
+<mark>  origin_airport=&quot;&quot;,</mark>
+<mark>  destination_airport=&quot;Los Angeles&quot;,</mark>
+<mark>  departure_date=&quot;&quot;,</mark>
+<mark>  return_date=&quot;&quot;,</mark>
+<mark>  seating_class=&quot;Economy&quot;,</mark>
+<mark>  airlines=&quot;Delta Airlines&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>已经发现必填信息缺失，仍强行生成工具调用</h2><p>BF16 和 Ours 没有调用查询工具，先要求补充信息。关键分歧位于看到工具列表后的第一条回复从“需要询问用户”的推理转向实际 tool_call 的地方。日期字段在此工具中可以省略，因此这里的确定性问题是缺失必填的出发地，不能把所有日期未填写都说成错误。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="008.html"><small>← 上一个案例</small>日期可以灵活，出发地不能凭空省略</a>
+<a href="010.html"><small>下一个案例 →</small>有出发地和日期，却没有目的地</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>规格查询，被当作价格查询 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 006 / BFCL V4</p><h1>规格查询，被当作价格查询</h1><p class="task-id">live_irrelevance_578-181-0</p><p class="intro">五个 baseline 的所选轨迹都调用了规格查询工具，把 ACHD 当作某种零件编号。推理中的关键跳转是从“用户要价格，工具给规格”，转成“规格也许包含价格，所以先试一下”。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>what is the price ACHD</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>指出现有工具只提供规格，不能完成价格查询，没有调用任务工具。</p>
+<blockquote class="reasoning"><p>…
+Also, the allowed search types are MPN, ItemNo, SKU, PartNumber. ACHD doesn&#x27;t look like any of these. Maybe the user meant a different identifier? But without more info, I can&#x27;t assume. Since the available tool can&#x27;t fetch prices and the query is unclear, I should ask the user to clarify what ACHD refers to and confirm if they need specs or price info.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>没有扩展工具未声明的能力，说明现有工具不能提供价格。</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>假设规格可能包含价格，把 ACHD 当作 PartNumber 调用。</p>
+<blockquote class="reasoning"><p>…
+Since the tool allows specifying the identifier and search type, I&#x27;ll try using it with the given value &quot;ACHD&quot; and see if it returns anything. If the tool doesn&#x27;t support searching by product name or if ACHD isn&#x27;t recognized, the next step would be to inform the user that the information isn&#x27;t available through these tools.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>raptor.mpn.specs(</mark>
+<mark>  identifier=&quot;ACHD&quot;,</mark>
+<mark>  search_type=&quot;PartNumber&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>以规格里也许有价格为理由，将 ACHD 作为 PartNumber 查询。</p>
+<blockquote class="reasoning"><p>…
+Alternatively, maybe &quot;ACHD&quot; is a part number, and the spec includes the price. So I&#x27;ll attempt to call the tool with identifier &quot;ACHD&quot; and search_type as PartNumber. If that doesn&#x27;t work, maybe the response will indicate an error, and then I can inform the user that the tool couldn&#x27;t find it. Let&#x27;s proceed with that.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>raptor.mpn.specs(</mark>
+<mark>  identifier=&quot;ACHD&quot;,</mark>
+<mark>  search_type=&quot;PartNumber&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>已经区分价格与规格，仍假设返回结果可能顺带包含价格，使用 MPN 查询。</p>
+<blockquote class="reasoning"><p>…
+If the tool doesn&#x27;t return price data, then we might need another approach. However, since this is the only available tool, perhaps the user meant ACHD as an MPN or similar. So, I&#x27;ll try using the tool with ACHD as the identifier. If it returns specs, maybe the price is included. Otherwise, inform the user that the tool doesn&#x27;t provide pricing.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>raptor.mpn.specs(</mark>
+<mark>  identifier=&quot;ACHD&quot;,</mark>
+<mark>  search_type=&quot;MPN&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>把“也许规格包含价格”作为继续调用的依据，使用 MPN 查询。</p>
+<blockquote class="reasoning"><p>…
+So I should try using the mcp_tool_raptor.mpn.specs with the identifier as ACHD and search_type as MPN. That would retrieve the specs, which might include the price. If not, then maybe the tool doesn&#x27;t support price lookup, and I&#x27;d have to tell the user that. But since the tool is the only option, I&#x27;ll proceed with that.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>raptor.mpn.specs(</mark>
+<mark>  identifier=&quot;ACHD&quot;,</mark>
+<mark>  search_type=&quot;MPN&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>先猜 ACHD 是 MPN，再希望规格结果中包含价格。</p>
+<blockquote class="reasoning"><p>…
+But since the user hasn&#x27;t clarified, maybe the tool can handle it. Let me try calling the tool with identifier &quot;ACHD&quot; and search_type as &quot;MPN&quot; (since that&#x27;s a common identifier). If the tool returns specs, maybe the price is included. If not, I might need to ask the user for more info. Let&#x27;s proceed with the call.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>raptor.mpn.specs(</mark>
+<mark>  identifier=&quot;ACHD&quot;,</mark>
+<mark>  search_type=&quot;MPN&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>把未声明的工具能力当成可用能力</h2><p>BF16 和 Ours 则依据工具声明指出无法取得价格，没有发起不匹配的调用。该 case 的特点是工具限制已经进入推理，却没有约束最终动作；这里不涉及数据库状态变化，也不需要假设错误不可逆。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="005.html"><small>← 上一个案例</small>不知道用户是谁，如何查询配偶？</a>
+<a href="007.html"><small>下一个案例 →</small>“想听一首歌”之后，该先问什么？</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

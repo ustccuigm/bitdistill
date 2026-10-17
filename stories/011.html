@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>推理说缺少城市，动作开始查火车 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 011 / BFCL V4</p><h1>推理说缺少城市，动作开始查火车</h1><p class="task-id">live_irrelevance_876-361-0</p><p class="intro">五种 baseline 的所选轨迹在推理中都发现缺少出发地和目的地，最终却发起 FindTrains 调用。GPTQ 自行选择旧金山到洛杉矶，On-Policy QAD 自行选择波士顿到纽约；EfficientQAT 和 BitDistiller 省略必填城市，QeRL 把城市设为空字符串。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>I&#x27;m planning to travel on the 8th of march 2023 and need to reserve train tickets. Could you book them for me? I&#x27;m not particular about the fare class.</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>没有在行程城市缺失时调用订票或查票工具。</p>
+<blockquote class="reasoning"><p>…
+I need to ask the user for the starting city and the destination city to complete the booking. Also, the date is March 8th, 2023, which should be formatted as MM/DD/YYYY, so 03/08/2023. But without the cities, even if I used FindTrains, I can&#x27;t get the necessary info. So the next step is to clarify with the user about the departure and arrival locations.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>先补充询问行程信息，没有强行查票。</p>
+<blockquote class="reasoning"><p>…
+Thus, the proper answer here is to prompt the user for the departure and destination cities. However, the initial setup requires that the assistant uses the tools, but in this case, the data isn&#x27;t sufficient. Therefore, the assistant should reply by asking for the missing information.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>CoT 说需要询问城市，动作却使用 San Francisco, CA 和 Los Angeles, CA。</p>
+<blockquote class="reasoning"><p>…
+Alternatively, maybe FindTrains can help find available trains first, but the user specifically asked to book. So the next step is to inform the user that we need more details to proceed with the booking.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Trains_1_FindTrains(</mark>
+<mark>  _from=&quot;San Francisco, CA&quot;,</mark>
+<mark>  to=&quot;Los Angeles, CA&quot;,</mark>
+<mark>  date_of_journey=&quot;03/08/2023&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>只传日期，省略必填的 _from 和 to。</p>
+<blockquote class="reasoning"><p>…
+But the user might expect the assistant to call the tool despite missing data. Given the ambiguity, but following strict adherence to the rules, the assistant should call the tool with the available parameters. But since the required ones are missing, it&#x27;s not feasible. Hence, the conclusion is that the task can&#x27;t be performed without the cities.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Trains_1_FindTrains(</mark>
+<mark>  date_of_journey=&quot;03/08/2023&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>只传日期和 dontcare 舱位，未提供必填的出发地和目的地。</p>
+<blockquote class="reasoning"><p>…
+So I need to ask for those. Also, the number_of_adults is optional in FindTrains, but the user didn&#x27;t mention that either. Wait, the user said they&#x27;re not particular about the fare class, so maybe leave _class unspecified. But without the origin and destination, I can&#x27;t proceed. Therefore, I should prompt the user for the departure and arrival cities.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Trains_1_FindTrains(</mark>
+<mark>  date_of_journey=&quot;03/08/2023&quot;,</mark>
+<mark>  _class=&quot;dontcare&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>CoT 说城市未知，动作却自行设为 Boston, MA 到 New York, NY。</p>
+<blockquote class="reasoning"><p>…
+Since these are missing, I can&#x27;t call the tool yet. Therefore, I need to ask the user for the necessary details like departure city, destination, and possibly the time. But looking back, the user didn&#x27;t provide those. Hence, the correct action is to request clarification on the specific cities and other needed parameters.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Trains_1_FindTrains(</mark>
+<mark>  _from=&quot;Boston, MA&quot;,</mark>
+<mark>  to=&quot;New York, NY&quot;,</mark>
+<mark>  date_of_journey=&quot;03/08/2023&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>出发地和目的地传空字符串，还自行设定一名成人。</p>
+<blockquote class="reasoning"><p>…
+However, the instructions say to use tools when possible. But without the missing info, the tools can&#x27;t be used effectively. So the next logical step is to request the user to provide the departure and arrival cities, preferred time, number of adults, and trip protection choice.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>Trains_1_FindTrains(</mark>
+<mark>  _from=&quot;&quot;,</mark>
+<mark>  to=&quot;&quot;,</mark>
+<mark>  date_of_journey=&quot;03/08/2023&quot;,</mark>
+<mark>  _class=&quot;dontcare&quot;,</mark>
+<mark>  number_of_adults=1</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>推理要求补全行程，动作却虚构或省略出发地和目的地</h2><p>BF16 和 Ours 先询问缺失信息。共同分歧发生在看到工具列表后的第一条回复：推理中的澄清结论没有约束实际动作。这不是因为用户没有指定舱位，舱位本来就可以不填。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="010.html"><small>← 上一个案例</small>有出发地和日期，却没有目的地</a>
+<a href="012.html"><small>下一个案例 →</small>要的是仪表盘，调用没有落地</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

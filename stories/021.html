@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>订机票之后，还有一条推文要完成 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 021 / BFCL V4</p><h1>订机票之后，还有一条推文要完成</h1><p class="task-id">multi_turn_base_189</p><p class="intro">不同方法失败在不同子任务：部分没有形成参考订票记录或扣款状态，部分没有形成要求的推文状态。不能把五种方法都概括成同一个订票错误。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>Planning an incredible journey from NYC to Tokyo on December 24th 2026 in first class! I have my credit card ready with the id card_5678, which is expiring soon, and I&#x27;d like to allocate business expenses wisely. The cardholder&#x27;s name matches mine, Michael Thompson, and I can provide the CVV when needed, which is 456. Just double check how much the flight costs for me and then could you make the booking using access token &#x27;abc123xyz&#x27;?</p>
+</div>
+<div><span class="source">用户 · 第 2 轮</span>
+<p>After sorting out my travel plans, draft a tweet about how flexible and adaptable my itinerary turned out to be, including a tag to my favorite travel blog &#x27;#TravelBlog&#x27; and mention my adventure-loving friend &#x27;@Spontaneity&#x27;. You may use my account with username &#x27;john&#x27; and password &#x27;john1234&#x27;. The tweet should read &#x27;Flexibility is key! Plans changed, but the adventure continues.&#x27;</p>
+</div>
+<div><span class="source">用户 · 第 3 轮</span>
+<p>Can you amplify the message by retweeting my recent post about the itinerary that you just posted, highlighting our spontaneity with travel plans to reach a larger audience?</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+No further tools are needed at this point. The booking should be straightforward with the provided information. Once the booking is successful, the user will likely need a confirmation, but according to the instructions, after completing the task, I should summarize the action taken. So the final step is to execute the book_flight tool with the gathered parameters.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 10</p>
+<pre><code>book_flight(
+  access_token=&quot;abc123xyz&quot;,
+  card_id=&quot;card_5678&quot;,
+  travel_date=&quot;2026-12-24&quot;,
+  travel_from=&quot;JFK&quot;,
+  travel_to=&quot;HND&quot;,
+  travel_class=&quot;first&quot;
+)</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+Therefore, the next step is to call mcp_tool_book_flight with the gathered parameters. Once booked, the user will receive confirmation, and the task is complete. Need to make sure all parameters are correctly formatted in JSON and that the tool is called properly.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 10</p>
+<pre><code>book_flight(
+  access_token=&quot;abc123xyz&quot;,
+  card_id=&quot;card_5678&quot;,
+  travel_date=&quot;2026-12-24&quot;,
+  travel_from=&quot;JFK&quot;,
+  travel_to=&quot;HND&quot;,
+  travel_class=&quot;first&quot;
+)</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 credit_card_list.card_5678.balance：实际为 50000.0，参考为 46000.0。</p>
+<blockquote class="reasoning"><p>…
+Before booking, I should check if they agree with the cost. If they do, I&#x27;ll use the mcp_tool_book_flight with the provided access token, card ID (card_5678), travel details, and class. Also, the user mentioned the card expires soon, so ensuring the payment is authorized with the CVV 456 is important. Let me prompt the user to confirm the cost first.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 10</p>
+<pre><code><mark>没有对应任务调用</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 4 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 credit_card_list.262919693687：实际为 {&quot;card_number&quot;: &quot;XXXX5678&quot;, &quot;expiration_date&quot;: &quot;12/26&quot;, &quot;cardholder_name&quot;: &quot;Michael Thompson&quot;, &quot;card_verification_number&quot;: &quot;456&quot;, &quot;balance&quot;: 40620.0}，参考为 null。</p>
+<blockquote class="reasoning"><p>…
+The response includes the total cost breakdown, so I should summarize that and offer to book the flight. Also, note that the credit card is about to expire, so urgency might be implied. Ensure the instructions are clear: confirm to proceed or decline. No further actions needed unless the user confirms.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 8</p>
+<pre><code><mark>call_checkout_flow_for_payment_and_reservation(</mark>
+<mark>  access_token=&quot;abc123xyz&quot;,</mark>
+<mark>  card_id=&quot;card_5678&quot;,</mark>
+  travel_from=&quot;JFK&quot;,
+  travel_to=&quot;HND&quot;,
+  travel_date=&quot;2026-12-24&quot;,
+<mark>  travel_class=&quot;first&quot;,</mark>
+<mark>  passenger_info={&quot;first_name&quot;: &quot;Michael&quot;, &quot;last_name&quot;: &quot;Thompson&quot;, &quot;date_of_birth&quot;: &quot;1985-05-15&quot;, &quot;passport_number&quot;: &quot;USPAS12345678&quot;},</mark>
+<mark>  payment_method={&quot;cvv&quot;: &quot;456&quot;}</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 3 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 credit_card_list.card_5678.balance：实际为 50000.0，参考为 46000.0。</p>
+<blockquote class="reasoning"><p>…
+So the steps are:
+1. Use mcp_tool_get_flight_cost with the correct airport codes and date to find the cost.
+2. Once the cost is retrieved, proceed to mcp_tool_book_flight with the same airport codes and other details.
+
+Need to verify the airport codes first. NYC&#x27;s IATA code is JFK, and Tokyo&#x27;s is NRT. So substituting those into the parameters for both tools.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>get_flight_cost(</mark>
+<mark>  travel_from=&quot;JFK&quot;,</mark>
+<mark>  travel_to=&quot;NRT&quot;,</mark>
+<mark>  travel_date=&quot;2026-12-24&quot;,</mark>
+<mark>  travel_class=&quot;first&quot;</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 tweets.11：实际为 {&quot;id&quot;: 11, &quot;username&quot;: &quot;john&quot;, &quot;content&quot;: &quot;Flexibility is key! Plans changed, but the adventure continues.&quot;, &quot;tags&quot;: [&quot;#TravelBlog&quot;], &quot;mentions&quot;: [&quot;@Spontaneity …，参考为 null。</p>
+<pre><code><mark>post_tweet(</mark>
+<mark>  content=&quot;Flexibility is key! Plans changed, but the adventure continues.&quot;,</mark>
+<mark>  tags=[&quot;#TravelBlog&quot;],</mark>
+<mark>  mentions=[&quot;@Spontaneity&quot;]</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 2 个用户轮，第 3 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>评分记录中的状态差异位于 tweets.11：实际为 {&quot;id&quot;: 11, &quot;username&quot;: &quot;john&quot;, &quot;content&quot;: &quot;Flexibility is key! Plans changed, but the adventure continues.&quot;, &quot;tags&quot;: [&quot;#TravelBlog&quot;], &quot;mentions&quot;: [&quot;@Spontaneity …，参考为 null。</p>
+<pre><code><mark>post_tweet(</mark>
+<mark>  content=&quot;Flexibility is key! Plans changed, but the adventure continues.&quot;,</mark>
+<mark>  tags=[&quot;#TravelBlog&quot;],</mark>
+<mark>  mentions=[&quot;@Spontaneity&quot;]</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 2 个用户轮，第 3 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>订机票之后，还有一条推文要完成</h2><p>不同方法失败在不同子任务：部分没有形成参考订票记录或扣款状态，部分没有形成要求的推文状态。不能把五种方法都概括成同一个订票错误。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="020.html"><small>← 上一个案例</small>查到了待处理订单，却没有取消</a>
+<a href="022.html"><small>下一个案例 →</small>文件创建了，不代表内容写对了</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

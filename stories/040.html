@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>Central Park：地点理解与字符串评分的差别 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 040 / BFCL V4</p><h1>Central Park：地点理解与字符串评分的差别</h1><p class="task-id">simple_python_395</p><p class="intro">评分接受 Central Park, NY；多数 baseline 使用 Central Park, New York，EfficientQAT 使用 Central Park。主要是地点字符串匹配差异，不能声称多数方法找错了城市。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>Find the nearest parking lot within 2 miles of Central Park in New York.</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+Its parameters are location, radius, and type. The location is required, so I&#x27;ll input &quot;Central Park, NY&quot;. The radius is 2 miles, which is under the default 5, so I&#x27;ll set that. Type isn&#x27;t specified, so maybe leave it as public. Need to make sure the arguments are correctly formatted as JSON. Let me structure the call accordingly.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>parking_lot.find_nearest(
+  location=&quot;Central Park, NY&quot;,
+  radius=2
+)</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>该方法的所选轨迹通过本题评分。</p>
+<blockquote class="reasoning"><p>…
+So I should call this tool with location set to &quot;Central Park, NY&quot; and radius set to 2. That should give the nearest parking lot within that range. No need to specify the type since it&#x27;s optional and defaults to public. Let me format the arguments properly as JSON.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>parking_lot.find_nearest(
+  location=&quot;Central Park, NY&quot;,
+  radius=2
+)</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;location&#x27;: &#x27;Central Park, New York&#x27;. Expected one of [&#x27;Central Park, NY&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+Radius is 2 miles. Since they didn&#x27;t specify a type, just use the default. So the arguments would be {&quot;location&quot;: &quot;Central Park, New York&quot;, &quot;radius&quot;: 2}. That should work. Let me double-check the parameters: location is a string, radius a number. Yep, looks good. No other tools are available, so this is the right one to use.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>parking_lot.find_nearest(
+<mark>  location=&quot;Central Park, New York&quot;,</mark>
+  radius=2
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;location&#x27;: &#x27;Central Park&#x27;. Expected one of [&#x27;Central Park, NY&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+The default radius is 5, but the user specified 2, so I should set that. Type isn&#x27;t mentioned, so maybe leave it as public. Need to structure the arguments correctly. Make sure the JSON is properly formatted with quotes. Let me double-check the parameters: location is a string, radius is a number. Yep, that should work.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>parking_lot.find_nearest(
+<mark>  location=&quot;Central Park&quot;,</mark>
+  radius=2
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;location&#x27;: &#x27;Central Park, New York&#x27;. Expected one of [&#x27;Central Park, NY&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+So, the arguments would be location: &quot;Central Park, New York&quot;, radius: 2, and type: &quot;public&quot;. That should fetch the nearest public parking lots within the desired range. Need to make sure the JSON is correctly formatted without any syntax errors. Alright, ready to call the tool with these parameters.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>parking_lot.find_nearest(
+<mark>  location=&quot;Central Park, New York&quot;,</mark>
+<mark>  radius=2,</mark>
+<mark>  type=&quot;public&quot;</mark>
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;location&#x27;: &#x27;Central Park, New York&#x27;. Expected one of [&#x27;Central Park, NY&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+So I&#x27;ll set up the arguments: location is &quot;Central Park, New York&quot;, radius is 2. No mention of parking type, so leave that out. Make sure the JSON is correctly formatted without any syntax errors. That should give the user the needed info.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>parking_lot.find_nearest(
+<mark>  location=&quot;Central Park, New York&quot;,</mark>
+  radius=2
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>评分指出：Invalid value for parameter &#x27;location&#x27;: &#x27;Central Park, New York&#x27;. Expected one of [&#x27;Central Park, NY&#x27;]. Case insensitive.</p>
+<blockquote class="reasoning"><p>…
+So I need to call find_nearest with location set to &quot;Central Park, New York&quot; and radius 2. That should give the nearest parking lots within that range. Let me make sure the parameters are correctly formatted. Location is a string, radius is a number. No issues there. Alright, time to construct the tool call.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>parking_lot.find_nearest(
+<mark>  location=&quot;Central Park, New York&quot;,</mark>
+  radius=2
+)</code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>Central Park：地点理解与字符串评分的差别</h2><p>评分接受 Central Park, NY；多数 baseline 使用 Central Park, New York，EfficientQAT 使用 Central Park。主要是地点字符串匹配差异，不能声称多数方法找错了城市。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="039.html"><small>← 上一个案例</small>现金流的类型，与多填的年份参数</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>

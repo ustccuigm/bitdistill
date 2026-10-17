@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="SteerDistill: original tasks, reasoning excerpts and decision differences across seven methods."><title>半句话，被补成了一次 HTTP 请求 | SteerDistill</title><link rel="stylesheet" href="../story.css"></head>
+<body><header><a class="brand" href="../index.html">SteerDistill</a><nav><a href="../contents.html">案例目录</a><a href="https://github.com/ustccuigm/bitdistill">Code ↗</a></nav></header><main><article><div class="article-head"><p class="eyebrow">CASE 004 / BFCL V4</p><h1>半句话，被补成了一次 HTTP 请求</h1><p class="task-id">live_irrelevance_307-76-5</p><p class="intro">五个 baseline 的所选轨迹都把半句话扩展成了查询詹姆斯资料的任务，并生成了不同的 URL、请求参数或请求头。BF16 和 Ours 没有发起请求，先要求澄清意图。</p></div>
+<section class="chapter"><p class="section-label">01 / 任务</p><h2>用户要完成什么？</h2><div class="task-quote">
+<div><span class="source">用户 · 第 1 轮</span>
+<p>lebron James is</p>
+</div>
+</div></section><section class="chapter"><p class="section-label">02 / 正确路径</p><h2>BF16 和 Ours 怎样完成任务</h2><div class="success-pair">
+<section class="method success"><div class="method-head"><h3>BF16</h3><span>通过</span></div>
+<p>识别到句子不完整，要求用户说明想了解什么。</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+<section class="method success"><div class="method-head"><h3>Ours</h3><span>通过</span></div>
+<p>指出原句缺少明确问题，没有根据猜测发起 GET。</p>
+<blockquote class="reasoning"><p>…
+Without the correct URL and parameters, using the tool wouldn&#x27;t yield useful results.
+
+Therefore, the appropriate response is to inform the user that their query is incomplete and ask for further clarification. That way, they can provide the necessary details or restate their question properly.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code>没有对应任务调用</code></pre>
+</section>
+</div></section><section class="chapter"><p class="section-label">03 / 分歧证据</p><h2>其他方法偏在了哪里</h2><p class="caption">下面保留关键推理和动作片段。黄色标出与 BF16 对照动作不同的行；最早的动作差异不一定就是失败原因，具体原因结合各方法的执行结果说明。</p>
+<section class="method failure"><div class="method-head"><h3>GPTQ</h3><span>未通过</span></div>
+<p>先承认请求不完整，随后自行决定查询 Wikipedia，并添加 JSON 请求头和格式参数。</p>
+<blockquote class="reasoning"><p>…
+Possible sources could be a sports API or Wikipedia. Let me try using the GET tool to retrieve his Wikipedia page. The URL would be something like https://en.wikipedia.org/wiki/Lebron_James. I&#x27;ll set the headers to accept JSON and specify the format as jsonv2. Let&#x27;s make that call.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>requests.get(</mark>
+<mark>  url=&quot;https://en.wikipedia.org/wiki/Lebron_James&quot;,</mark>
+<mark>  headers={&quot;Accept&quot;: &quot;application/json&quot;, &quot;Content-Type&quot;: &quot;application/json&quot;},</mark>
+<mark>  format=&quot;jsonv2&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>EfficientQAT</h3><span>未通过</span></div>
+<p>自行构造 NBA 积分榜接口和 2023-24 赛季参数，偏离尚未明确的人物问题。</p>
+<blockquote class="reasoning"><p>…
+Given the constraints, the best approach is to construct a reasonable URL based on common practices and use the get method to retrieve data about LeBron James.
+
+Therefore, the next step is to call the mcp_tool_requests.get function with an appropriately constructed URL to fetch the necessary information about LeBron James.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>requests.get(</mark>
+<mark>  url=&quot;https://data.nba.com/data/v4/standings.json&quot;,</mark>
+<mark>  params={&quot;leagueId&quot;: &quot;00&quot;, &quot;season&quot;: &quot;2023-24&quot;}</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>BitDistiller</h3><span>未通过</span></div>
+<p>直接把不完整请求解释成读取 Wikipedia 人物页面。</p>
+<blockquote class="reasoning"><p>…
+The parameters would include the url, possibly headers, and other optional parameters. Since the user hasn&#x27;t provided specifics, I&#x27;ll proceed with the most logical approach, hoping the URL returns the necessary information. If the response isn&#x27;t helpful, further steps may be needed, but given the constraints, this is the best option.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>requests.get(</mark>
+<mark>  url=&quot;https://en.wikipedia.org/wiki/LeBron_James&quot;</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>On-Policy QAD</h3><span>未通过</span></div>
+<p>生成 Sportsdata 接口地址，还填入占位的 Authorization 请求头。</p>
+<blockquote class="reasoning"><p>…
+Putting it all together, the GET request would have the URL as &quot;https://sports-api.com/player&quot; with params including the player name. If the API returns the data successfully, the response will contain the relevant information about LeBron James. If not, I may need to adjust the URL or parameters, but with the given tool, this is the best approach.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>requests.get(</mark>
+<mark>  url=&quot;https://api.sportsdata.io/v3/nba/stats&quot;,</mark>
+<mark>  params={&quot;playerName&quot;: &quot;LeBron James&quot;},</mark>
+<mark>  headers={&quot;Authorization&quot;: &quot;Bearer YOUR_API_KEY_HERE&quot;}</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+<section class="method failure"><div class="method-head"><h3>QeRL</h3><span>未通过</span></div>
+<p>自行选择人物页面和格式参数，URL 中还出现 LeBron_Jamess。</p>
+<blockquote class="reasoning"><p>…
+For instance, appending &quot;&amp;name=lebron+james&quot; to the base URL. However, without knowing the exact API structure, this is speculative. But given the tools available, this is the best approach. I&#x27;ll proceed to make the GET request with the appropriate parameters to fetch LeBron James&#x27; information.</p></blockquote>
+<p class="source">动作前推理节选 · 原始消息 4</p>
+<pre><code><mark>requests.get(</mark>
+<mark>  url=&quot;https://en.wikipedia.org/wiki/LeBron_Jamess&quot;,</mark>
+<mark>  params={&quot;format&quot;: &quot;json&quot;}</mark>
+<mark>)</mark></code></pre>
+<p class="source">首次动作差异：第 1 个用户轮，第 1 个动作。</p>
+</section>
+</section><section class="chapter conclusion"><p class="section-label">04 / 这个案例说明了什么</p><h2>用户意图不完整时，擅自补全任务并生成请求</h2><p>这个 case 展示的是面对不完整请求时，是否过早替用户确定目标；评分失败依据是该任务要求澄清，而非 HTTP GET 在一般情况下不能检索人物资料。</p></section>
+<nav class="article-nav" aria-label="相邻案例">
+<a href="003.html"><small>← 上一个案例</small>搜索商品，不等于知道何时补货</a>
+<a href="005.html"><small>下一个案例 →</small>不知道用户是谁，如何查询配偶？</a>
+</nav></article></main><footer>SteerDistill · Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation</footer></body></html>
