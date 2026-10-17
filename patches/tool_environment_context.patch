@@ -1,0 +1,92 @@
+--- a/awm/core/agent.py
++++ b/awm/core/agent.py
+@@ -612,7 +612,7 @@
+         })
+     if not tool_calls:
+         tool_calls = parse_tool_calls(content)
+-    sampling = {}
++    sampling = {"finish_reason": choice.finish_reason}
+     response_extra = getattr(response, "model_extra", None) or {}
+     rollout_role = response_extra.get("bitdistiller_rollout_role")
+     qir_metadata = response_extra.get("bitdistiller_qir_metadata")
+@@ -819,13 +819,34 @@
+-                    os.environ.get("AWM_RUN_TOKEN", ""),
++                    os.environ.get("TOOL_ENV_RUN_TOKEN", ""),
+                 )
+ 
++        termination_reason = "max_iterations"
++        truncation_info = None
+         for iteration in range(iteration + 1, config.max_iterations + 1):
+             logger.info(f"\n--- Iteration {iteration}/{config.max_iterations} ---")
+ 
+-            content, tool_calls, sampling = await generate_response(
+-                llm_client, model, messages, config, use_vllm_extras=use_vllm_extras,
+-                native_tools=tools,
+-            )
++            try:
++                content, tool_calls, sampling = await generate_response(
++                    llm_client, model, messages, config, use_vllm_extras=use_vllm_extras,
++                    native_tools=tools,
++                )
++            except BadRequestError as exc:
++                error = exc.body or {}
++                if isinstance(error, dict) and isinstance(error.get("error"), dict):
++                    error = error["error"]
++                if not isinstance(error, dict) or error.get("code") != "context_length_exceeded":
++                    raise
++                # No new response was sampled. Keep the exact existing history
++                # and live environment state for verification and causal repair.
++                iteration -= 1
++                termination_reason = "context_length"
++                truncation_info = error
++                logger.warning("ROLLOUT_LENGTH_SIGNAL prompt exhausted context; saving retained trajectory")
++                break
++
++            response_truncated = sampling.get("finish_reason") == "length"
++            if response_truncated:
++                termination_reason = "generation_length"
++                truncation_info = {"finish_reason": "length"}
+ 
+             if config.verbose:
+                 preview = content[:500] + "..." if len(content) > 500 else content
+@@ -839,7 +860,9 @@
+ 
+             # no tool calls -> task complete
+             if not tool_calls:
+-                logger.info("No tool calls detected - task complete.")
++                if not response_truncated:
++                    termination_reason = "completed"
++                logger.info(f"No tool calls detected; termination={termination_reason}.")
+                 logger.info(f"\n{'=' * 40} Final Answer {'=' * 40}")
+                 logger.info(content)
+                 logger.info("=" * 80)
+@@ -848,7 +871,7 @@
+                     "role": "assistant",
+                     "content": content,
+                     "tool_calls": [],
+-                    "is_final": True,
++                    "is_final": not response_truncated,
+                     "sampling": sampling,
+                 }
+                 if sampling.get("rollout_role") is not None:
+@@ -944,6 +967,9 @@
+                     tools_exposed_to_model,
+-                    os.environ.get("AWM_RUN_TOKEN", ""),
++                    os.environ.get("TOOL_ENV_RUN_TOKEN", ""),
+                 )
++            if response_truncated:
++                logger.warning("ROLLOUT_LENGTH_SIGNAL generation reached length limit; saving retained trajectory")
++                break
+         else:
+             logger.warning("Max iterations reached without completion.")
+ 
+@@ -962,6 +988,9 @@
+             "temperature": config.temperature,
+             "behavior_logprobs": config.behavior_logprobs,
+             "total_iterations": iteration,
++            "termination_reason": termination_reason,
++            "truncated": truncation_info is not None,
++            "truncation_info": truncation_info,
+             "timestamp": timestamp,
+             "trajectory": trajectory,
+             "messages": messages,

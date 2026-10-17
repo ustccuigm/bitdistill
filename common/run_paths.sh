@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Shared by every stage, including direct step invocations.
+: "${STEER_ASSET_ROOT:?Set STEER_ASSET_ROOT}"
+: "${MODEL_FAMILY:?Set MODEL_FAMILY}"
+: "${BENCHMARK:?Set BENCHMARK}"
+export RUN_ROOT=${RUN_ROOT:-$STEER_ASSET_ROOT/runs/$MODEL_FAMILY/$BENCHMARK}
+if [[ "$BENCHMARK" == tau2_bench ]]; then
+  TRAINING_RUN_ROOT=${TRAINING_RUN_ROOT:-$STEER_ASSET_ROOT/runs/$MODEL_FAMILY/bfcl_v4}
+else
+  TRAINING_RUN_ROOT=${TRAINING_RUN_ROOT:-$RUN_ROOT}
+fi
+export TRAINING_RUN_ROOT
+export STEER_ONLINE_ROOT=${STEER_ONLINE_ROOT:-$TRAINING_RUN_ROOT/online}
+export CHECKPOINT_ROOT=${CHECKPOINT_ROOT:-$TRAINING_RUN_ROOT/checkpoints}
+export LOG_ROOT=${LOG_ROOT:-$TRAINING_RUN_ROOT/logs}
+export STEER_SKILL_STORE=${STEER_SKILL_STORE:-$STEER_ONLINE_ROOT/skill_store/events.jsonl}
+export INITIAL_RUNTIME_W4=${INITIAL_RUNTIME_W4:-$CHECKPOINT_ROOT/initial-clipped-int4-g64-awq-runtime}

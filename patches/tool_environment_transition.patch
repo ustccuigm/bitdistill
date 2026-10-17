@@ -1,0 +1,21 @@
+--- a/awm/core/agent.py
++++ b/awm/core/agent.py
+@@ -821,2 +821,8 @@
+ 
++        local_gate = None
++        if os.environ.get("STEER_LOCAL_GATE"):
++            import runpy
++            local_gate = runpy.run_path(os.environ["STEER_LOCAL_GATE_MODULE"])["check_boundary"]
++            if not config.snapshot_dir:
++                raise ValueError("Local transition verification requires state snapshots")
+         termination_reason = "max_iterations"
+@@ -969,2 +975,5 @@
+                 )
++            if local_gate is not None and not local_gate(config.snapshot_dir, iteration, messages, output_dir):
++                termination_reason = "local_transition_rejected"
++                break
+             if response_truncated:
+@@ -984,2 +993,3 @@
+             "task": task,
++            "snapshot_root": config.snapshot_dir,
+             "model": model,
