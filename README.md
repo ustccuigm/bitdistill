@@ -14,3 +14,7 @@ there is no full-trajectory viewer or raw-data download interface.
 `index.html` opens the first case, `contents.html` lists all cases, and
 `stories/` contains the individual articles. `story.css` defines the layout.
 Original records under `data/` are retained as source material.
+
+## Digital-world demonstrations
+
+`demos/index.html` introduces two evidence-led stories: updating a phone number and copying a redemption code. Each story includes selected screenshots, the original teacher guidance, a correction video, and independent execution by the step-8 W4 student. All four videos and the pages work offline. Both tasks passed three same-initial-state unguided repetitions; they are training-task demonstrations, not held-out evaluation.
