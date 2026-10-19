@@ -14,6 +14,68 @@ from test_pipeline import TinyTokenizer
 
 
 class BenchmarkRouteTest(unittest.TestCase):
+    def test_direct_preflight_exports_private_config_to_child_processes(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            interpreter = root / "env/bin/python"
+            interpreter.parent.mkdir(parents=True)
+            interpreter.write_text(
+                '#!/bin/bash\n'
+                '[[ "$MODEL_MAX_LENGTH" == 32768 && "$SDAR_ROOT" == /assets/vendor/SDAR ]] || exit 74\n'
+                'echo PREFLIGHT_CONFIG_EXPORTED\n'
+                'exit 73\n'
+            )
+            interpreter.chmod(0o755)
+            config = root / "config.env"
+            config.write_text(
+                f'ENV_ROOT="{root}/env"\n'
+                'MODEL_MAX_LENGTH=32768\n'
+                'SDAR_ROOT=/assets/vendor/SDAR\n'
+            )
+            result = subprocess.run(
+                ["bash", str(ROOT / "scripts/validate/preflight.sh")],
+                env={"PATH": os.environ["PATH"], "STEER_CONFIG": str(config)},
+                capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 73, result.stderr)
+            self.assertIn("PREFLIGHT_CONFIG_EXPORTED", result.stdout)
+
+    def test_search_preflight_does_not_require_alfworld_dependencies(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            interpreter = root / "env/bin/python"
+            interpreter.parent.mkdir(parents=True)
+            interpreter.write_text('#!/bin/bash\nprintf "%s\\n" "$*" >> "$PREFLIGHT_TRACE"\n')
+            interpreter.chmod(0o755)
+            for name in ("model/config.json", "sdar/agent_system/environments/prompts/__init__.py",
+                         "train.parquet", "test.parquet"):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch()
+            values = {
+                "ENV_ROOT": root / "env", "INFERENCE_ENV_ROOT": root / "env",
+                "BENCHMARK_ENV_ROOT": root / "env", "PREFLIGHT_TRACE": root / "trace",
+                "MODEL_FAMILY": "qwen3_8b", "BENCHMARK": "search_qa",
+                "BENCHMARK_ENGINE": "sdar", "TEACHER_MODEL": root / "model",
+                "INITIAL_W4_MASTER": root / "model", "INITIAL_RUNTIME_W4": root / "runtime",
+                "SDAR_ROOT": root / "sdar", "SEARCH_TRAIN_PARQUET": root / "train.parquet",
+                "SEARCH_EVAL_PARQUET": root / "test.parquet",
+            }
+            config = root / "config.env"
+            config.write_text("".join(f'{key}="{value}"\n' for key, value in values.items()))
+            result = subprocess.run(
+                ["bash", str(ROOT / "scripts/validate/preflight.sh")],
+                env={"PATH": os.environ["PATH"], "STEER_CONFIG": str(config)},
+                capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            imports = (root / "trace").read_text()
+            self.assertIn("import pandas, omegaconf", imports)
+            self.assertNotIn("textworld", imports)
+            self.assertNotIn("fast_downward", imports)
+
     def test_export_preserves_multimodal_processor_metadata(self):
         import tempfile
         from steerdistill.training.convert_hf_to_awq_runtime import copy_processor_metadata

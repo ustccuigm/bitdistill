@@ -5,7 +5,9 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$SCRIPT_DIR/../_bootstrap.sh"
 ROOT="$STEERDISTILL_ROOT"
 CONFIG=${STEER_CONFIG:-$ROOT/configs/steerdistill.example.env}
+set -a
 source "$CONFIG"
+set +a
 
 [[ -x "$ENV_ROOT/bin/python" ]] || { echo "missing Python: $ENV_ROOT/bin/python" >&2; exit 2; }
 "$ENV_ROOT/bin/python" - <<'PY'
@@ -114,10 +116,15 @@ if [[ "$BENCHMARK_ENGINE" == sdar ]]; then
       fi
       "$BENCHMARK_ENV_ROOT/bin/python" -c 'from pyserini.search.lucene import LuceneSearcher'
       ;;
-    alfworld) asset_files+=("$ALFWORLD_DATA/json_2.1.1/train") ;;
-    search_qa) asset_files+=("$SEARCH_TRAIN_PARQUET" "$SEARCH_EVAL_PARQUET") ;;
+    alfworld)
+      asset_files+=("$ALFWORLD_DATA/json_2.1.1/train")
+      "$BENCHMARK_ENV_ROOT/bin/python" -c 'import textworld, fast_downward'
+      ;;
+    search_qa)
+      asset_files+=("$SEARCH_TRAIN_PARQUET" "$SEARCH_EVAL_PARQUET")
+      "$BENCHMARK_ENV_ROOT/bin/python" -c 'import pandas, omegaconf'
+      ;;
   esac
-  "$BENCHMARK_ENV_ROOT/bin/python" -c 'import pandas, omegaconf, textworld, fast_downward'
 fi
 EVALUATOR=${BENCHMARK_EVAL_COMMAND:-}
 if [[ "$BENCHMARK" == tau2_bench ]]; then
