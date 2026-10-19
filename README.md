@@ -12,6 +12,7 @@ external inputs and are not included in this repository.
 configs/                  Public configuration templates
 docs/                     Benchmark setup, reproducibility, and notices
 patches/                  Required patches for external adapters
+requirements/             Dependencies grouped by environment
 scripts/
   prepare/                Data normalization, clipping, and runtime export
   run/                    Benchmark, rollout, and evaluation entry points
@@ -37,11 +38,17 @@ cd bitdistill
 
 python3.10 -m venv /path/to/steerdistill-env
 /path/to/steerdistill-env/bin/python -m pip install --upgrade pip
-/path/to/steerdistill-env/bin/python -m pip install -r requirements.lock
+/path/to/steerdistill-env/bin/python -m pip install -r requirements/training.lock
 /path/to/steerdistill-env/bin/python -m pip install -e .
 ```
 
-`requirements-tool-env.txt` is for the separate tool-environment adapter. See
+Additional environment dependencies are grouped under `requirements/`:
+
+- `tool-environment.txt`: compatibility constraints for the tool-environment adapter.
+- `bfcl-memory.txt`: sentence embeddings and vector search for BFCL memory tasks;
+  install these in `BENCHMARK_ENV_ROOT`.
+
+See
 [docs/reproducibility.md](docs/reproducibility.md) for tested versions, CUDA
 requirements, external revisions, and adapter installation.
 

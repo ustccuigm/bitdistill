@@ -17,7 +17,7 @@ def load_model(path, **kwargs):
         try:
             from fla.ops.gated_delta_rule import chunk_gated_delta_rule
         except ImportError as error:
-            raise ImportError("Qwen3.5 requires the pinned FLA packages in requirements.lock; the PyTorch fallback exceeds the training memory budget.") from error
+            raise ImportError("Qwen3.5 requires the pinned FLA packages in requirements/training.lock; the PyTorch fallback exceeds the training memory budget.") from error
     conditional = any("ForConditionalGeneration" in a for a in (config.architectures or []))
     loader = transformers.AutoModelForImageTextToText if conditional else transformers.AutoModelForCausalLM
     model = loader.from_pretrained(path, config=config, **kwargs)

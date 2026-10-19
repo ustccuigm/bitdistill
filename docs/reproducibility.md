@@ -2,10 +2,10 @@
 
 ## Software environment
 
-Use the versions pinned in `requirements.lock` for the training environment.
+Use the versions pinned in `requirements/training.lock` for the training environment.
 Benchmark adapters may require a separate environment because their dependency
 sets are not interchangeable. The tool-use adapter uses
-`requirements-tool-env.txt`.
+`requirements/tool-environment.txt`.
 
 The reference W4A16 configuration uses CUDA-capable A100-class GPUs, group
 size 64, two epochs, trajectory batch size 16, and learning rate `8e-6`.
