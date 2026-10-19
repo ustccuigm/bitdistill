@@ -9,16 +9,14 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from quantization.clip_provenance import check_manifest, sha256
-
-spec = importlib.util.spec_from_file_location("calibration_data", ROOT / "benchmarks/prepare_data.py")
-calibration = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(calibration)
+sys.path.insert(0, str(ROOT / "src"))
+from steerdistill.quantization.clip_provenance import check_manifest, sha256
+from steerdistill.benchmarks import prepare_data as calibration
 
 
 class CalibrationPipelineTest(unittest.TestCase):
     def test_training_signal_requires_finite_nonzero_gradients_and_complete_steps(self):
-        from check_training_signal import check
+        from scripts.validate.check_training_signal import check
         state = {"global_step": 2, "log_history": [
             {"step": 1, "loss": 0.3, "grad_norm": 0.1},
             {"step": 2, "loss": 0.2, "grad_norm": 0.08},
@@ -87,7 +85,7 @@ class CalibrationPipelineTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "empty.pt"
             torch.save({"clip": []}, path)
-            result = subprocess.run([sys.executable, str(ROOT / "verified_teacher/validate_clip.py"),
+            result = subprocess.run([sys.executable, "-m", "steerdistill.teacher.validate_clip",
                                      str(path)], capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("nonempty", result.stderr)

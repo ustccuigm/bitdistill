@@ -11,15 +11,15 @@ import threading
 from unittest.mock import patch
 from types import SimpleNamespace
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from generation_budget import ContextWindowExceeded, apply_budget, available_tokens
-from verified_teacher import response_bridge
-from verified_teacher.response_bridge import preserve_reasoning
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from steerdistill.generation_budget import ContextWindowExceeded, apply_budget, available_tokens
+from steerdistill.teacher import response_bridge
+from steerdistill.teacher.response_bridge import preserve_reasoning
 
 
 class GenerationBudgetTest(unittest.TestCase):
     def test_steering_context_exhaustion_has_same_length_contract(self):
-        from skill_proxy import handler_for
+        from steerdistill.skill_proxy import handler_for
         matched = {"skill": "steering instruction", "causal_divergence": {"assistant_turn": 0}}
         state = SimpleNamespace(upstream="http://127.0.0.1:1",
             route=lambda messages: (matched, "skill_inject", None), log=lambda row: None)
@@ -27,8 +27,8 @@ class GenerationBudgetTest(unittest.TestCase):
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
-            with patch("generation_budget.context_window", return_value=32768), \
-                 patch("generation_budget.read_json", return_value={"count": 33370}):
+            with patch("steerdistill.generation_budget.context_window", return_value=32768), \
+                 patch("steerdistill.generation_budget.read_json", return_value={"count": 33370}):
                 request = urllib.request.Request(f"http://127.0.0.1:{server.server_port}/v1/chat/completions",
                     data=json.dumps({"model": "test", "messages": [{"role": "user", "content": "task"}]}).encode(),
                     headers={"Content-Type": "application/json"})
@@ -45,8 +45,8 @@ class GenerationBudgetTest(unittest.TestCase):
         body = {"model": "test", "messages": [{"role": "user", "content": "task"}],
                 "max_tokens": 32768}
         original = json.loads(json.dumps(body))
-        with patch("generation_budget.context_window", return_value=32768), \
-             patch("generation_budget.read_json", return_value={"count": 33370}):
+        with patch("steerdistill.generation_budget.context_window", return_value=32768), \
+             patch("steerdistill.generation_budget.read_json", return_value={"count": 33370}):
             with self.assertRaises(ContextWindowExceeded) as caught:
                 apply_budget("http://localhost:1234/v1", body)
         self.assertEqual(caught.exception.as_error()["code"], "context_length_exceeded")
@@ -54,8 +54,8 @@ class GenerationBudgetTest(unittest.TestCase):
         self.assertEqual(body, original)
 
     def test_bridge_returns_nonretryable_length_error_without_generation(self):
-        with patch("generation_budget.context_window", return_value=32768), \
-             patch("generation_budget.read_json", return_value={"count": 33370}), \
+        with patch("steerdistill.generation_budget.context_window", return_value=32768), \
+             patch("steerdistill.generation_budget.read_json", return_value={"count": 33370}), \
              response_bridge.bridge_endpoint("http://127.0.0.1:1") as endpoint:
             request = urllib.request.Request(endpoint + "/chat/completions",
                 data=json.dumps({"model": "test", "messages": [{"role": "user", "content": "task"}]}).encode(),
@@ -78,8 +78,8 @@ class GenerationBudgetTest(unittest.TestCase):
         body = {"model": "model", "messages": [{"role": "system", "content": "steer"}],
                 "tools": [{"type": "function"}], "max_completion_tokens": 32768,
                 "chat_template_kwargs": {"enable_thinking": True}}
-        with patch("generation_budget.context_window", return_value=32768), \
-             patch("generation_budget.read_json", return_value={"count": 31000}) as count:
+        with patch("steerdistill.generation_budget.context_window", return_value=32768), \
+             patch("steerdistill.generation_budget.read_json", return_value={"count": 31000}) as count:
             apply_budget("http://localhost:1234/v1", body)
         self.assertEqual(body["max_completion_tokens"], 1768)
         self.assertEqual(count.call_args.args[1]["tools"], body["tools"])

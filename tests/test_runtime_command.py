@@ -7,8 +7,9 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
-from runtime import Runtime
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import steerdistill
+from steerdistill.benchmarks.runtime import Runtime
 
 
 class RuntimeCommandTest(unittest.TestCase):
@@ -22,7 +23,7 @@ class RuntimeCommandTest(unittest.TestCase):
                 process.poll.return_value = 1
                 with patch.dict(os.environ, INFERENCE_ENV_ROOT=directory,
                                 TMPDIR=directory + "/" + "long-run-name" * 20), \
-                     patch("runtime.subprocess.Popen", return_value=process) as start:
+                     patch("steerdistill.benchmarks.runtime.subprocess.Popen", return_value=process) as start:
                     runtime = Runtime(root, "student", "0", 0, root / "server.log", tool_calls=True)
                     with self.assertRaisesRegex(RuntimeError, "Inference server exited"):
                         runtime.__enter__()

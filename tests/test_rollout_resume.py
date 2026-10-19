@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-from run_online import main
+from steerdistill.online import main
 
 class ResumeTest(unittest.TestCase):
     def test_rollout_resume_and_training_guard(self):
@@ -23,9 +23,9 @@ class ResumeTest(unittest.TestCase):
                 train=run/'steps/step000001/train'
                 train.mkdir(exist_ok=True)
                 (train/'training_signal.json').write_text(json.dumps({'global_step':1,'previous_step':0,'status':'passed'}))
-            with patch.dict(os.environ,env,clear=True), patch('sys.argv',['run_online.py','--gpu-ids','0,1']), \
-                 patch('run_online.model_digest',side_effect=str):
-                with patch('run_online.run_command',side_effect=RuntimeError('rollout failed')):
+            with patch.dict(os.environ,env,clear=True), patch('sys.argv',['steerdistill.online.py','--gpu-ids','0,1']), \
+                 patch('steerdistill.online.model_digest',side_effect=str):
+                with patch('steerdistill.online.run_command',side_effect=RuntimeError('rollout failed')):
                     with self.assertRaisesRegex(RuntimeError,'rollout failed'): main()
                 with self.assertRaisesRegex(ValueError,'Partial step'): main()
                 os.environ['OPD_RESUME_ROLLOUT_ONLY']='1'
@@ -35,7 +35,7 @@ class ResumeTest(unittest.TestCase):
                 artifact.write_text('{}')
                 with self.assertRaisesRegex(ValueError,'training artifacts'): main()
                 artifact.unlink()
-                with patch('run_online.run_command',side_effect=completed) as execute:
+                with patch('steerdistill.online.run_command',side_effect=completed) as execute:
                     main()
                     self.assertEqual(execute.call_count,1)
                     main()

@@ -4,7 +4,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from benchmarks.online_rollout import generate
+from steerdistill.benchmarks.online_rollout import generate
 
 
 class ActionBudgetTests(unittest.TestCase):
@@ -13,7 +13,7 @@ class ActionBudgetTests(unittest.TestCase):
                                  'finish_reason': 'stop'}], 'usage': {}}
         with patch.dict(os.environ, {'STEER_BENCHMARK': benchmark, 'MAX_TOKENS': '32768',
                                      'ACTION_MAX_TOKENS': '4096'}), \
-             patch('benchmarks.online_rollout.apply_budget'), \
+             patch('steerdistill.benchmarks.online_rollout.apply_budget'), \
              patch('urllib.request.urlopen', return_value=io.BytesIO(json.dumps(response).encode())) as call:
             text, metadata = generate('http://localhost/v1', 'model', [], 42)
         return json.loads(call.call_args.args[0].data), text, metadata

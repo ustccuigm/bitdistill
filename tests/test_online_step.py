@@ -11,15 +11,15 @@ import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "train"))
-from online_step import OnlineGlobalBatches, OnlineCollator, trajectory_groups
-from data_loading import DataCollatorForSupervisedDataset, IndexedJsonlDataset
-from mytrainer import SkillKDTrainer
+sys.path.insert(0, str(ROOT / "src"))
+from steerdistill.training.online_step import OnlineGlobalBatches, OnlineCollator, trajectory_groups
+from steerdistill.training.data_loading import DataCollatorForSupervisedDataset, IndexedJsonlDataset
+from steerdistill.training.mytrainer import SkillKDTrainer
 from test_pipeline import TinyLM, TinyTokenizer
-from run_online import epoch_batches, main
-from check_training_signal import check
-from audit_training_data import audit_tool_fallback
-from stream_repair import RepairConsumer, restored_state
+from steerdistill.online import epoch_batches, main
+from scripts.validate.check_training_signal import check
+from scripts.data.audit_training_data import audit_tool_fallback
+from steerdistill.stream_repair import RepairConsumer, restored_state
 
 
 def records():
@@ -68,10 +68,10 @@ class OnlineStepTest(unittest.TestCase):
                  "counterfactual_attempts": 4, "repair_status": "no_verified_counterfactual"}
         event = {"run_dir": "/runs/s/task_1/attempt_0", "status": "rejected"}
         source = event["run_dir"]
-        with patch("audit_training_data.read_json", side_effect=lambda path:
+        with patch("scripts.data.audit_training_data.read_json", side_effect=lambda path:
                    trajectory if path.name == "trajectory.json" else event), \
-                patch("audit_training_data.iter_jsonl", return_value=[state]), \
-                patch("audit_training_data.collect_runs", return_value={"s:1": [{"success": False}] * 4}):
+                patch("scripts.data.audit_training_data.iter_jsonl", return_value=[state]), \
+                patch("scripts.data.audit_training_data.collect_runs", return_value={"s:1": [{"success": False}] * 4}):
             self.assertTrue(audit_tool_fallback("/steps/step000001/stream.state.jsonl", source))
             state["repair_status"] = "system_error"
             self.assertFalse(audit_tool_fallback("/steps/step000001/stream.state.jsonl", source))
@@ -118,7 +118,7 @@ class OnlineStepTest(unittest.TestCase):
         for rank in range(8):
             local = TinyLM(1)
             online = online_collator([dataset[rank]])
-            with patch("online_step.distributed", return_value=True), \
+            with patch("steerdistill.training.online_step.distributed", return_value=True), \
                     patch("torch.distributed.get_world_size", return_value=8):
                 for group in online["online_microgroups"]:
                     for micro in group:
@@ -189,9 +189,9 @@ class OnlineStepTest(unittest.TestCase):
                 directory.mkdir()
                 (directory / "training_signal.json").write_text(json.dumps(
                     {"global_step": step, "previous_step": step - 1, "status": "passed"}))
-            with patch.dict(os.environ, env, clear=True), patch("sys.argv", ["run_online.py", "--gpu-ids", "0,1,2,3,4,5,6,7"]), \
-                    patch("run_online.model_digest", side_effect=lambda path: str(path)), \
-                    patch("run_online.run_command", side_effect=execute):
+            with patch.dict(os.environ, env, clear=True), patch("sys.argv", ["steerdistill.online.py", "--gpu-ids", "0,1,2,3,4,5,6,7"]), \
+                    patch("steerdistill.online.model_digest", side_effect=lambda path: str(path)), \
+                    patch("steerdistill.online.run_command", side_effect=execute):
                 main()
                 self.assertEqual(sampled[0], ("initial-runtime", "0"))
                 self.assertEqual(sampled[1], (str(run / "checkpoints/student-step000001-awq-runtime"), "1"))

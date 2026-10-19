@@ -9,17 +9,17 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from common import first_divergence, local_transition_match
-from transition_verifier import check_boundary, compare_transition
+from steerdistill.common import first_divergence, local_transition_match
+from steerdistill.transition_verifier import check_boundary, compare_transition
 
 
 class TransitionVerifierTest(unittest.TestCase):
     def test_equivalent_action_is_retained_and_audited_as_student_target(self):
-        from common import canonical_decision, prompt_fingerprint
-        from store import SkillStore
-        from validate_skills import main as validate
-        from materialize_training_data import rows_from_run
-        from audit_training_data import main as audit
+        from steerdistill.common import canonical_decision, prompt_fingerprint
+        from steerdistill.store import SkillStore
+        from scripts.validate.validate_skills import main as validate
+        from steerdistill.materialize import rows_from_run
+        from scripts.data.audit_training_data import main as audit
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             teacher_dir, candidate_dir = root / "teacher", root / "runs/candidate"
@@ -62,8 +62,8 @@ class TransitionVerifierTest(unittest.TestCase):
                 audit()
 
     def test_repair_preserves_prefix_snapshots_without_aliasing_anchor(self):
-        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "verified_teacher"))
-        from generate_verified import preserve_snapshot_prefix
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+        from steerdistill.teacher.generate_verified import preserve_snapshot_prefix
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             source, output = root / "source", root / "output"
@@ -81,7 +81,7 @@ class TransitionVerifierTest(unittest.TestCase):
                                 (source / "turn_0001/state.db").read_bytes())
 
     def test_search_effect_ignores_query_wording_but_not_retrieved_information(self):
-        from benchmarks.sdar_environment import Environment
+        from steerdistill.benchmarks.sdar_environment import Environment
         environment = object.__new__(Environment)
         environment.benchmark = "search_qa"
         environment.success = False
@@ -96,7 +96,7 @@ class TransitionVerifierTest(unittest.TestCase):
         self.assertNotEqual(environment.transition_state(), expected)
 
     def test_webshop_effect_excludes_action_counters_not_product_selection(self):
-        from benchmarks.sdar_environment import Environment
+        from steerdistill.benchmarks.sdar_environment import Environment
         environment = object.__new__(Environment)
         environment.benchmark = "webshop"
         environment.description = "Buy the requested item"

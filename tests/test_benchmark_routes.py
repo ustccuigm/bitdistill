@@ -8,15 +8,15 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "train"))
-from data_loading import _extract_prompt_completion, DataCollatorForSupervisedDataset
+sys.path.insert(0, str(ROOT / "src"))
+from steerdistill.training.data_loading import _extract_prompt_completion, DataCollatorForSupervisedDataset
 from test_pipeline import TinyTokenizer
 
 
 class BenchmarkRouteTest(unittest.TestCase):
     def test_export_preserves_multimodal_processor_metadata(self):
         import tempfile
-        from convert_hf_to_awq_runtime import copy_processor_metadata
+        from steerdistill.training.convert_hf_to_awq_runtime import copy_processor_metadata
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             source, output = root / "source", root / "output"
@@ -30,9 +30,7 @@ class BenchmarkRouteTest(unittest.TestCase):
             self.assertEqual(json.loads((output / "video_preprocessor_config.json").read_text()), {"fps": 2})
 
     def test_calibration_rejects_test_data_and_raw_catalogs(self):
-        spec = importlib.util.spec_from_file_location("prepare_data", ROOT / "benchmarks/prepare_data.py")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        from steerdistill.benchmarks import prepare_data as module
         with self.assertRaisesRegex(ValueError, "split"):
             module.calibration_record({"prompt": "question", "extra_info": {"split": "test"}})
         with self.assertRaisesRegex(ValueError, "raw benchmark"):
@@ -45,9 +43,7 @@ class BenchmarkRouteTest(unittest.TestCase):
         self.assertNotIn("completion", row)
 
     def test_external_adapter_requires_verifier_and_exact_restore(self):
-        spec = importlib.util.spec_from_file_location("adapter_contract", ROOT / "benchmarks/validate_adapter_output.py")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        from steerdistill.benchmarks import validate_adapter_output as module
         row = {"benchmark": "webshop", "task_key": "task:1", "completion": "click", "source_run": "/run",
                "verifier": {"success": True}, "state_snapshot": {
                    "snapshot_id": "s1", "prefix_hash": "p", "before_state_hash": "b", "after_state_hash": "a"},
@@ -60,7 +56,7 @@ class BenchmarkRouteTest(unittest.TestCase):
                 module.validate(invalid, 1, "webshop")
 
     def test_revised_turns_bind_individual_verified_steps(self):
-        from materialize_training_data import rows_from_run
+        from steerdistill.materialize import rows_from_run
         run = {"trajectory": {"scenario": "s", "task_id": 1, "messages": [
             {"role": "user", "content": "task"}, {"role": "assistant", "content": "first"},
             {"role": "tool", "content": "observation"}, {"role": "assistant", "content": "second"},
@@ -75,7 +71,7 @@ class BenchmarkRouteTest(unittest.TestCase):
 
     def test_clipping_preserves_per_group_bounds(self):
         import torch
-        from quantization.clip_state import clipped_weight
+        from steerdistill.quantization.clip_state import clipped_weight
         weight = torch.tensor([[-4., 4., -8., 8.]])
         maximum = torch.tensor([[[2.], [3.]]])
         minimum = torch.tensor([[[-1.], [-2.]]])
@@ -85,7 +81,7 @@ class BenchmarkRouteTest(unittest.TestCase):
     def test_all_fifteen_routes_are_isolated_and_tool_checkpoints_shared(self):
         paths = {}
         script = '''set -a
-source "$1/config.example.env"
+source "$1/configs/steerdistill.example.env"
 printf '%s\n' "$MODEL_SOURCE_PATH" "$RUN_ROOT" "$CLIP_PATH" "$STEER_SKILL_STORE" "$INITIAL_RUNTIME_W4"
 '''
         for model in ("qwen3_8b", "qwen3_5_4b", "gemma4_12b"):
@@ -123,7 +119,7 @@ printf '%s\n' "$MODEL_SOURCE_PATH" "$RUN_ROOT" "$CLIP_PATH" "$STEER_SKILL_STORE"
         self.assertIsInstance(row["prompt"], list)
 
     def test_fsdp_selection_uses_checkpoint_architecture(self):
-        spec = importlib.util.spec_from_file_location("select_fsdp", ROOT / "common/select_fsdp.py")
+        spec = importlib.util.spec_from_file_location("select_fsdp", ROOT / "scripts/lib/select_fsdp.py")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         self.assertEqual(module.select({"model_type": "qwen3_5"}), "fsdp2_8gpu_qwen3_5.yaml")
@@ -137,7 +133,7 @@ printf '%s\n' "$MODEL_SOURCE_PATH" "$RUN_ROOT" "$CLIP_PATH" "$STEER_SKILL_STORE"
         with tempfile.TemporaryDirectory() as directory:
             env = dict(os.environ, STEER_ASSET_ROOT=directory, BENCHMARK="bfcl_v4",
                        MODEL_FAMILY="qwen3_8b", MODEL_SERVING_NAME="student", RUN_ROOT=directory)
-            result = subprocess.run(["bash", str(ROOT / "benchmarks/evaluate.sh"), "1"],
+            result = subprocess.run(["bash", str(ROOT / "scripts/run/evaluate.sh"), "1"],
                                     env=env, capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("Missing trained runtime", result.stderr)

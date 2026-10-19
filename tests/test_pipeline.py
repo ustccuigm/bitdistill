@@ -12,9 +12,9 @@ import torch
 HERE = Path(__file__).resolve().parents[1]
 ROOT = HERE
 sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(ROOT / "train"))
+sys.path.insert(0, str(ROOT / "src"))
 
-from common import (
+from steerdistill.common import (
     canonical_decision,
     causal_action_delta,
     causal_transition_match,
@@ -23,9 +23,9 @@ from common import (
     local_transition_match,
     prompt_fingerprint,
 )
-from materialize_training_data import rows_from_run
-from build_counterfactuals import task_texts
-from analyze_skills import (
+from steerdistill.materialize import rows_from_run
+from steerdistill.counterfactuals import task_texts
+from steerdistill.analysis import (
     analysis_violations,
     assert_pair_binding,
     bind_teacher_analysis,
@@ -35,13 +35,13 @@ from analyze_skills import (
     required_relation,
     same_recovery_lineage,
 )
-from store import SkillStore
-from skill_proxy import ProxyState
-from data_loading import DataCollatorForSupervisedDataset
-from mytrainer import SkillKDTrainer
-from convert_hf_to_awq_runtime import pack_awq
-from validate_awq_runtime import unpack_awq
-from validate_skills import transition_with_steps
+from steerdistill.store import SkillStore
+from steerdistill.skill_proxy import ProxyState
+from steerdistill.training.data_loading import DataCollatorForSupervisedDataset
+from steerdistill.training.mytrainer import SkillKDTrainer
+from steerdistill.training.convert_hf_to_awq_runtime import pack_awq
+from steerdistill.runtime_validation import unpack_awq
+from scripts.validate.validate_skills import transition_with_steps
 
 
 class TinyTokenizer:
@@ -76,7 +76,7 @@ class TinyLM(torch.nn.Module):
 
 class PipelineTest(unittest.TestCase):
     def test_tool_call_ids_are_transport_metadata(self):
-        from common import canonical_decision
+        from steerdistill.common import canonical_decision
 
         left = {"role": "assistant", "content": None, "tool_calls": [{
             "id": "call_A", "type": "function",
@@ -135,7 +135,7 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(divergence["corrected_assistant_turn"], 1)
 
     def test_empty_native_tool_call_is_materialized(self):
-        from materialize_training_data import rows_from_run
+        from steerdistill.materialize import rows_from_run
 
         run = {"run_dir": "/native", "success": True, "trajectory": {
             "scenario": "s", "task_id": 2,

@@ -5,8 +5,8 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
-from evaluate_tau2 import bind_output, selected_tasks
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from steerdistill.benchmarks.evaluate_tau2 import bind_output, selected_tasks
 
 
 class Tau2InputsTest(unittest.TestCase):

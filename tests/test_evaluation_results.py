@@ -6,21 +6,22 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
-from evaluate_bfcl import register_model, serializable_messages, validate_results
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import steerdistill
+from steerdistill.benchmarks.evaluate_bfcl import register_model, serializable_messages, validate_results
 
 
 class EvaluationResultTest(unittest.TestCase):
     def test_native_context_limit_retains_real_evaluation_prefix(self):
-        import evaluate_sdar
-        from generation_budget import ContextWindowExceeded
+        from steerdistill.benchmarks import evaluate_sdar
+        from steerdistill.generation_budget import ContextWindowExceeded
         env = SimpleNamespace(done=False, success=False, score=0., turn=1,
                               prompt=lambda: "long history", close=lambda: None)
         with tempfile.TemporaryDirectory() as directory:
             args = SimpleNamespace(benchmark="webshop", output=Path(directory), url="local", model="test", seed=42)
             with patch.object(evaluate_sdar, "Environment", return_value=env), \
                  patch.object(evaluate_sdar, "generate", side_effect=ContextWindowExceeded(32768, 33000)):
-                self.assertEqual(evaluate_sdar.evaluate_task((args, {"task_id": 0})), ("webshop", False, 0.))
+                self.assertEqual(steerdistill.benchmarks.evaluate_sdar.evaluate_task((args, {"task_id": 0})), ("webshop", False, 0.))
             saved = json.loads((Path(directory) / "tasks/0.json").read_text())
             self.assertEqual(saved["trajectory"], [])
             self.assertEqual(saved["termination"]["reason"], "context_length")

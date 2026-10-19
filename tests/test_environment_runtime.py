@@ -6,8 +6,8 @@ import sys
 import tempfile
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
-from sdar_environment import Environment
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from steerdistill.benchmarks.sdar_environment import Environment
 
 
 @unittest.skipUnless(os.getenv("STEER_TEST_ENVIRONMENTS") == "1", "requires external benchmark assets")

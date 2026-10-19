@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from validate_awq_runtime import behavioral_metadata
+from steerdistill.runtime_validation import behavioral_metadata
 
 
 class RuntimeMetadataTest(unittest.TestCase):

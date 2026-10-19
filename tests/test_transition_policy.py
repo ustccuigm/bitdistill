@@ -5,8 +5,8 @@ import sqlite3
 import tempfile
 import unittest
 
-from transition_policy import compile_policy
-from transition_verifier import compare_transition
+from steerdistill.transition_policy import compile_policy
+from steerdistill.transition_verifier import compare_transition
 
 
 ENVIRONMENT = '''

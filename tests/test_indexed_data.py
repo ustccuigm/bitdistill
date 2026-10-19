@@ -6,9 +6,9 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "train"))
-from data_loading import make_supervised_data_module
-from chat_templates import normalize_tool_arguments
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from steerdistill.training.data_loading import make_supervised_data_module
+from steerdistill.training.chat_templates import normalize_tool_arguments
 
 
 class IndexedDataTest(unittest.TestCase):

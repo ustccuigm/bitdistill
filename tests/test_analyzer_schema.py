@@ -3,7 +3,7 @@ import json
 import unittest
 import urllib.error
 from unittest.mock import patch
-from analyze_skills import AnalysisRejected, call_analyzer, extract_object
+from steerdistill.analysis import AnalysisRejected, call_analyzer, extract_object
 
 
 class AnalyzerSchemaTests(unittest.TestCase):
@@ -12,7 +12,7 @@ class AnalyzerSchemaTests(unittest.TestCase):
         def respond(request, **kwargs):
             requests.append(json.loads(request.data))
             return io.BytesIO(json.dumps({'choices': [{'message': {'content': '{}'}}]}).encode())
-        with patch('analyze_skills.apply_budget', side_effect=lambda url, body, key: body), \
+        with patch('steerdistill.analysis.apply_budget', side_effect=lambda url, body, key: body), \
              patch('urllib.request.urlopen', side_effect=respond):
             with self.assertRaises(AnalysisRejected) as error:
                 call_analyzer('http://localhost/v1', 'EMPTY', 'model', '{}')
@@ -21,7 +21,7 @@ class AnalyzerSchemaTests(unittest.TestCase):
         self.assertIn('failed schema validation', requests[1]['messages'][-1]['content'])
 
     def test_network_failure_is_not_an_analysis_rejection(self):
-        with patch('analyze_skills.apply_budget', side_effect=lambda url, body, key: body), \
+        with patch('steerdistill.analysis.apply_budget', side_effect=lambda url, body, key: body), \
              patch('urllib.request.urlopen', side_effect=urllib.error.URLError('offline')), \
              patch('time.sleep'):
             with self.assertRaises(RuntimeError) as error:

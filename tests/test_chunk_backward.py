@@ -11,9 +11,9 @@ import torch
 import torch.nn.functional as F
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "train"))
-from mytrainer import SkillKDTrainer
-from data_loading import DataCollatorForSupervisedDataset
+sys.path.insert(0, str(ROOT / "src"))
+from steerdistill.training.mytrainer import SkillKDTrainer
+from steerdistill.training.data_loading import DataCollatorForSupervisedDataset
 from test_pipeline import TinyTokenizer
 
 
