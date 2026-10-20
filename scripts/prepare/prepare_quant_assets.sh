@@ -4,9 +4,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$SCRIPT_DIR/../_bootstrap.sh"
 ROOT="$STEERDISTILL_ROOT"
+source "$ROOT/scripts/lib/load_config.sh"
 set -a
-CONFIG=${STEER_CONFIG:-$ROOT/configs/steerdistill.example.env}
-source "$CONFIG"
 source "$ROOT/scripts/lib/select_benchmark.sh"
 set +a
 source "$ROOT/scripts/lib/run_paths.sh"

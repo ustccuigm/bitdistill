@@ -1,5 +1,14 @@
 # Environments and reproducibility
 
+Store runtime settings in `configs/local.env`, copied from
+`configs/local.example.env`. Public commands load it automatically. For the
+manual environment-installation commands in this guide, load the settings once:
+
+```bash
+source scripts/_bootstrap.sh
+source scripts/lib/load_config.sh
+```
+
 ## Training
 
 Use Python 3.10 and the pins in
@@ -28,12 +37,14 @@ cuRAND headers. Set `CUDA_HOME` in the private configuration. For a separate
 Conda toolkit prefix:
 
 ```bash
-export INFERENCE_CUDA_ROOT="$STEER_ASSET_ROOT/envs/cuda12.9"
+INFERENCE_CUDA_ROOT="$STEER_ASSET_ROOT/envs/cuda12.9"
 conda create -y -p "$INFERENCE_CUDA_ROOT" -c nvidia \
   cuda-nvcc=12.9 cuda-cudart-dev=12.9 cuda-cccl=12.9 libcurand-dev
-export CUDA_HOME="$INFERENCE_CUDA_ROOT"
-test -e "$CUDA_HOME/lib64" || ln -s targets/x86_64-linux/lib "$CUDA_HOME/lib64"
+test -e "$INFERENCE_CUDA_ROOT/lib64" || ln -s targets/x86_64-linux/lib "$INFERENCE_CUDA_ROOT/lib64"
 ```
+
+Then set `CUDA_HOME="$STEER_ASSET_ROOT/envs/cuda12.9"` in `configs/local.env`
+above its final `source` command.
 
 `preflight.sh` checks compiler support for `--compress-mode`, cuRAND headers,
 and the CUDA runtime library. The inference toolkit is separate from the
@@ -86,9 +97,8 @@ versions, selected configuration, GPU names, seeds, external source revisions,
 and input hashes. To record inputs independently after loading the configuration:
 
 ```bash
-set -a
-source "$STEER_CONFIG"
-set +a
+source scripts/_bootstrap.sh
+source scripts/lib/load_config.sh
 "$ENV_ROOT/bin/python" scripts/metadata/record_run_manifest.py \
   --output "$STEER_ASSET_ROOT/asset_manifest.json" \
   --asset-root "$STEER_ASSET_ROOT" --step 0 --gpu-ids 0,1,2,3,4,5,6,7

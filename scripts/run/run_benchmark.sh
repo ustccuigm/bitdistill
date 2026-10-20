@@ -4,10 +4,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$SCRIPT_DIR/../_bootstrap.sh"
 ROOT="$STEERDISTILL_ROOT"
-set -a
-CONFIG=${STEER_CONFIG:-$ROOT/configs/steerdistill.example.env}
-source "$CONFIG"
-set +a
+source "$ROOT/scripts/lib/load_config.sh"
 source "$ROOT/scripts/lib/run_paths.sh"
 export TMPDIR=${TMPDIR:-$RUN_ROOT/tmp}
 mkdir -p "$TMPDIR"

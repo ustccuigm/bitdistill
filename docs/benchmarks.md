@@ -3,6 +3,23 @@
 Commands below run from the repository root. Keep checkpoints, datasets,
 environment installations, and outputs under `STEER_ASSET_ROOT`.
 
+## Local configuration
+
+Copy `configs/local.example.env` to `configs/local.env` and edit the settings
+there. Public entry points automatically load this Git-ignored file and export
+its variables to child processes. No shell activation or manual `export` is
+needed. Configuration files contain trusted Bash code; use only your own files.
+
+Keep overrides above the final `source` command, which derives model, data,
+and output paths. The per-model checkpoint variables below initialize both
+the frozen teacher and the student. `MODEL_SOURCE_PATH` overrides both for
+a single route; `TEACHER_MODEL` alone overrides only the teacher.
+
+For an existing external configuration, the compatible invocation remains
+`STEER_CONFIG=/path/to/config.env bash scripts/run/run_benchmark.sh train`.
+An explicit `STEER_CONFIG` takes precedence over `configs/local.env`. Without
+either, scripts retain the environment-variable configuration interface.
+
 ## Checkpoints
 
 The quantization stage takes the benchmark-specific BF16 checkpoint produced
@@ -83,14 +100,14 @@ same training inputs and the corresponding trained checkpoint.
 
 ### Native environments
 
-Set the following in the private configuration before sourcing the template:
+Set the following in `configs/local.env` above its final `source` command:
 
 ```bash
-export SDAR_ROOT="$STEER_ASSET_ROOT/vendor/SDAR"
-export ALFWORLD_DATA="$STEER_ASSET_ROOT/benchmarks/alfworld/data"
-export SEARCH_TRAIN_PARQUET="$STEER_ASSET_ROOT/benchmarks/search_qa/train.parquet"
-export SEARCH_EVAL_PARQUET="$STEER_ASSET_ROOT/benchmarks/search_qa/test.parquet"
-export SEARCH_RETRIEVER_URL=http://127.0.0.1:8000/retrieve
+SDAR_ROOT="$STEER_ASSET_ROOT/vendor/SDAR"
+ALFWORLD_DATA="$STEER_ASSET_ROOT/benchmarks/alfworld/data"
+SEARCH_TRAIN_PARQUET="$STEER_ASSET_ROOT/benchmarks/search_qa/train.parquet"
+SEARCH_EVAL_PARQUET="$STEER_ASSET_ROOT/benchmarks/search_qa/test.parquet"
+SEARCH_RETRIEVER_URL=http://127.0.0.1:8000/retrieve
 # For WebShop, configure JAVA_HOME to the installed JDK if needed.
 ```
 
@@ -115,8 +132,9 @@ bounds are reused only when model, tokenizer, data, and search parameters match.
 
 ## Evaluation
 
-Use `MODEL_FAMILY=<key> BENCHMARK=<key> bash scripts/run/run_benchmark.sh eval`
-after training. `EVAL_STEP` defaults to `latest`; `EVAL_GPU_IDS` defaults to `0`.
+Select `MODEL_FAMILY` and `BENCHMARK` in `configs/local.env`, then run
+`bash scripts/run/run_benchmark.sh eval` after training.
+`EVAL_STEP` defaults to `latest`; `EVAL_GPU_IDS` defaults to `0`.
 The evaluator loads a completed quantized student checkpoint and uses no
 teacher steering.
 
@@ -133,7 +151,7 @@ seven Search QA datasets in `SEARCH_EVAL_PARQUET` for the paper's protocol.
 Use the same retrieval corpus and index across the experiment.
 
 The tau2 user simulator is part of the environment, separate from the
-distillation teacher. Keep its credentials in environment variables.
+distillation teacher. Keep its credentials in the private configuration file.
 Native evaluators write `scores.json` and task trajectories; BFCL retains
 its official result and score files. Outputs live in
 `runs/<model-family>/<benchmark>/eval/stepNNNNNN/` under the asset root.
@@ -142,6 +160,32 @@ its official result and score files. Outputs live in
 
 [`benchmark-paths.example.env`](../configs/benchmark-paths.example.env)
 lists every model and data path. [`steerdistill.example.env`](../configs/steerdistill.example.env)
-defines training defaults. Use the all-model command in the
-[main README](../README.md#run-every-model-and-benchmark) to run the 12 training
-configurations and 15 evaluations without training the shared tool-use model twice.
+defines training defaults. Put overrides in `configs/local.env`, not in the
+tracked templates.
+
+## Running all configurations
+
+There are 12 training configurations and 15 evaluations: each model trains
+one shared tool-use checkpoint and three benchmark-specific checkpoints.
+The benchmark keys are `bfcl_v4`, `tau2_bench`, `webshop`, `alfworld`, and
+`search_qa`. After configuring all assets, the following optional batch command
+runs them sequentially, without training the shared tool-use model twice:
+
+```bash
+set -e
+for model in qwen3_8b qwen3_5_4b gemma4_12b; do
+  MODEL_FAMILY="$model" BENCHMARK=bfcl_v4 \
+    bash scripts/run/run_benchmark.sh full
+  MODEL_FAMILY="$model" BENCHMARK=tau2_bench \
+    bash scripts/run/run_benchmark.sh eval
+  for benchmark in webshop alfworld search_qa; do
+    MODEL_FAMILY="$model" BENCHMARK="$benchmark" \
+      bash scripts/run/run_benchmark.sh full
+  done
+done
+```
+
+For this loop, retain the template's `${MODEL_FAMILY:-...}` and
+`${BENCHMARK:-...}` assignments so each invocation can select its route.
+Use the per-model checkpoint variables, and do not set shared derived values
+such as `RUN_ROOT`, `MODEL_SOURCE_PATH`, or `TEACHER_MODEL` across routes.

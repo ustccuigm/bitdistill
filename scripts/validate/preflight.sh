@@ -4,10 +4,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$SCRIPT_DIR/../_bootstrap.sh"
 ROOT="$STEERDISTILL_ROOT"
-CONFIG=${STEER_CONFIG:-$ROOT/configs/steerdistill.example.env}
-set -a
-source "$CONFIG"
-set +a
+source "$ROOT/scripts/lib/load_config.sh"
 
 [[ -x "$ENV_ROOT/bin/python" ]] || { echo "missing Python: $ENV_ROOT/bin/python" >&2; exit 2; }
 "$ENV_ROOT/bin/python" - <<'PY'

@@ -15,28 +15,14 @@ checkpoints; model weights and benchmark data are downloaded separately.
 
 ## Models and benchmarks
 
-All three model families use the shared quantization and training implementation.
-Select a row with `MODEL_FAMILY` and a column with `BENCHMARK`.
+**Models:** Qwen3-8B, Qwen3.5-4B, and Gemma 4 12B-it.
 
-| Model | `MODEL_FAMILY` | BFCL V4 | tau2-Bench | WebShop | ALFWorld | Search QA |
-| --- | --- | --- | --- | --- | --- | --- |
-| Qwen3-8B | `qwen3_8b` | Included | Included | Included | Included | Included |
-| Qwen3.5-4B | `qwen3_5_4b` | Included | Included | Included | Included | Included |
-| Gemma 4 12B-it | `gemma4_12b` | Included | Included | Included | Included | Included |
+**Benchmarks:** BFCL V4, tau2-Bench, WebShop, ALFWorld, and Search QA.
 
-| Benchmark | `BENCHMARK` | Training inputs | Evaluation metric |
-| --- | --- | --- | --- |
-| BFCL V4 | `bfcl_v4` | Executable tool-use tasks | Official Overall score |
-| tau2-Bench | `tau2_bench` | Same tool-use tasks and checkpoint as BFCL V4 | Pass@1 over four trials per task |
-| WebShop | `webshop` | WebShop training environments | Success rate |
-| ALFWorld | `alfworld` | ALFWorld training environments | Success rate |
-| Search QA | `search_qa` | NQ and HotpotQA training sets | Mean exact match across seven datasets |
-
-For each model, BFCL V4 and tau2-Bench share one post-RL checkpoint and one
-quantized training run. The other three benchmarks use separate checkpoints
-and training runs: **12 training configurations and 15 evaluation configurations**.
-See [benchmark setup](docs/benchmarks.md) for downloads, checkpoint variables,
-data formats, and evaluator requirements.
+All model families use the shared quantization and training pipeline. For each
+model, BFCL V4 and tau2-Bench share one post-RL checkpoint and training run;
+the other benchmarks use separate checkpoints. See [benchmark setup](docs/benchmarks.md)
+for model keys, downloads, data formats, and evaluation protocols.
 
 ## Requirements
 
@@ -58,90 +44,77 @@ revisions are listed in [reproducibility.md](docs/reproducibility.md).
 git clone https://github.com/ustccuigm/bitdistill.git
 cd bitdistill
 
-export STEERDISTILL_ROOT="$PWD"
-export STEER_ASSET_ROOT="$(dirname "$PWD")/steerdistill-assets"
-export ENV_ROOT="$STEER_ASSET_ROOT/envs/train"
-
-python3.10 -m venv "$ENV_ROOT"
-"$ENV_ROOT/bin/python" -m pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cu126
-"$ENV_ROOT/bin/python" -m pip install -r requirements/training.lock
-"$ENV_ROOT/bin/python" -m pip install --no-deps -e .
+python3.10 -m venv .venv
+.venv/bin/python -m pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cu126
+.venv/bin/python -m pip install -r requirements/training.lock
+.venv/bin/python -m pip install --no-deps -e .
 ```
 
 Prepare the inference, benchmark, and tool-adapter environments using
 [the environment guide](docs/reproducibility.md), then configure their paths.
 
-### Configure external assets
-
-Use a private configuration file outside the checkout, for example
-`$STEER_ASSET_ROOT/config.env`. Its contents should follow this template:
+### Configure once
 
 ```bash
-export STEERDISTILL_ROOT=/path/to/bitdistill
-export STEER_ASSET_ROOT=/path/to/steerdistill-assets
-export ENV_ROOT="$STEER_ASSET_ROOT/envs/train"
-export INFERENCE_ENV_ROOT="$STEER_ASSET_ROOT/envs/inference"
-export BENCHMARK_ENV_ROOT="$STEER_ASSET_ROOT/envs/benchmarks"
-
-# Defaults remain overridable by each command below.
-export MODEL_FAMILY=${MODEL_FAMILY:-qwen3_8b}
-export BENCHMARK=${BENCHMARK:-bfcl_v4}
-
-# Put checkpoint, dataset, adapter, and API settings here, before sourcing.
-# Default checkpoint folders are listed in docs/benchmarks.md.
-source "$STEERDISTILL_ROOT/configs/steerdistill.example.env"
+cp configs/local.example.env configs/local.env
+chmod 600 configs/local.env
 ```
 
-```bash
-export STEER_CONFIG="$STEER_ASSET_ROOT/config.env"
-```
+Edit `configs/local.env` to select the model and benchmark and set environment,
+checkpoint, data, and private API settings. Keep custom settings above its final
+`source` line. The scripts load this file automatically and pass its settings
+to subprocesses; no manual `export` or environment activation is required.
+`configs/local.env` is excluded from Git.
 
-The per-model checkpoint variables select both the frozen teacher and the
-initial student weights. To override one run directly, set `MODEL_SOURCE_PATH`
-before sourcing the template. Setting only `TEACHER_MODEL` changes the teacher
-but does not change the initial student checkpoint.
+The template selects Qwen3-8B and BFCL V4 by default. Model and data locations
+are documented in [benchmark setup](docs/benchmarks.md). To select another
+route, change `MODEL_FAMILY` and `BENCHMARK` in the file before running.
 
-### Prepare, train, and evaluate
-
-After placing the external inputs at the configured paths:
+### Check prerequisites
 
 ```bash
 bash scripts/validate/preflight.sh
+```
+
+### Prepare calibration data and quantize
+
+```bash
 bash scripts/run/run_benchmark.sh prepare
 bash scripts/run/run_benchmark.sh quantize
-GPU_IDS=0,1,2,3,4,5,6,7 bash scripts/run/run_benchmark.sh train
-bash scripts/run/run_benchmark.sh eval
 ```
 
 `prepare` normalizes training records and computes clipping bounds; `quantize`
-exports the initial quantized student. `train` updates the student and exports
-each completed checkpoint. `eval` selects the latest committed checkpoint.
-Use `EVAL_STEP=2` to evaluate a specific completed step. `full` runs preflight,
-quantization, training, and evaluation in sequence.
+exports the initial quantized student, reusing matching calibration results.
 
-### Run every model and benchmark
-
-Run this from a shell containing common settings and per-model asset paths.
-Let each command load `STEER_CONFIG`; avoid exporting derived paths such as
-`RUN_ROOT`, `MODEL_SOURCE_PATH`, or `TEACHER_MODEL` across different routes.
+### Train the quantized student
 
 ```bash
-set -e
-for model in qwen3_8b qwen3_5_4b gemma4_12b; do
-  MODEL_FAMILY="$model" BENCHMARK=bfcl_v4 \
-    bash scripts/run/run_benchmark.sh full
-  MODEL_FAMILY="$model" BENCHMARK=tau2_bench \
-    bash scripts/run/run_benchmark.sh eval
-  for benchmark in webshop alfworld search_qa; do
-    MODEL_FAMILY="$model" BENCHMARK="$benchmark" \
-      bash scripts/run/run_benchmark.sh full
-  done
-done
+bash scripts/run/run_benchmark.sh train
 ```
 
-This sequence trains the shared tool-use model once per model family and
-evaluates it on both tool-use benchmarks. All evaluation routes use the
-quantized student without teacher guidance.
+Training generates online trajectories, applies teacher-guided corrections,
+and updates the student. Completed updates export quantized checkpoints.
+Set training GPUs with `GPU_IDS` in `configs/local.env`.
+
+### Evaluate
+
+```bash
+bash scripts/run/run_benchmark.sh eval
+```
+
+Evaluation uses the latest completed quantized checkpoint without teacher
+guidance. Select another completed step with `EVAL_STEP` in `configs/local.env`.
+To evaluate the shared tool-use checkpoint on tau2-Bench, change `BENCHMARK`
+to `tau2_bench` and run the same evaluation command.
+
+For the complete sequence, use:
+
+```bash
+bash scripts/run/run_benchmark.sh full
+```
+
+For all three models and five benchmarks, see
+[running all configurations](docs/benchmarks.md#running-all-configurations).
 
 ## Configuration defaults
 
@@ -193,7 +166,7 @@ licenses/          Third-party license texts
 ## Tests
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 "$ENV_ROOT/bin/python" -B -m unittest discover -s tests -v
+.venv/bin/python -B -m unittest discover -s tests -v
 ```
 
 Environment integration tests are enabled with `STEER_TEST_ENVIRONMENTS=1`

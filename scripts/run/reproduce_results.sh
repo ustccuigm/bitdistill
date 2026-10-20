@@ -4,10 +4,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$SCRIPT_DIR/../_bootstrap.sh"
 ROOT="$STEERDISTILL_ROOT"
-CONFIG=${STEER_CONFIG:-$ROOT/configs/steerdistill.example.env}
-set -a
-source "$CONFIG"
-set +a
+source "$ROOT/scripts/lib/load_config.sh"
 : "${STEER_ASSET_ROOT:?Set STEER_ASSET_ROOT}"
 : "${ENV_ROOT:?Set ENV_ROOT}"
 : "${STEERDISTILL_ROOT:=$ROOT}"
