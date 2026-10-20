@@ -116,23 +116,6 @@ bash scripts/run/run_benchmark.sh full
 For all three models and five benchmarks, see
 [running all configurations](docs/benchmarks.md#running-all-configurations).
 
-## Configuration defaults
-
-| Setting | Default |
-| --- | --- |
-| Weight precision | 4-bit integers |
-| Activation precision | 16-bit |
-| Quantization group size | 64 |
-| Training epochs | 2 |
-| Trajectories per optimizer update | 16 |
-| Learning rate | `8e-6` |
-| Context window | 32,768 tokens |
-| Task shuffle seed | 42 |
-
-The runtime uses AWQ-compatible packing and Marlin kernels. Packing describes
-the exported tensor layout; clipping and distillation are implemented by
-SteerDistill. The configuration templates are in [configs/](configs/).
-
 ## Outputs
 
 Artifacts are stored outside the checkout under

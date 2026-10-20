@@ -32,6 +32,11 @@ is `d9105ea80` from [vLLM](https://github.com/vllm-project/vllm).
 Use that revision's installation instructions and matching CUDA wheels.
 Older builds without Qwen3.5 or Gemma 4 registration cannot serve those routes.
 
+The exporter stores SteerDistill's quantized weights in an AutoAWQ-compatible
+tensor layout for vLLM's AWQ/Marlin loader. This is a storage and runtime
+interface, not AWQ calibration or training. The `quant_method: awq` metadata
+selects that loader and must be retained for compatibility.
+
 FlashInfer compilation requires a CUDA 12.9 compiler toolkit, including
 cuRAND headers. Set `CUDA_HOME` in the private configuration. For a separate
 Conda toolkit prefix:
