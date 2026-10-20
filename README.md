@@ -294,6 +294,17 @@ Set `EVAL_STEP` in `configs/local.env` to select a specific completed update.
 The [all-configuration example](docs/benchmarks.md#running-all-configurations)
 covers the 12 training runs and 15 evaluations.
 
+## Experiment data and figures
+
+The [experiment collection](experiments/README.md) contains organized result
+tables, figure data, and all 40 cases in one [case directory](experiments/cases).
+Plot the quantitative results without running model inference:
+
+```bash
+python -m pip install -r requirements/figures.txt
+python scripts/figures/plot_results.py
+```
+
 ## Outputs
 
 Artifacts are stored outside the checkout under
@@ -315,6 +326,7 @@ writes evaluation results to its own directory.
 
 ```text
 configs/           Model, benchmark, and training configuration templates
+experiments/       Organized case data, result tables, and experiment figures
 docs/              Setup, reproducibility, and third-party notices
 requirements/      Dependencies grouped by environment
 scripts/           Preparation, training, evaluation, and validation commands
