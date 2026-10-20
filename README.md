@@ -2,7 +2,7 @@
 
 **Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation**
 
-[Getting started](#getting-started) · [Models and benchmarks](#models-and-benchmarks) · [Benchmark setup](docs/benchmarks.md) · [Case studies](https://github.com/ustccuigm/bitdistill/tree/gh-pages)
+[Setup](#getting-started) · [Data preparation](#data-preparation) · [Training](#quantization-and-training) · [Evaluation](#evaluation) · [Case studies](https://github.com/ustccuigm/bitdistill/tree/gh-pages)
 
 SteerDistill trains quantized LLM agents using online trajectories and
 teacher-guided corrections. A frozen teacher provides steering during training;
@@ -62,13 +62,15 @@ chmod 600 configs/local.env
 
 Edit `configs/local.env` to select the model and benchmark and set environment,
 checkpoint, data, and private API settings. Keep custom settings above its final
-`source` line. The scripts load this file automatically and pass its settings
-to subprocesses; no manual `export` or environment activation is required.
+`source` line. The Bash launchers load this file automatically and pass its
+settings to subprocesses; no manual `export` is required.
 `configs/local.env` is excluded from Git.
 
 The template selects Qwen3-8B and BFCL V4 by default. Model and data locations
-are documented in [benchmark setup](docs/benchmarks.md). To select another
-route, change `MODEL_FAMILY` and `BENCHMARK` in the file before running.
+are documented in [benchmark setup](docs/benchmarks.md). The commands below
+select routes with `--model` and `--benchmark`. Keep the template's
+`${MODEL_FAMILY:-...}` and `${BENCHMARK:-...}` assignments so command-line
+selections can override the defaults. Set training GPUs with `GPU_IDS`.
 
 ### Check prerequisites
 
@@ -76,45 +78,221 @@ route, change `MODEL_FAMILY` and `BENCHMARK` in the file before running.
 bash scripts/validate/preflight.sh
 ```
 
-### Prepare calibration data and quantize
+## Data preparation
+
+Download the training data and install the benchmark environments following
+[benchmark setup](docs/benchmarks.md#data-and-environment-downloads).
+
+**BFCL V4 and tau2-Bench:** provide the shared tool-use training records,
+executable prompt manifest, and environment tables. tau2-Bench does not require
+a second training dataset. Its evaluation uses the official tau2 environment.
+
+**WebShop, ALFWorld, and Search QA:** export training tasks from their native
+environments using the Python entry point below. Search QA uses NQ and HotpotQA
+training records. Each export is performed once and shared by all three models.
 
 ```bash
-bash scripts/run/run_benchmark.sh prepare
-bash scripts/run/run_benchmark.sh quantize
+(
+  set -e
+  source scripts/_bootstrap.sh
+  source scripts/lib/load_config.sh
+
+  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.prepare_sdar_tasks \
+    --benchmark webshop --split train --output "$WEBSHOP_RL_TRAIN_DATA"
+  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.prepare_sdar_tasks \
+    --benchmark alfworld --split train --output "$ALFWORLD_RL_TRAIN_DATA"
+  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.prepare_sdar_tasks \
+    --benchmark search_qa --split train --output "$SEARCH_QA_RL_TRAIN_DATA"
+)
 ```
 
-`prepare` normalizes training records and computes clipping bounds; `quantize`
-exports the initial quantized student, reusing matching calibration results.
+Run only the exports needed for your benchmarks. The parentheses keep these
+configuration variables out of the shell used to launch different training routes.
+The quantization launcher also generates missing native training records.
 
-### Train the quantized student
+Calibration records are normalized and deduplicated automatically before
+clipping. To inspect this preprocessing independently:
 
 ```bash
-bash scripts/run/run_benchmark.sh train
+.venv/bin/python -m steerdistill.benchmarks.prepare_data \
+  --input /path/to/rl_train.jsonl \
+  --output /path/to/prepared/calibration.jsonl
 ```
 
-Training generates online trajectories, applies teacher-guided corrections,
-and updates the student. Completed updates export quantized checkpoints.
-Set training GPUs with `GPU_IDS` in `configs/local.env`.
+## Quantization and training
 
-### Evaluate
+Each example starts from the corresponding post-RL BF16 checkpoint.
+`quantize` prepares calibration data, computes clipping bounds, and exports
+the initial quantized student. `train` runs online teacher-steered distillation
+and exports completed student checkpoints. These launchers coordinate the
+Python calibration, export, and distributed-training programs and check cached
+artifacts before reuse.
+
+For every model, run the tool-use training route once for **both BFCL V4 and
+tau2-Bench**. WebShop, ALFWorld, and Search QA each require their own post-RL
+checkpoint and training run. The examples below are independent experiments,
+not consecutive stages of one model.
+
+### Qwen3-8B
+
+Set the `QWEN3_8B_*_MODEL` paths in `configs/local.env`, or place the four
+checkpoints under `models/qwen3_8b/` in the asset directory.
 
 ```bash
-bash scripts/run/run_benchmark.sh eval
+# BFCL V4 + tau2-Bench: shared tool-use checkpoint
+bash scripts/run/run_benchmark.sh quantize --model qwen3_8b --benchmark bfcl_v4
+bash scripts/run/run_benchmark.sh train --model qwen3_8b --benchmark bfcl_v4
+
+# WebShop
+bash scripts/run/run_benchmark.sh quantize --model qwen3_8b --benchmark webshop
+bash scripts/run/run_benchmark.sh train --model qwen3_8b --benchmark webshop
+
+# ALFWorld
+bash scripts/run/run_benchmark.sh quantize --model qwen3_8b --benchmark alfworld
+bash scripts/run/run_benchmark.sh train --model qwen3_8b --benchmark alfworld
+
+# Search QA
+bash scripts/run/run_benchmark.sh quantize --model qwen3_8b --benchmark search_qa
+bash scripts/run/run_benchmark.sh train --model qwen3_8b --benchmark search_qa
 ```
 
-Evaluation uses the latest completed quantized checkpoint without teacher
-guidance. Select another completed step with `EVAL_STEP` in `configs/local.env`.
-To evaluate the shared tool-use checkpoint on tau2-Bench, change `BENCHMARK`
-to `tau2_bench` and run the same evaluation command.
+### Qwen3.5-4B
 
-For the complete sequence, use:
+Set the `QWEN35_4B_*_MODEL` paths, or use `models/qwen3_5_4b/` in the asset
+directory. This route requires the FLA dependencies in the training lock file
+and an inference environment supporting the `qwen3_5` architecture.
 
 ```bash
-bash scripts/run/run_benchmark.sh full
+# BFCL V4 + tau2-Bench: shared tool-use checkpoint
+bash scripts/run/run_benchmark.sh quantize --model qwen3_5_4b --benchmark bfcl_v4
+bash scripts/run/run_benchmark.sh train --model qwen3_5_4b --benchmark bfcl_v4
+
+# WebShop
+bash scripts/run/run_benchmark.sh quantize --model qwen3_5_4b --benchmark webshop
+bash scripts/run/run_benchmark.sh train --model qwen3_5_4b --benchmark webshop
+
+# ALFWorld
+bash scripts/run/run_benchmark.sh quantize --model qwen3_5_4b --benchmark alfworld
+bash scripts/run/run_benchmark.sh train --model qwen3_5_4b --benchmark alfworld
+
+# Search QA
+bash scripts/run/run_benchmark.sh quantize --model qwen3_5_4b --benchmark search_qa
+bash scripts/run/run_benchmark.sh train --model qwen3_5_4b --benchmark search_qa
 ```
 
-For all three models and five benchmarks, see
-[running all configurations](docs/benchmarks.md#running-all-configurations).
+### Gemma 4 12B-it
+
+Set the `GEMMA4_12B_*_MODEL` paths, or use `models/gemma4_12b/` in the asset
+directory. Supply a text checkpoint with architecture `gemma4_unified_text`;
+the runtime selects eager execution for this model.
+
+```bash
+# BFCL V4 + tau2-Bench: shared tool-use checkpoint
+bash scripts/run/run_benchmark.sh quantize --model gemma4_12b --benchmark bfcl_v4
+bash scripts/run/run_benchmark.sh train --model gemma4_12b --benchmark bfcl_v4
+
+# WebShop
+bash scripts/run/run_benchmark.sh quantize --model gemma4_12b --benchmark webshop
+bash scripts/run/run_benchmark.sh train --model gemma4_12b --benchmark webshop
+
+# ALFWorld
+bash scripts/run/run_benchmark.sh quantize --model gemma4_12b --benchmark alfworld
+bash scripts/run/run_benchmark.sh train --model gemma4_12b --benchmark alfworld
+
+# Search QA
+bash scripts/run/run_benchmark.sh quantize --model gemma4_12b --benchmark search_qa
+bash scripts/run/run_benchmark.sh train --model gemma4_12b --benchmark search_qa
+```
+
+Use `prepare` instead of `quantize` to stop after clipping. Use `full` to run
+preflight, quantization, training, and evaluation for a selected route.
+
+## Evaluation
+
+The Python evaluators below accept an explicit trained quantized checkpoint
+and apply to all three model families. Replace `/path/to/...` with the exported
+student directory, not the BF16 source checkpoint. The `--model` argument is
+the local serving name; architecture and tool parsers are read from the checkpoint.
+No evaluator uses the distillation teacher or steering.
+
+Open a separate shell for direct Python evaluation, then load the environment
+paths and private settings once:
+
+```bash
+source scripts/_bootstrap.sh
+source scripts/lib/load_config.sh
+```
+
+### BFCL V4
+
+Uses the official scoring categories and Overall score. Install the memory
+dependencies and configure `SERPAPI_API_KEY` for web-search tasks.
+
+```bash
+"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.evaluate_bfcl \
+  --runtime /path/to/quantized-tool-use-checkpoint --model steerdistill \
+  --output /path/to/results/bfcl_v4 --gpus 0
+```
+
+### tau2-Bench
+
+Use the **same checkpoint as BFCL V4**. Configure `TAU2_USER_MODEL` and its API
+settings in `configs/local.env`. Evaluation covers airline, retail, and telecom
+with four trials per task; the user simulator is separate from the student.
+
+```bash
+"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.evaluate_tau2 \
+  --runtime /path/to/quantized-tool-use-checkpoint --model steerdistill \
+  --output /path/to/results/tau2_bench --gpus 0
+```
+
+### WebShop
+
+Uses the WebShop-specific checkpoint and the 500 held-out shopping goals.
+The catalog, search index, JDK, and Pyserini must be installed.
+
+```bash
+"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.evaluate_sdar \
+  --benchmark webshop --runtime /path/to/quantized-webshop-checkpoint \
+  --model steerdistill --output /path/to/results/webshop --gpus 0 --workers 4
+```
+
+### ALFWorld
+
+Uses the ALFWorld-specific checkpoint and unseen evaluation games. Install
+the game data, TextWorld, and Fast Downward planner.
+
+```bash
+"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.evaluate_sdar \
+  --benchmark alfworld --runtime /path/to/quantized-alfworld-checkpoint \
+  --model steerdistill --output /path/to/results/alfworld --gpus 0 --workers 4
+```
+
+### Search QA
+
+Uses the Search-QA-specific checkpoint. Start the retrieval service configured
+by `SEARCH_RETRIEVER_URL` and provide all seven evaluation datasets: NQ,
+TriviaQA, PopQA, HotpotQA, 2WikiMultiHopQA, MuSiQue, and Bamboogle. Results
+include per-dataset exact match and their unweighted mean.
+
+```bash
+"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.evaluate_sdar \
+  --benchmark search_qa --runtime /path/to/quantized-search-qa-checkpoint \
+  --model steerdistill --output /path/to/results/search_qa --gpus 0 --workers 4
+```
+
+Use a distinct output directory for each model, benchmark, and checkpoint.
+To select the latest completed training checkpoint automatically, run this
+alternative from a fresh shell; change the model and benchmark as needed:
+
+```bash
+bash scripts/run/run_benchmark.sh eval --model qwen3_8b --benchmark bfcl_v4
+bash scripts/run/run_benchmark.sh eval --model qwen3_8b --benchmark tau2_bench
+```
+
+Set `EVAL_STEP` in `configs/local.env` to select a specific completed update.
+The [all-configuration example](docs/benchmarks.md#running-all-configurations)
+covers the 12 training runs and 15 evaluations.
 
 ## Outputs
 

@@ -2,6 +2,8 @@
 import os
 from pathlib import Path
 import shutil
+import re
+import shlex
 import subprocess
 import tempfile
 import unittest
@@ -146,6 +148,90 @@ class ConfigLoadingTest(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout.splitlines()[-2:], ["--gpu-ids", expected])
+
+    def test_route_help_and_invalid_options_do_not_load_configuration(self):
+        launcher = self.root / "scripts/run/run_benchmark.sh"
+        for arguments, code in ((["--help"], 0), (["train", "--model"], 2),
+                                (["train", "--model", "unknown"], 2),
+                                (["eval", "--benchmark", "unknown"], 2),
+                                (["quantize", "--unexpected"], 2), (["invalid"], 2)):
+            with self.subTest(arguments=arguments):
+                result = subprocess.run(
+                    ["bash", str(launcher), *arguments],
+                    env={"PATH": os.environ["PATH"]}, text=True, capture_output=True,
+                )
+                self.assertEqual(result.returncode, code, result.stderr)
+                self.assertNotIn("Set STEER_ASSET_ROOT", result.stderr)
+
+    def prepare_route_stubs(self):
+        self.install_local_config()
+        for name in (
+            "scripts/prepare/prepare_quant_assets.sh", "scripts/prepare/prepare_initial_runtime.sh",
+            "scripts/run/run_online.sh", "scripts/run/evaluate.sh", "scripts/validate/preflight.sh",
+        ):
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                '#!/bin/bash\nprintf "%s|%s|%s|%s\\n" '
+                '"$MODEL_FAMILY" "$BENCHMARK" "$MODEL_SOURCE_PATH" "$RUN_ROOT"\n'
+            )
+        interpreter = self.root / "stub-env/bin/python"
+        interpreter.parent.mkdir(parents=True)
+        interpreter.write_text("#!/bin/bash\nexit 0\n")
+        interpreter.chmod(0o755)
+        return {"PATH": os.environ["PATH"], "STEER_ASSET_ROOT": str(self.root / "assets"),
+                "ENV_ROOT": str(interpreter.parent.parent),
+                "INFERENCE_ENV_ROOT": str(interpreter.parent.parent)}
+
+    def test_readme_training_commands_dispatch_to_the_documented_routes(self):
+        environment = self.prepare_route_stubs()
+        commands = re.findall(r"^bash scripts/run/run_benchmark.sh (.+)$",
+                              (ROOT / "README.md").read_text(), re.MULTILINE)
+        covered = set()
+        for command in commands:
+            arguments = shlex.split(command)
+            model = arguments[arguments.index("--model") + 1]
+            benchmark = arguments[arguments.index("--benchmark") + 1]
+            with self.subTest(command=command):
+                result = subprocess.run(
+                    ["bash", str(self.root / "scripts/run/run_benchmark.sh"), *arguments],
+                    env=environment, text=True, capture_output=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                group = "tool_use" if benchmark in ("bfcl_v4", "tau2_bench") else benchmark
+                expected = f"{model}|{benchmark}|{self.root}/assets/models/{model}/{group}|{self.root}/assets/runs/{model}/{benchmark}"
+                self.assertTrue(result.stdout.strip())
+                self.assertTrue(all(row == expected for row in result.stdout.splitlines()), result.stdout)
+                covered.add((arguments[0], model, benchmark))
+        expected_training = {
+            (stage, model, benchmark)
+            for stage in ("quantize", "train")
+            for model in ("qwen3_8b", "qwen3_5_4b", "gemma4_12b")
+            for benchmark in ("bfcl_v4", "webshop", "alfworld", "search_qa")
+        }
+        self.assertTrue(expected_training <= covered)
+
+    def test_full_dispatch_preserves_selected_route_in_child_launchers(self):
+        environment = self.prepare_route_stubs()
+        result = subprocess.run(
+            ["bash", str(self.root / "scripts/run/run_benchmark.sh"), "full",
+             "--model", "gemma4_12b", "--benchmark", "webshop"],
+            env=environment, text=True, capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(result.stdout.splitlines()), 7)
+        self.assertTrue(all(row.startswith("gemma4_12b|webshop|") for row in result.stdout.splitlines()))
+
+    def test_fixed_config_cannot_silently_override_requested_route(self):
+        environment = self.prepare_route_stubs()
+        (self.root / "configs/local.env").write_text('MODEL_FAMILY=qwen3_8b\nBENCHMARK=bfcl_v4\n')
+        result = subprocess.run(
+            ["bash", str(self.root / "scripts/run/run_benchmark.sh"), "train",
+             "--model", "gemma4_12b", "--benchmark", "webshop"],
+            env=environment, text=True, capture_output=True,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("overrides the requested route", result.stderr)
 
 
 if __name__ == "__main__":

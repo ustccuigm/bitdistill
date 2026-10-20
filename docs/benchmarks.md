@@ -174,13 +174,10 @@ runs them sequentially, without training the shared tool-use model twice:
 ```bash
 set -e
 for model in qwen3_8b qwen3_5_4b gemma4_12b; do
-  MODEL_FAMILY="$model" BENCHMARK=bfcl_v4 \
-    bash scripts/run/run_benchmark.sh full
-  MODEL_FAMILY="$model" BENCHMARK=tau2_bench \
-    bash scripts/run/run_benchmark.sh eval
+  bash scripts/run/run_benchmark.sh full --model "$model" --benchmark bfcl_v4
+  bash scripts/run/run_benchmark.sh eval --model "$model" --benchmark tau2_bench
   for benchmark in webshop alfworld search_qa; do
-    MODEL_FAMILY="$model" BENCHMARK="$benchmark" \
-      bash scripts/run/run_benchmark.sh full
+    bash scripts/run/run_benchmark.sh full --model "$model" --benchmark "$benchmark"
   done
 done
 ```
