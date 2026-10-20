@@ -41,12 +41,31 @@ def style(ax, xlabel=None, ylabel=None):
 def results(data, output):
     rows = read(data, "benchmark_results")
     quantized = [row for row in rows if row["precision"] in ("BF16", "W4A16")]
-    fig, ax = plt.subplots(figsize=(8, 4), layout="constrained")
-    for method in METHODS:
-        values = [next(float(row["average"]) for row in quantized if row["model"] == model and row["method"] == method) for model in MODELS]
-        ax.plot(MODELS, values, "o-", label=method, color=COLORS[method], linewidth=1.5)
-    style(ax, ylabel="Mean benchmark score (%)")
-    ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(.5, 1.25), frameon=False)
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4.4), sharey=True)
+    fig.subplots_adjust(left=.06, right=.99, bottom=.14, top=.78, wspace=.12)
+    for model, ax in zip(MODELS, axes):
+        values = [next(float(row["average"]) for row in quantized
+                       if row["model"] == model and row["method"] == method)
+                  for method in METHODS]
+        bars = ax.bar(range(len(METHODS)), values, width=.72,
+                      color=[COLORS[method] for method in METHODS], zorder=3)
+        ax.bar_label(bars, labels=[f"{value:.2f}" for value in values],
+                     padding=5, fontsize=9)
+        ax.set_xticks([])
+        ax.set_xlabel(model, fontsize=12, labelpad=14)
+        ax.set_ylim(0, 75)
+        ax.set_yticks(range(0, 71, 10))
+        ax.spines[["top", "right", "left"]].set_visible(False)
+        ax.spines["bottom"].set_color("#d0d4d8")
+        ax.tick_params(axis="y", length=0)
+        ax.grid(axis="y", color="#e8eaed", linewidth=.7)
+        ax.set_axisbelow(True)
+        bars[-1].set_edgecolor("#145d27")
+        bars[-1].set_linewidth(1.3)
+    axes[0].set_ylabel("Mean score across five benchmarks (%)", labelpad=12)
+    fig.legend(bars, METHODS, ncol=7, loc="upper center",
+               bbox_to_anchor=(.52, .98), frameon=False, fontsize=10,
+               handlelength=1.2, columnspacing=1.8)
     save(fig, output, "model_comparison")
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.3), layout="constrained")
