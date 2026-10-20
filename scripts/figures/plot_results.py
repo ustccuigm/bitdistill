@@ -41,6 +41,10 @@ def style(ax, xlabel=None, ylabel=None):
 def results(data, output):
     rows = read(data, "benchmark_results")
     quantized = [row for row in rows if row["precision"] in ("BF16", "W4A16")]
+    chart_data = [{"model": row["model"], "method": row["method"],
+                   **{key: float(row[key]) for key in ["average", *BENCHMARKS]}}
+                  for row in quantized]
+    (output / "results-chart.json").write_text(json.dumps(chart_data, indent=2) + "\n")
     chart_colors = ["#9da3a6", "#829bab", "#b7a47c", "#a29aa9",
                     "#739c96", "#c0957b", "#a33a31"]
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.9), sharey=True)
