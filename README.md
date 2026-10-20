@@ -14,7 +14,7 @@ The homepage and `contents.html` present all 40 cases as a paginated
 comparison. Each case has task, comparison, and conclusion views; readers can
 switch between Ours/BF16 and five baselines. Reasons for correct and incorrect
 outcomes are highlighted alongside selected actions and reasoning excerpts.
-There is no full-trajectory viewer.
+The case comparison shows selected evidence rather than full trajectories.
 
 `cases.js` and `cases.css` implement the viewer. `data/case-slides.json` maps
 display numbers 1-40 to stable task IDs and identical `source_case` numbers.
@@ -25,4 +25,20 @@ from appropriate clarification or refusal to use an unsuitable tool.
 
 ## Digital-world demonstrations
 
-The homepage Demo section introduces two evidence-led stories: updating a phone number and copying a redemption code. Each story includes selected screenshots, the original teacher guidance, a correction video, and independent execution by the step-8 quantized student. All four videos and the pages work offline. Both tasks passed three same-initial-state unguided repetitions; they are training-task demonstrations, not held-out evaluation.
+The homepage Demo section presents two interactive recorded trajectories:
+updating a phone number and copying a redemption code. `demo-player.js` and
+`demo-player.css` provide step selection, previous/next navigation, automatic
+playback, recorded thinking, teacher guidance, and before/after screenshots.
+`demos/player/trajectories.json` contains 70 steps across the original attempts,
+guided retries, and independent runs. Screenshot frames are deduplicated under
+`demos/player/frames/`.
+
+Animated tap markers use recorded executed coordinates. They are visual
+overlays, not a live application or newly generated model actions. A final step
+without a following screenshot retains the last frame and displays the
+environment result separately. Existing videos and background articles remain
+available. Serve over HTTP so the browser can load the trajectory JSON.
+
+Both tasks passed three same-initial-state unguided repetitions; they are
+training-task demonstrations, not held-out evaluation. The player shows one
+recorded independent run for each task.
