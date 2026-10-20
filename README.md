@@ -296,14 +296,22 @@ covers the 12 training runs and 15 evaluations.
 
 ## Experiment data and figures
 
-The [experiment collection](experiments/README.md) contains organized result
-tables, figure data, and all 40 cases in one [case directory](experiments/cases).
+Organized [experiment data and figures](https://github.com/ustccuigm/bitdistill/tree/gh-pages/experiments)
+and the existing [40-case collection](https://github.com/ustccuigm/bitdistill/tree/gh-pages/data/cases)
+are maintained on `gh-pages`. The `main` branch contains the implementation,
+plotting scripts, and documentation, without duplicating these datasets.
 Plot the quantitative results without running model inference:
 
 ```bash
 python -m pip install -r requirements/figures.txt
-python scripts/figures/plot_results.py
+git fetch origin gh-pages
+git worktree add --detach ../bitdistill-pages origin/gh-pages
+python scripts/figures/plot_results.py \
+  --data ../bitdistill-pages/experiments/data \
+  --output ../bitdistill-pages/experiments/figures
 ```
+
+See [figure generation](docs/figures.md) for data checks and PDF-coordinate extraction.
 
 ## Outputs
 
@@ -326,7 +334,6 @@ writes evaluation results to its own directory.
 
 ```text
 configs/           Model, benchmark, and training configuration templates
-experiments/       Organized case data, result tables, and experiment figures
 docs/              Setup, reproducibility, and third-party notices
 requirements/      Dependencies grouped by environment
 scripts/           Preparation, training, evaluation, and validation commands

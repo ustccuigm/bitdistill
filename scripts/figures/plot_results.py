@@ -10,7 +10,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-ROOT = Path(__file__).resolve().parents[2]
 METHODS = ["BF16", "GPTQ", "EfficientQAT", "BitDistiller", "On-Policy QAD", "QeRL", "Ours"]
 COLORS = dict(zip(METHODS, ["#707070", "#1f77b4", "#ff7f0e", "#8c564b", "#d62728", "#9467bd", "#1b8f3a"]))
 MODELS = ["Qwen3-8B", "Qwen3.5-4B", "Gemma 4 12B-it"]
@@ -155,8 +154,8 @@ def diagnostics(data, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data", type=Path, default=ROOT / "experiments/data")
-    parser.add_argument("--output", type=Path, default=ROOT / "experiments/figures")
+    parser.add_argument("--data", type=Path, required=True, help="CSV directory from the gh-pages experiment collection")
+    parser.add_argument("--output", type=Path, required=True, help="Destination for generated PDF and PNG figures")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 10, "pdf.fonttype": 42})

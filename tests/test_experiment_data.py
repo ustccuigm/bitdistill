@@ -2,11 +2,13 @@
 import csv
 import json
 import math
+import os
 from pathlib import Path
 import unittest
 
 
-ROOT = Path(__file__).resolve().parents[1] / "experiments"
+PAGES = Path(os.environ["STEER_PAGES_ROOT"]) if os.environ.get("STEER_PAGES_ROOT") else None
+ROOT = PAGES / "experiments" if PAGES else None
 METHODS = {"BF16", "Ours", "GPTQ", "EfficientQAT", "BitDistiller", "On-Policy QAD", "QeRL"}
 
 
@@ -15,6 +17,7 @@ def rows(name):
         return list(csv.DictReader(stream))
 
 
+@unittest.skipUnless(PAGES is not None, "Set STEER_PAGES_ROOT to a gh-pages checkout to test published data")
 class ExperimentDataTest(unittest.TestCase):
     def test_manifest_dimensions_and_finite_values(self):
         manifest = json.loads((ROOT / "manifest.json").read_text())
@@ -68,11 +71,11 @@ class ExperimentDataTest(unittest.TestCase):
             self.assertTrue(all(0 <= float(r[label]) <= 1 for r in selected for label in labels))
 
     def test_case_collection_contract(self):
-        index = json.loads((ROOT / "cases/index.json").read_text())
+        index = json.loads((PAGES / "data/case_index.json").read_text())
         self.assertEqual(len(index), 40)
         self.assertEqual(len({row["task_id"] for row in index}), 40)
         for row in index:
-            case = ROOT / "cases" / row["path"]
+            case = PAGES / "data" / row["path"]
             for name in ("task.json", "ground_truth.json", "analysis.json"):
                 json.loads((case / name).read_text())
             self.assertTrue((case / "summary.md").is_file())
