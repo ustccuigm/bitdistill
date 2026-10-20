@@ -41,31 +41,47 @@ def style(ax, xlabel=None, ylabel=None):
 def results(data, output):
     rows = read(data, "benchmark_results")
     quantized = [row for row in rows if row["precision"] in ("BF16", "W4A16")]
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.4), sharey=True)
-    fig.subplots_adjust(left=.06, right=.99, bottom=.14, top=.78, wspace=.12)
+    chart_colors = ["#9da3a6", "#829bab", "#b7a47c", "#a29aa9",
+                    "#739c96", "#c0957b", "#a33a31"]
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4.9), sharey=True)
+    fig.subplots_adjust(left=.045, right=.99, bottom=.23, top=.78, wspace=.14)
+    fig.text(.045, .965, "Average benchmark score (%)", fontsize=11,
+             color="#555b60", va="top")
+    fig.text(.99, .965, "Three models / seven methods", fontsize=10,
+             color="#777c80", ha="right", va="top")
     for model, ax in zip(MODELS, axes):
         values = [next(float(row["average"]) for row in quantized
                        if row["model"] == model and row["method"] == method)
                   for method in METHODS]
-        bars = ax.bar(range(len(METHODS)), values, width=.72,
-                      color=[COLORS[method] for method in METHODS], zorder=3)
-        ax.bar_label(bars, labels=[f"{value:.2f}" for value in values],
-                     padding=5, fontsize=9)
+        bars = ax.bar(range(len(METHODS)), [value-40 for value in values],
+                      bottom=40, width=.61, color=chart_colors, zorder=3)
+        for bar, value, method in zip(bars, values, METHODS):
+            ax.annotate(f"{value:.2f}",
+                        (bar.get_x()+bar.get_width()/2, value),
+                        xytext=(0, 6), textcoords="offset points",
+                        ha="center", fontsize=9.5,
+                        color="#a33a31" if method == "Ours" else "#4c5155",
+                        fontweight="bold" if method == "Ours" else "normal")
         ax.set_xticks([])
-        ax.set_xlabel(model, fontsize=12, labelpad=14)
-        ax.set_ylim(0, 75)
-        ax.set_yticks(range(0, 71, 10))
+        ax.set_title(model, fontsize=14, fontfamily="DejaVu Serif",
+                     color="#292825", pad=20)
+        ax.set_ylim(40, 70)
+        ax.set_yticks(range(40, 71, 5))
         ax.spines[["top", "right", "left"]].set_visible(False)
-        ax.spines["bottom"].set_color("#d0d4d8")
-        ax.tick_params(axis="y", length=0)
-        ax.grid(axis="y", color="#e8eaed", linewidth=.7)
+        ax.spines["bottom"].set_color("#cfd3d5")
+        ax.tick_params(axis="y", length=0, labelsize=9, colors="#777c80", pad=8)
+        ax.grid(axis="y", color="#e9ebed", linewidth=.65)
         ax.set_axisbelow(True)
-        bars[-1].set_edgecolor("#145d27")
-        bars[-1].set_linewidth(1.3)
-    axes[0].set_ylabel("Mean score across five benchmarks (%)", labelpad=12)
-    fig.legend(bars, METHODS, ncol=7, loc="upper center",
-               bbox_to_anchor=(.52, .98), frameon=False, fontsize=10,
-               handlelength=1.2, columnspacing=1.8)
+        # Mark the nonzero baseline explicitly, including on panels without ticks.
+        ax.plot([-.018, -.006, .006, .018], [-.012, .012, -.012, .012],
+                transform=ax.transAxes, color="#777c80", linewidth=1,
+                clip_on=False)
+    legend = fig.legend(bars, METHODS, ncol=7, loc="lower center",
+                        bbox_to_anchor=(.52, .08), frameon=False, fontsize=10,
+                        handlelength=1, handleheight=.8, columnspacing=1.9)
+    legend.get_texts()[-1].set_color("#a33a31")
+    legend.get_texts()[-1].set_fontweight("bold")
+    fig.savefig(output / "model_comparison.svg", bbox_inches="tight")
     save(fig, output, "model_comparison")
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.3), layout="constrained")
