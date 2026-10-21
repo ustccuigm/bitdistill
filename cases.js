@@ -40,8 +40,9 @@
     const peerEvidence=side==='good'?peer:(peer.by_turn?.[String(focus)]||peer);
     const card=el('section','comparison-panel '+side);
     const head=el('div','comparison-head');head.append(el('h4','',name),el('span','outcome',data.passed?'通过':'未通过'));
-    card.append(head,el('p','reason-label',data.passed?'为什么做对':'为什么失败'),highlight(data.reason,'reason-summary'));
-    card.append(el('h5','evidence-heading','动作与答复'));
+    const intro=el('div','comparison-intro');
+    intro.append(head,el('p','reason-label',data.passed?'为什么做对':'为什么失败'),highlight(data.reason,'reason-summary'));
+    card.append(intro);
     const evidence=el('div','case-evidence action-evidence');evidence.tabIndex=0;
     evidence.setAttribute('aria-label',name+'动作与答复');
       evidence.append(el('p','evidence-label',data.location||'关键动作 / 实际答复'));
@@ -56,8 +57,28 @@
       }else evidence.append(code(data.code||'该位置没有动作片段。',peerEvidence.missing?'':peerEvidence.code));
     const thought=el('div','case-evidence reasoning-evidence');thought.tabIndex=0;
     thought.setAttribute('aria-label',name+'推理节选');
-    thought.append(reasoning(data.reasoning||'该位置没有可展示的推理文本。'));
-    card.append(evidence,el('h5','evidence-heading','推理节选'),thought); return card;
+    const quote=reasoning(data.reasoning||'该位置没有可展示的推理文本。');
+    const decisionCue=data.passed
+      ? /cannot|can't|unable|no (?:available )?(?:tool|function)|not (?:possible|supported|available)|should (?:explain|ask|inform)|clarification|refrain|shouldn't/ig
+      : /have to use|need to (?:pick|choose)|assum\w*|proceed|let(?:'s| me) (?:try|call|use)|generic|default|only (?:available )?tool/ig;
+    const candidates=(data.reasoning||'').match(/[^.!?\n]+(?:[.!?]+|$)/g)||[];
+    const ranked=candidates.map((text,i)=>({text:text.trim(),i,score:(text.match(decisionCue)||[]).length}))
+      .filter(x=>x.score&&x.text.length>15&&x.text.length<360)
+      .sort((a,b)=>b.score-a.score||b.i-a.i);
+    const focusText=ranked[0]?.text||quote.querySelector('mark')?.textContent;
+    if(focusText){
+      const focusQuote=el('blockquote','reasoning-focus');
+      focusQuote.append(EvidenceHighlight.terms(focusText,[focusText]));
+      thought.append(focusQuote);
+    }
+    const context=el('details','reasoning-context');
+    context.append(el('summary','',focusText?'查看推理上下文':'查看推理节选'),quote);
+    thought.append(context);
+    const actionGroup=el('section','evidence-group action-group');
+    const thoughtGroup=el('section','evidence-group thought-group');
+    actionGroup.append(el('h5','evidence-heading',name+' · 动作与答复'),evidence);
+    thoughtGroup.append(el('h5','evidence-heading',name+' · 推理节选'),thought);
+    card.append(actionGroup,thoughtGroup); return card;
   }
   const pager=el('div','case-pager');
   const count=el('span','case-count');count.setAttribute('aria-live','polite');
