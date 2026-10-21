@@ -42,3 +42,7 @@ available. Serve over HTTP so the browser can load the trajectory JSON.
 Both tasks passed three same-initial-state unguided repetitions; they are
 training-task demonstrations, not held-out evaluation. The player shows one
 recorded independent run for each task.
+
+## Independent inference comparisons
+
+The homepage now includes six recorded videos for BestBuy tasks 47 and 52, comparing BF16, a specialist SteerDistill checkpoint, and a 3-update local on-policy QAD baseline. The section explains checkpoint scope, unequal budgets, post-hoc selection, repeat outcomes, and cumulative versus matched-input inference timing. Verified data, complete evidence, and a server inference-code bundle are downloadable under `demos/comparison/`. These demonstrations are separate from the benchmark results.
