@@ -2,7 +2,7 @@
 
 **Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation**
 
-[Setup](#getting-started) · [Data preparation](#data-preparation) · [Training](#quantization-and-training) · [Evaluation](#evaluation) · [Case studies](https://github.com/ustccuigm/bitdistill/tree/gh-pages)
+[Quickstart](#quickstart-qwen3-8b-on-bfcl-v4) · [Setup](#getting-started) · [Data preparation](#data-preparation) · [Training](#quantization-and-training) · [Evaluation](#evaluation) · [Case studies](https://ustccuigm.github.io/bitdistill/contents.html)
 
 SteerDistill trains quantized LLM agents using online trajectories and
 teacher-guided corrections. A frozen teacher provides steering during training;
@@ -60,23 +60,38 @@ cp configs/local.example.env configs/local.env
 chmod 600 configs/local.env
 ```
 
-Edit `configs/local.env` to select the model and benchmark and set environment,
-checkpoint, data, and private API settings. Keep custom settings above its final
-`source` line. The Bash launchers load this file automatically and pass its
-settings to subprocesses; no manual `export` is required.
-`configs/local.env` is excluded from Git.
-
-The template selects Qwen3-8B and BFCL V4 by default. Model and data locations
-are documented in [benchmark setup](docs/benchmarks.md). The commands below
-select routes with `--model` and `--benchmark`. Keep the template's
-`${MODEL_FAMILY:-...}` and `${BENCHMARK:-...}` assignments so command-line
-selections can override the defaults. Set training GPUs with `GPU_IDS`.
+Set environment, checkpoint, data, GPU, and private API settings in
+`configs/local.env`. Launchers load this Git-ignored file automatically;
+no manual `export` is required. The default route is Qwen3-8B with BFCL V4.
+See [local configuration](docs/benchmarks.md#local-configuration) for overrides
+and [checkpoint paths](docs/benchmarks.md#checkpoints) for each model.
 
 ### Check prerequisites
 
 ```bash
 bash scripts/validate/preflight.sh
 ```
+
+### Quickstart: Qwen3-8B on BFCL V4
+
+After installation, prepare the [tool-use training inputs](docs/benchmarks.md#tool-use-training)
+and set `QWEN3_8B_TOOL_USE_MODEL` in `configs/local.env` to your post-RL BF16
+checkpoint. Configure `SERPAPI_API_KEY` for BFCL web-search evaluation.
+Then run the complete route:
+
+```bash
+bash scripts/run/run_benchmark.sh full --model qwen3_8b --benchmark bfcl_v4
+```
+
+This runs prerequisite checks, calibration-data preprocessing, clipping,
+quantized student export, online teacher-steered training, and BFCL V4
+evaluation. Evaluation uses the latest completed student checkpoint without
+teacher guidance. Artifacts are written under
+`$STEER_ASSET_ROOT/runs/qwen3_8b/bfcl_v4/`; see [Outputs](#outputs).
+
+To run stages separately, use the [Qwen3-8B commands](#qwen3-8b) below.
+[Qwen3.5-4B](#qwen35-4b), [Gemma 4 12B-it](#gemma-4-12b-it), and all five
+[evaluation routes](#evaluation) remain available as separate examples.
 
 ## Data preparation
 
@@ -209,6 +224,10 @@ preflight, quantization, training, and evaluation for a selected route.
 
 ## Evaluation
 
+Each route below lists its evaluation scope and prerequisites alongside the
+command. See [evaluation protocols](docs/benchmarks.md#evaluation) for the
+complete settings and output formats.
+
 The Python evaluators below accept an explicit trained quantized checkpoint
 and apply to all three model families. Replace `/path/to/...` with the exported
 student directory, not the BF16 source checkpoint. The `--model` argument is
@@ -295,6 +314,9 @@ The [all-configuration example](docs/benchmarks.md#running-all-configurations)
 covers the 12 training runs and 15 evaluations.
 
 ## Experiment data and figures
+
+The result tables cover three model families and five benchmarks. Metric
+definitions and evaluation settings are listed with the [evaluation commands](#evaluation).
 
 Organized [experiment data and figures](https://github.com/ustccuigm/bitdistill/tree/gh-pages/experiments)
 and the existing [40-case collection](https://github.com/ustccuigm/bitdistill/tree/gh-pages/data/cases)
