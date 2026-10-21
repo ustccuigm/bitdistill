@@ -14,16 +14,13 @@
     node.setAttribute('aria-label',title); node.onclick=action; return node;
   }
   function highlight(value, cls) {
-    const node=el('p', cls), split=value.search(/[。；]/);
-    const end=split<0?value.length:split+1;
-    node.append(el('mark','',value.slice(0,end)),document.createTextNode(value.slice(end))); return node;
+    const node=el('p', cls);node.append(EvidenceHighlight.prose(value));return node;
   }
-  function code(value, highlights) {
+  function code(value, reference) {
     const pre=el('pre','case-code'), content=el('code');
-    value.split('\n').forEach((line,i)=>{
-      const span=el('span',highlights.some(h=>h.includes(line.trim())&&line.trim().length>2)?'changed-line':'',line);
-      content.append(span); if(i<value.split('\n').length-1)content.append(document.createTextNode('\n'));
-    });pre.append(content);return pre;
+    if(typeof reference==='string')content.append(EvidenceHighlight.difference(value,reference));
+    else content.textContent=value;
+    pre.append(content);return pre;
   }
   function segment(items, selected, onSelect, label) {
     const nav=el('div','case-segments');nav.setAttribute('aria-label',label);
@@ -33,10 +30,8 @@
     const original=cases[index].methods[name];
     const focus=cases[index].methods[bad].focus_turn;
     const data=side==='good'?{...original,...original.by_turn?.[String(focus)]}:original;
-    if(side==='good'){
-      const opposite=new Set(cases[index].methods[bad].code.split('\n'));
-      data.highlights=data.code.split('\n').filter(line=>!opposite.has(line)&&line.trim().length>2);
-    }
+    const peer=side==='good'?cases[index].methods[bad]:cases[index].methods[good];
+    const peerEvidence=side==='good'?peer:(peer.by_turn?.[String(focus)]||peer);
     const card=el('section','comparison-panel '+side);
     const head=el('div','comparison-head');head.append(el('h4','',name),el('span','outcome',data.passed?'通过':'未通过'));
     card.append(head,el('p','reason-label',data.passed?'为什么做对':'为什么失败'),highlight(data.reason,'reason-summary'));
@@ -52,9 +47,9 @@
       }
       if(data.missing){
         evidence.append(el('p','no-call',data.passed?'未调用任务工具，直接答复用户':'这一轮没有执行任务工具调用'));
-        if(data.reference&&!data.passed){evidence.append(el('p','evidence-label','BF16 在这一轮的对照调用'),code(data.reference,[]));}
+        if(data.reference&&!data.passed){evidence.append(el('p','evidence-label','BF16 在这一轮的对照调用'),code(data.reference));}
         evidence.append(el('p','evidence-label','模型实际答复'),el('blockquote','',data.response||'该轮记录中未检出最终文字答复。'));
-      }else evidence.append(code(data.code||'该位置没有动作片段。',data.highlights));
+      }else evidence.append(code(data.code||'该位置没有动作片段。',peerEvidence.missing?'':peerEvidence.code));
     }
     card.append(evidence); return card;
   }

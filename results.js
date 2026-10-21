@@ -18,6 +18,20 @@
   const status = document.getElementById('chart-status');
   let rows;
   let active = 'average';
+  let activeModel=models[0];
+  const compact=window.matchMedia('(max-width:740px)');
+  const modelTabs=document.createElement('div');modelTabs.className='chart-model-tabs';
+  modelTabs.setAttribute('role','group');modelTabs.setAttribute('aria-label','Result model');
+  models.forEach(model=>{
+    const button=document.createElement('button');button.type='button';button.textContent=model;
+    button.dataset.model=model;button.setAttribute('aria-pressed',String(model===activeModel));
+    button.addEventListener('click',()=>{
+      activeModel=model;
+      modelTabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.model===model)));
+      render();
+    });modelTabs.append(button);
+  });
+  document.getElementById('result-panel').prepend(modelTabs);
   function node(tag, attrs = {}, text) {
     const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
     Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
@@ -40,11 +54,12 @@
     const [label, caption, low, high] = metrics[active];
     document.getElementById('chart-metric').textContent = label;
     document.getElementById('chart-caption').textContent = caption;
-    const svg = node('svg', {viewBox: '0 0 1080 342', role: 'group', 'aria-label': `${label}; three models; axis ${low} to ${high}`});
+    const mobile=compact.matches, visibleModels=mobile?[activeModel]:models;
+    const svg = node('svg', {viewBox: `0 0 ${mobile?360:1080} 342`, role: 'group', 'aria-label': `${label}; ${visibleModels.join(', ')}; axis ${low} to ${high}`});
     svg.append(node('title', {}, label));
-    const top = 62, bottom = 302, panelWidth = 322, gap = 24, left = 44;
+    const top = 62, bottom = 302, panelWidth = mobile?296:322, gap = 24, left = 44;
     const y = value => bottom - (value - low) / (high - low) * (bottom - top);
-    models.forEach((model, m) => {
+    visibleModels.forEach((model, m) => {
       const start = left + m * (panelWidth + gap);
       svg.append(node('text', {x: start + panelWidth / 2, y: 30, 'text-anchor': 'middle', class: 'chart-model'}, model));
       for (let tick = low; tick <= high; tick += 5) {
@@ -54,8 +69,8 @@
       svg.append(node('path', {d: `M ${start-10} ${bottom+4} l 4 -8 l 4 8 l 4 -8`, class: 'chart-break'}));
       methods.forEach((method, i) => {
         const value = rows.find(row => row.model === model && row.method === method)[active];
-        const x = start + 13 + i * 44;
-        const bar = node('rect', {x, y: y(value), width: 29, height: bottom-y(value), fill: colors[i], tabindex: 0,
+        const x = start + (mobile?7:13) + i * (mobile?41:44), barWidth=mobile?26:29;
+        const bar = node('rect', {x, y: y(value), width: barWidth, height: bottom-y(value), fill: colors[i], tabindex: 0,
           role: 'img', 'aria-label': `${model}, ${method}, ${value.toFixed(2)} percent`,
           class: 'chart-bar', 'data-model': model, 'data-method': method, 'data-value': value});
         bar.addEventListener('pointerenter', e => showTip(bar, model, method, value, e));
@@ -65,7 +80,7 @@
         bar.addEventListener('blur', hideTip);
         bar.addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
         svg.append(bar);
-        svg.append(node('text', {x: x + 14.5, y: y(value)-9, 'text-anchor': 'middle', class: method === 'Ours' ? 'chart-value ours' : 'chart-value'}, value.toFixed(2)));
+        svg.append(node('text', {x: x + barWidth/2, y: y(value)-9, 'text-anchor': 'middle', class: method === 'Ours' ? 'chart-value ours' : 'chart-value'}, value.toFixed(2)));
       });
     });
     host.replaceChildren(svg);
@@ -94,6 +109,7 @@
   document.querySelector('.result-chart').addEventListener('scroll', hideTip);
   window.addEventListener('scroll', hideTip, {passive: true});
   window.addEventListener('resize', hideTip);
+  compact.addEventListener('change',render);
   fetch('experiments/data/results-chart.json').then(response => {
     if (!response.ok) throw new Error('Results unavailable');
     return response.json();

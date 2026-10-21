@@ -28,6 +28,19 @@
       tabs[target].focus();
     });
   });
+  section.querySelectorAll('[data-compare-panel]').forEach(panel=>{
+    const cards=[...panel.querySelectorAll('.comparison-card')];
+    const switcher=document.createElement('div');switcher.className='comparison-method-tabs';
+    switcher.setAttribute('role','group');switcher.setAttribute('aria-label','Comparison model');
+    cards.forEach((card,index)=>{
+      const button=document.createElement('button');button.type='button';button.textContent=card.querySelector('h4').textContent;
+      button.setAttribute('aria-pressed',String(index===1));card.dataset.active=String(index===1);
+      button.addEventListener('click',()=>{
+        pauseAll();cards.forEach((c,i)=>c.dataset.active=String(i===index));
+        [...switcher.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));
+      });switcher.append(button);
+    });panel.querySelector('.comparison-grid').before(switcher);
+  });
   section.querySelectorAll('.comparison-film').forEach(film => {
     const video = film.querySelector('video');
     const cover = film.querySelector('.comparison-cover');
