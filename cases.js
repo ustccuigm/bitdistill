@@ -4,7 +4,6 @@
   if (!root) return;
   const baselines = ['GPTQ', 'EfficientQAT', 'BitDistiller', 'On-Policy QAD', 'QeRL'];
   let cases, index = 0, stage = 'compare', good = 'Ours', bad = 'GPTQ';
-  const modes = {good:'action',bad:'action'};
   const el = (tag, cls, value) => {
     const node = document.createElement(tag); if (cls) node.className = cls;
     if (value !== undefined) node.textContent = value; return node;
@@ -22,6 +21,13 @@
     else content.textContent=value;
     pre.append(content);return pre;
   }
+  function reasoning(value) {
+    const quote=el('blockquote');
+    const clauses=value.match(/[^.!?\n]+(?:[.!?]+|$)/g)||[];
+    const cues=/\b(?:need to|should|must|cannot|can't|shouldn't|missing|didn't specify|did not (?:specify|provide)|not provided|no (?:tool|function)|only available|have to use|pick one|assum\w*|instead|clarif\w*|doesn't|does not|not (?:available|supported|specifically))\b/i;
+    const phrases=clauses.map(s=>s.trim()).filter(s=>s.length>15&&s.length<280&&cues.test(s)).slice(0,5);
+    quote.append(EvidenceHighlight.terms(value,phrases));return quote;
+  }
   function segment(items, selected, onSelect, label) {
     const nav=el('div','case-segments');nav.setAttribute('aria-label',label);
     for(const item of items){const b=button(item,label+'：'+item,()=>onSelect(item));b.setAttribute('aria-pressed',String(item===selected));nav.append(b);}return nav;
@@ -35,11 +41,9 @@
     const card=el('section','comparison-panel '+side);
     const head=el('div','comparison-head');head.append(el('h4','',name),el('span','outcome',data.passed?'通过':'未通过'));
     card.append(head,el('p','reason-label',data.passed?'为什么做对':'为什么失败'),highlight(data.reason,'reason-summary'));
-    card.append(segment(['动作与答复','推理节选'],modes[side]==='action'?'动作与答复':'推理节选',value=>{modes[side]=value==='动作与答复'?'action':'reasoning';renderBody();},name+'证据'));
-    const evidence=el('div','case-evidence');evidence.tabIndex=0;
-    if(modes[side]==='reasoning'){
-      evidence.append(el('p','evidence-label','原文节选'),el('blockquote','',data.reasoning||'该位置没有可展示的推理文本。'));
-    }else{
+    card.append(el('h5','evidence-heading','动作与答复'));
+    const evidence=el('div','case-evidence action-evidence');evidence.tabIndex=0;
+    evidence.setAttribute('aria-label',name+'动作与答复');
       evidence.append(el('p','evidence-label',data.location||'关键动作 / 实际答复'));
       if(side==='bad'&&data.state_evidence?.length){
         const outcome=el('div','state-evidence');outcome.append(el('p','evidence-label','评分记录中的具体状态差异'));
@@ -50,8 +54,10 @@
         if(data.reference&&!data.passed){evidence.append(el('p','evidence-label','BF16 在这一轮的对照调用'),code(data.reference));}
         evidence.append(el('p','evidence-label','模型实际答复'),el('blockquote','',data.response||'该轮记录中未检出最终文字答复。'));
       }else evidence.append(code(data.code||'该位置没有动作片段。',peerEvidence.missing?'':peerEvidence.code));
-    }
-    card.append(evidence); return card;
+    const thought=el('div','case-evidence reasoning-evidence');thought.tabIndex=0;
+    thought.setAttribute('aria-label',name+'推理节选');
+    thought.append(reasoning(data.reasoning||'该位置没有可展示的推理文本。'));
+    card.append(evidence,el('h5','evidence-heading','推理节选'),thought); return card;
   }
   const pager=el('div','case-pager');
   const count=el('span','case-count');count.setAttribute('aria-live','polite');
@@ -92,7 +98,7 @@
   }
   function navigate(value){
     index=Math.max(0,Math.min(cases.length-1,value));
-    const c=cases[index];modes.good=modes.bad='action';
+    const c=cases[index];
     count.textContent=`CASE ${String(index+1).padStart(2,'0')} / ${cases.length}`;
     heading.textContent=c.title;id.textContent=c.task_id;expectation.textContent=c.expectation;
     select.value=String(index);prev.disabled=index===0;next.disabled=index===cases.length-1;
