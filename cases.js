@@ -4,6 +4,7 @@
   if (!root) return;
   const baselines = ['GPTQ', 'EfficientQAT', 'BitDistiller', 'On-Policy QAD', 'QeRL'];
   let cases, index = 0, stage = 'compare', good = 'Ours', bad = 'GPTQ';
+  const expanded = new Map();
   const el = (tag, cls, value) => {
     const node = document.createElement(tag); if (cls) node.className = cls;
     if (value !== undefined) node.textContent = value; return node;
@@ -30,7 +31,14 @@
   }
   function segment(items, selected, onSelect, label) {
     const nav=el('div','case-segments');nav.setAttribute('aria-label',label);
-    for(const item of items){const b=button(item,label+'：'+item,()=>onSelect(item));b.setAttribute('aria-pressed',String(item===selected));nav.append(b);}return nav;
+    for(const item of items){
+      const title=label+'：'+item;
+      const b=button(item,title,()=>{
+        onSelect(item);
+        [...root.querySelectorAll('.case-segments button')].find(node=>node.getAttribute('aria-label')===title)?.focus({preventScroll:true});
+      });
+      b.setAttribute('aria-pressed',String(item===selected));nav.append(b);
+    }return nav;
   }
   function panel(name, side) {
     const original=cases[index].methods[name];
@@ -72,7 +80,15 @@
       thought.append(focusQuote);
     }
     const context=el('details','reasoning-context');
-    context.append(el('summary','',focusText?'查看推理上下文':'查看推理节选'),quote);
+    const contextKey=[index,name,focus].join(':');
+    const summary=el('summary');
+    context.open=expanded.get(contextKey)??!focusText;
+    const updateContext=()=>{
+      summary.textContent=context.open?'收起推理上下文':(focusText?'查看推理上下文':'查看推理节选');
+      expanded.set(contextKey,context.open);
+    };
+    updateContext();context.addEventListener('toggle',updateContext);
+    context.append(summary,quote);
     thought.append(context);
     const actionGroup=el('section','evidence-group action-group');
     const thoughtGroup=el('section','evidence-group thought-group');
@@ -86,6 +102,7 @@
   select.onchange=()=>navigate(Number(select.value));
   const prev=button('←','上一个案例',()=>navigate(index-1));
   const next=button('→','下一个案例',()=>navigate(index+1));
+  prev.disabled=next.disabled=select.disabled=true;
   pager.append(count,select,prev,next);
   const heading=el('h3','case-title'), id=el('p','case-task-id'), expectation=el('p','case-expectation');
   const stages=el('div','case-stages');
@@ -118,11 +135,12 @@
     grid.append(left,right);compare.append(grid);body.append(taskStrip,compare);
   }
   function navigate(value){
+    if(!cases)return;
     index=Math.max(0,Math.min(cases.length-1,value));
     const c=cases[index];
     count.textContent=`CASE ${String(index+1).padStart(2,'0')} / ${cases.length}`;
     heading.textContent=c.title;id.textContent=c.task_id;expectation.textContent=c.expectation;
-    select.value=String(index);prev.disabled=index===0;next.disabled=index===cases.length-1;
+    select.disabled=false;select.value=String(index);prev.disabled=index===0;next.disabled=index===cases.length-1;
     history.replaceState(null,'',`#case-${index+1}`);renderBody();
   }
   root.addEventListener('keydown',e=>{
