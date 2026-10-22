@@ -45,7 +45,7 @@
       const prev = button('←','上一步',()=>go(index-1));
       const next = button('→','下一步',()=>go(index+1));
       const play = button('▶','自动播放轨迹',()=>{playing=!playing; updatePlay(); if(playing) schedule(); else clearTimeout(timer);});
-      const replay = button('↻','从第 1 步重播',()=>go(0));
+      const replay = button('↻','从第 1 步重播',()=>{go(0);playing=demo.runs[mode].length>1;updatePlay();if(playing)schedule();});
       controls.append(counter,prev,play,next,replay);
       const teacher = node('details','trajectory-teacher');
       teacher.append(node('summary','','Teacher steering · 原始指导'));
@@ -66,7 +66,8 @@
       function updatePlay(){play.textContent=playing?'Ⅱ':'▶';play.setAttribute('aria-label',playing?'暂停播放':'自动播放轨迹');}
       function schedule(){clearTimeout(timer);timer=setTimeout(()=>{
         if(root.closest('[hidden]') || document.hidden){stop();return;}
-        if(index>=demo.runs[mode].length-1){stop();return;}index++;render();schedule();
+        if(index>=demo.runs[mode].length-1){stop();return;}index++;render();
+        if(index===demo.runs[mode].length-1)stop();else schedule();
       },4200);}
       function centerStep(){
         const selected=timeline.children[index];if(!selected||!timeline.clientWidth)return;
@@ -167,7 +168,8 @@
         const excerpt=sentences.find(s=>/need|should|next|click|tap|type|save|copy|editable/i.test(s))||sentences[0]||'';
         const preview=node('blockquote','trajectory-thought-preview');
         preview.append(EvidenceHighlight.terms(excerpt.trim(),[...thought.querySelectorAll('mark')].map(m=>m.textContent)));
-        narrative.append(node('h4','','Thinking'),preview,thoughtDetails,node('h4','','Action'),action);
+        const actionHeading=node('h4','trajectory-action-heading','Action');
+        narrative.append(node('h4','','Thinking'),preview,thoughtDetails,actionHeading,action);
         const result=step.result.info||{};
         const state=step.result.done?(result.success?'环境确认任务成功': '轨迹结束，任务未通过'):
           mode==='before'&&index===steps.length-1?'原始轨迹止于这一步，没有记录到任务成功。':

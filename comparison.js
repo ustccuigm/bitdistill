@@ -37,9 +37,11 @@
     const controls=document.createElement('div');controls.className='comparison-playback';
     const start=document.createElement('button');start.type='button';start.textContent='▶ Play all from start';
     const pause=document.createElement('button');pause.type='button';pause.textContent='Ⅱ Pause all';pause.disabled=true;
+    let started=false;
     const status=document.createElement('span');status.setAttribute('role','status');
     start.addEventListener('click',async()=>{
       pauseAll();start.disabled=true;status.textContent='';
+      started=true;
       panel.dataset.groupPlayback='true';
       videos.forEach(video=>video.currentTime=0);
       const results=await Promise.allSettled(videos.map(video=>video.play()));
@@ -47,8 +49,22 @@
       else if(results.some(result=>result.status==='rejected'))status.textContent='Some videos could not start. Use their play buttons to retry.';
       start.disabled=false;
     });
-    pause.addEventListener('click',()=>videos.forEach(video=>video.pause()));
-    const update=()=>pause.disabled=videos.every(video=>video.paused||video.ended);
+    pause.addEventListener('click',async()=>{
+      if(videos.some(video=>!video.paused&&!video.ended)){
+        videos.forEach(video=>video.pause());return;
+      }
+      panel.dataset.groupPlayback='true';status.textContent='';
+      const results=await Promise.allSettled(videos.filter(video=>!video.ended).map(video=>video.play()));
+      if(panel.hidden)videos.forEach(video=>video.pause());
+      else if(results.some(result=>result.status==='rejected'))status.textContent='Some videos could not resume. Use their play buttons to retry.';
+      update();
+    });
+    const update=()=>{
+      if(videos.some(video=>!video.paused))started=true;
+      const running=videos.some(video=>!video.paused&&!video.ended);
+      pause.textContent=running?'Ⅱ Pause all':'▶ Resume all';
+      pause.disabled=!started||videos.every(video=>video.ended);
+    };
     videos.forEach(video=>['play','pause','ended'].forEach(event=>video.addEventListener(event,update)));
     controls.append(start,pause,status);panel.querySelector('.comparison-grid').before(controls);
     const switcher=document.createElement('div');switcher.className='comparison-method-tabs';
