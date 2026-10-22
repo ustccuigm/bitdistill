@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demo measurement notes | SteerDistill</title>
+<link rel="stylesheet" href="project.css"><link rel="stylesheet" href="home.css"><link rel="stylesheet" href="comparison.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('steer-theme')||'light'}catch{}</script>
+<script src="project.js" defer></script>
+</head>
+<body class="project">
+<header class="running-head"><div class="page"><a href="index.html#demo"><strong>SteerDistill</strong></a><nav aria-label="Navigation"><a href="index.html#demo">Back to Demo</a></nav><button class="theme-toggle" aria-label="Toggle theme">◐</button></div></header>
+<main class="page" style="padding-top:40px;padding-bottom:48px;max-width:900px">
+<h1>Demo measurement notes</h1>
+    <p class="comparison-speed-note">Speed measured on a shared A100, with identical inputs and 64 output tokens. Two measurement orders gave 1.48–1.59×; the smaller ratio is shown. This is an inference-backend measurement, not a speed advantage over QAD.</p>
+<p class="comparison-timing">The six timings on the Demo page are medians from three repeats per model and task. Each video is an additional recorded run, so its displayed time can differ. Timing sums model inference calls; model loading, warmup, browser actions, and the final 2-second result hold are excluded. Failed runs may terminate early.</p>
+    <section aria-label="Protocol">
+      <div class="comparison-protocol-body">
+        <p><strong>Model and environment.</strong> Qwen3-VL-8B-Instruct in ScaleWoB / BestBuy. All three models start from the same saved state for each task, with the original task prompt, greedy decoding, a maximum of 30 actions and 256 output tokens per action. No teacher guidance is supplied during these evaluations.</p>
+        <p><strong>Checkpoint scope.</strong> The SteerDistill specialist starts from main-run step 17, followed by 20 fixed-batch updates on verified corrections for tasks 47 and 51. It is separate from the formal 50-step run. The QAD baseline is a local ordinary on-policy distillation ablation, trained for 3 online updates without the correction branch. Training budgets are unequal; it is not a complete reproduction of a QAD paper.</p>
+        <p><strong>Case selection.</strong> These two tasks were selected after exploratory evaluation. The displayed 3/3 and 0/3 counts describe repeated runs on these selected training tasks, not held-out accuracy or an unbiased estimate of method superiority. They are separate from the paper benchmark results below.</p>
+        <p><strong>Matched-input latency.</strong> vLLM 0.11.2 on the same A100-SXM4-80GB GPU, with CUDA Graphs, concurrency 1 and a fixed 2 GiB KV cache for every model; quantized models use AWQ-Marlin. Six input states, three repetitions per state, exactly 64 generated tokens, and matching prompt/image hashes. BF16 and SteerDistill were repeated in reverse order. Other GPU workloads remained active, so these are shared-server measurements. Quantized speedups come from the inference backend; this experiment does not establish faster kernels than QAD.</p>
+        <p><strong>Recorded screens.</strong> Videos contain actual rollout screenshots and actions. Final screens were captured after waiting for asynchronous UI completion, outside the model timing. The barcode simulator can resolve to different valid products.</p>
+        <p class="resource-links"><a href="demos/comparison/metrics.json">Six timing measurements ↗</a><a href="demos/comparison/repeat-verification.json">All repeat outcomes ↗</a><a href="demos/comparison/matched-latency.json">Latency protocol &amp; results ↗</a><a href="demos/comparison/selection-history.json">Exploratory case selection ↗</a></p>
+      </div>
+    </section>
+
+</main>
+</body></html>
