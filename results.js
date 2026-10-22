@@ -4,12 +4,12 @@
   const methods = ['BF16', 'GPTQ', 'EfficientQAT', 'BitDistiller', 'On-Policy QAD', 'QeRL', 'Ours'];
   const colors = ['#9da3a6', '#829bab', '#b7a47c', '#a29aa9', '#739c96', '#c0957b', '#a33a31'];
   const metrics = {
-    average: ['Average benchmark score (%)', 'Mean score across the five benchmarks in Table 1.', 40, 70],
-    bfcl_v4: ['BFCL V4 score (%)', 'BFCL V4 results from Table 1.', 35, 70],
-    tau2_bench: ['τ²-Bench score (%)', 'τ²-Bench results from Table 1.', 20, 70],
-    webshop: ['WebShop score (%)', 'WebShop results from Table 1.', 55, 80],
-    alfworld: ['ALFWorld score (%)', 'ALFWorld results from Table 1.', 65, 90],
-    search_qa: ['Search QA score (%)', 'Search QA results from Table 1.', 30, 50],
+    average: ['Average benchmark score (%)', 40, 70],
+    bfcl_v4: ['BFCL V4 score (%)', 35, 70],
+    tau2_bench: ['τ²-Bench score (%)', 20, 70],
+    webshop: ['WebShop score (%)', 55, 80],
+    alfworld: ['ALFWorld score (%)', 65, 90],
+    search_qa: ['Search QA score (%)', 30, 50],
   };
   const tabs = [...document.querySelectorAll('[data-metric]')];
   const host = document.getElementById('native-chart');
@@ -51,9 +51,8 @@
   function render() {
     if (!rows) return;
     hideTip();
-    const [label, caption, low, high] = metrics[active];
+    const [label, low, high] = metrics[active];
     document.getElementById('chart-metric').textContent = label;
-    document.getElementById('chart-caption').textContent = caption;
     const mobile=compact.matches, visibleModels=mobile?[activeModel]:models;
     const svg = node('svg', {viewBox: `0 0 ${mobile?360:1080} 342`, role: 'group', 'aria-label': `${label}; ${visibleModels.join(', ')}; axis ${low} to ${high}`});
     svg.append(node('title', {}, label));
@@ -118,12 +117,12 @@
     for (const model of models) for (const method of methods) {
       const matches = data.filter(row => row.model === model && row.method === method);
       if (matches.length !== 1) throw new Error('Missing or duplicate method');
-      for (const [metric, [, , low, high]] of Object.entries(metrics)) {
+      for (const [metric, [, low, high]] of Object.entries(metrics)) {
         const value = matches[0][metric];
         if (!Number.isFinite(value) || value < low || value > high) throw new Error('Invalid score');
       }
     }
     rows = data; status.hidden = true; render();
-  }).catch(() => { status.textContent = 'Results could not be loaded. View the table data below.'; })
+  }).catch(() => { status.textContent = 'Results could not be loaded. Please refresh to retry.'; })
     .finally(() => document.querySelector('.result-chart').setAttribute('aria-busy', 'false'));
 })();
