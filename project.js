@@ -1,1 +1,43 @@
-(()=>{const r=document.documentElement;const buttons=[...document.querySelectorAll('.theme-toggle')];const updateTheme=()=>{buttons.forEach(b=>{b.setAttribute('aria-pressed',String(r.dataset.theme==='dark'));b.setAttribute('aria-label',r.dataset.theme==='dark'?'Switch to light theme':'Switch to dark theme')});document.querySelector('meta[name="theme-color"]')?.setAttribute('content',r.dataset.theme==='dark'?'#1b1c1c':'#fffefa')};updateTheme();buttons.forEach(b=>b.addEventListener('click',()=>{r.dataset.theme=r.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('steer-theme',r.dataset.theme)}catch{}updateTheme()}));const tabs=[...document.querySelectorAll('[data-demo]')];const select=b=>{tabs.forEach(x=>{x.setAttribute('aria-selected',String(x===b));x.tabIndex=x===b?0:-1});document.querySelectorAll('[data-panel]').forEach(p=>{p.hidden=p.dataset.panel!==b.dataset.demo;p.querySelectorAll('video').forEach(v=>v.pause())})};tabs.forEach((b,i)=>{b.addEventListener('click',()=>select(b));b.addEventListener('keydown',e=>{let j;if(e.key==='ArrowRight')j=(i+1)%tabs.length;else if(e.key==='ArrowLeft')j=(i+tabs.length-1)%tabs.length;else if(e.key==='Home')j=0;else if(e.key==='End')j=tabs.length-1;else return;e.preventDefault();select(tabs[j]);tabs[j].focus()})});document.querySelectorAll('video').forEach(v=>v.addEventListener('play',()=>document.querySelectorAll('video').forEach(other=>{if(other!==v)other.pause()})));})();
+(() => {
+  const root=document.documentElement;
+  const buttons=[...document.querySelectorAll('.theme-toggle')];
+  const updateTheme=()=>{
+    buttons.forEach(button=>{
+      button.setAttribute('aria-pressed',String(root.dataset.theme==='dark'));
+      button.setAttribute('aria-label',root.dataset.theme==='dark'?'Switch to light theme':'Switch to dark theme');
+    });
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content',root.dataset.theme==='dark'?'#1b1c1c':'#fffefa');
+  };
+  updateTheme();
+  buttons.forEach(button=>button.addEventListener('click',()=>{
+    root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';
+    try{localStorage.setItem('steer-theme',root.dataset.theme);}catch{}
+    updateTheme();
+  }));
+  const tabs=[...document.querySelectorAll('[data-demo]')];
+  const select=button=>{
+    tabs.forEach(tab=>{tab.setAttribute('aria-selected',String(tab===button));tab.tabIndex=tab===button?0:-1;});
+    document.querySelectorAll('[data-panel]').forEach(panel=>{
+      panel.hidden=panel.dataset.panel!==button.dataset.demo;
+      panel.querySelectorAll('video').forEach(video=>video.pause());
+    });
+  };
+  tabs.forEach((button,index)=>{
+    button.addEventListener('click',()=>select(button));
+    button.addEventListener('keydown',event=>{
+      let next;
+      if(event.key==='ArrowRight')next=(index+1)%tabs.length;
+      else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;
+      else if(event.key==='Home')next=0;
+      else if(event.key==='End')next=tabs.length-1;
+      else return;
+      event.preventDefault();select(tabs[next]);tabs[next].focus();
+    });
+  });
+  document.querySelectorAll('video').forEach(video=>video.addEventListener('play',()=>{
+    const group=video.closest('[data-compare-panel][data-group-playback="true"]');
+    document.querySelectorAll('video').forEach(other=>{
+      if(other!==video&&!(group&&group.contains(other)))other.pause();
+    });
+  }));
+})();
