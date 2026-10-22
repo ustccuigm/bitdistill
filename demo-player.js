@@ -44,7 +44,11 @@
       const counter = node('span', 'trajectory-counter'); counter.setAttribute('aria-live','polite');
       const prev = button('←','上一步',()=>go(index-1));
       const next = button('→','下一步',()=>go(index+1));
-      const play = button('▶','自动播放轨迹',()=>{playing=!playing; updatePlay(); if(playing) schedule(); else clearTimeout(timer);});
+      const play = button('▶','自动播放轨迹',()=>{
+        if(playing){stop();return;}
+        if(index===demo.runs[mode].length-1){index=0;render();play.focus({preventScroll:true});}
+        playing=demo.runs[mode].length>1;updatePlay();if(playing)schedule();
+      });
       const replay = button('↻','从第 1 步重播',()=>{go(0);playing=demo.runs[mode].length>1;updatePlay();if(playing)schedule();});
       controls.append(counter,prev,play,next,replay);
       const teacher = node('details','trajectory-teacher');
@@ -75,9 +79,13 @@
         timeline.scrollLeft+=a.left-b.left-(timeline.clientWidth-a.width)/2;
       }
       function go(value){
-        const restore=content.contains(document.activeElement);
+        const active=document.activeElement;
+        const control=controls.contains(active)?active:null;
+        const restore=content.contains(active);
         stop();index=Math.max(0,Math.min(demo.runs[mode].length-1,value));render();
-        if(restore)focusStep();
+        if(control&&!control.disabled)control.focus({preventScroll:true});
+        else if(control)play.focus({preventScroll:true});
+        else if(restore)focusStep();
       }
       function focusStep(){
         const target=window.matchMedia('(max-width:740px)').matches?stepPicker:timeline.children[index];
