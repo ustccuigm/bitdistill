@@ -28,10 +28,18 @@
       timeline.setAttribute('role','group'); timeline.setAttribute('aria-label','逐步轨迹');
       const stepPicker=node('select','trajectory-step-picker');
       stepPicker.setAttribute('aria-label','选择任意轨迹步骤');
-      stepPicker.addEventListener('change',()=>go(Number(stepPicker.value)));
+      const stepMenu=node('details','trajectory-step-menu');
+      stepMenu.append(node('summary','','全部步骤'),stepPicker);
+      const compactSteps=window.matchMedia('(max-width:740px)');
+      const updateStepMenu=()=>{stepMenu.open=compactSteps.matches;};
+      compactSteps.addEventListener('change',updateStepMenu);updateStepMenu();
+      stepPicker.addEventListener('change',()=>{
+        go(Number(stepPicker.value));
+        if(!window.matchMedia('(max-width:740px)').matches){stepMenu.open=false;stepMenu.querySelector('summary').focus({preventScroll:true});}
+      });
       const progress=node('div','trajectory-progress');
       const progressLabel=node('span','trajectory-progress-label');
-      progress.append(progressLabel,stepPicker,timeline);
+      progress.append(progressLabel,timeline,stepMenu);
       const controls = node('div', 'trajectory-controls');
       const counter = node('span', 'trajectory-counter'); counter.setAttribute('aria-live','polite');
       const prev = button('←','上一步',()=>go(index-1));
@@ -68,7 +76,11 @@
       function go(value){
         const restore=content.contains(document.activeElement);
         stop();index=Math.max(0,Math.min(demo.runs[mode].length-1,value));render();
-        if(restore)timeline.children[index].focus({preventScroll:true});
+        if(restore)focusStep();
+      }
+      function focusStep(){
+        const target=window.matchMedia('(max-width:740px)').matches?stepPicker:timeline.children[index];
+        target.focus({preventScroll:true});
       }
       function animate(){
         clearTimeout(animation);clearTimeout(markerTimer);
@@ -195,7 +207,11 @@
           if(i)figure.append(node('p','trajectory-frame-note',step.after?(step.unchanged?'画面未改变': '下一步记录的实际画面'):'没有后续截图，保留最后画面；结果见环境记录。'));
           phones.append(figure);
         });
-        const media=node('div','trajectory-media');media.append(controls,frameTabs,phones);
+        const brief=node('div','trajectory-mobile-brief');
+        const briefGuide=guide.cloneNode(true);briefGuide.className='trajectory-mobile-guide';
+        const briefAction=action.cloneNode(true);briefAction.className='trajectory-mobile-action';
+        brief.append(briefGuide,briefAction);
+        const media=node('div','trajectory-media');media.append(controls,brief,frameTabs,phones);
         selectFrame(frame);content.replaceChildren(narrative,media);
         highlightChange(phones,step);
         animate();
@@ -204,7 +220,7 @@
         if(zoom.open||e.target.matches('summary,input,textarea,select')||e.target.closest('pre'))return;
         if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
           e.preventDefault();go(index+(e.key==='ArrowRight'?1:-1));
-          timeline.children[index].focus({preventScroll:true});
+          focusStep();
         }
       });
       new MutationObserver(()=>{if(root.closest('[hidden]'))stop();else render();}).observe(root.closest('[role="tabpanel"]')||root,{attributes:true,attributeFilter:['hidden']});
