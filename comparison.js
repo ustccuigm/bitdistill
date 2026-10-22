@@ -51,7 +51,10 @@
     range.setAttribute('aria-label','Seek all recordings (seconds)');
     const clock=document.createElement('output');clock.textContent='0:00 / 0:00';
     scrub.append(range,clock);
-    const format=seconds=>`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;
+    const format=seconds=>{
+      const tenths=Math.round(seconds*10);
+      return `${Math.floor(tenths/600)}:${(tenths%600/10).toFixed(1).padStart(4,'0')}`;
+    };
     const total=()=>Math.max(0,...videos.map(v=>Number.isFinite(v.duration)?v.duration:0));
     const showTime=time=>{clock.textContent=`${format(time)} / ${format(total())}`;range.setAttribute('aria-valuetext',`${time.toFixed(1)} seconds of ${total().toFixed(1)}`);};
     videos.forEach(video=>{
@@ -107,7 +110,7 @@
       pause.textContent=running?'Ⅱ Pause all':'▶ Resume all';
       pause.disabled=busy||!started||videos.every(video=>video.ended||video.currentTime>=video.duration-.05);
     };
-    videos.forEach(video=>['play','pause','ended'].forEach(event=>video.addEventListener(event,update)));
+    videos.forEach(video=>['play','pause','ended','seeked'].forEach(event=>video.addEventListener(event,update)));
     controls.append(start,pause,status);panel.querySelector('.comparison-grid').before(controls,scrub);
     const switcher=document.createElement('div');switcher.className='comparison-method-tabs';
     switcher.setAttribute('role','group');switcher.setAttribute('aria-label','Comparison model');
