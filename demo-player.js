@@ -38,6 +38,11 @@
         if(!window.matchMedia('(max-width:740px)').matches){stepMenu.open=false;stepMenu.querySelector('summary').focus({preventScroll:true});}
       });
       const progress=node('div','trajectory-progress');
+      const landmarks=node('div','trajectory-landmarks');landmarks.setAttribute('role','group');landmarks.setAttribute('aria-label','关键步骤');
+      for(const [label,run,position] of [['偏移位置','before',demo.pivot],['纠偏动作','repair',0],['最终结果','independent',demo.runs.independent.length-1]]){
+        const jump=button(label,label,()=>{stop();mode=run;index=position;render();});
+        jump.dataset.runTarget=run;jump.dataset.stepTarget=position;landmarks.append(jump);
+      }
       const progressLabel=node('span','trajectory-progress-label');
       progress.append(progressLabel,timeline,stepMenu);
       const controls = node('div', 'trajectory-controls');
@@ -61,7 +66,7 @@
       const zoomImage=node('img','');
       zoom.append(button('×','关闭放大截图',()=>zoom.close()),zoomImage);
       zoom.addEventListener('click',e=>{if(e.target===zoom)zoom.close();});
-      root.replaceChildren(header,paths,progress,content,zoom);
+      root.replaceChildren(header,paths,landmarks,progress,content,zoom);
       for(const [value,label] of Object.entries(labels)){
         const b=button(label,label,()=>{mode=value;index=value==='before'?demo.pivot:0;stop();render();});
         b.dataset.run=value;paths.append(b);
@@ -131,6 +136,7 @@
         const steps=demo.runs[mode], step=steps[index];
         root.dataset.run=mode;
         paths.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.run===mode)));
+        landmarks.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.runTarget===mode&&Number(b.dataset.stepTarget)===index)));
         if(timelineMode!==mode){
           timeline.replaceChildren();stepPicker.replaceChildren();
           steps.forEach((s,i)=>{
