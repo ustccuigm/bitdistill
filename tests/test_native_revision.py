@@ -26,7 +26,7 @@ class DeterministicEnvironment:
 
     def snapshot(self):
         return {"state": self.state, "done": self.done, "success": self.success,
-                "semantic_hash": f"s{self.state}"}
+                "semantic_hash": f"s{self.state}", "alignment_hash": f"s{self.state}"}
 
     def save_snapshot(self, path):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,7 +45,7 @@ class DeterministicEnvironment:
         else:
             self.state = -1
             self.done = True
-        return {"state_hash": f"s{self.state}", "success": self.success,
+        return {"state_hash": f"s{self.state}", "alignment_state_hash": f"s{self.state}", "success": self.success,
                 "done": self.done, "observation": self.prompt(), "valid": True,
                 "score": float(self.success)}
 
@@ -182,7 +182,7 @@ class NativeRevisionTest(unittest.TestCase):
             def step(self, response):
                 self.done = True
                 self.success = response == "correct"
-                return {"state_hash": "s0", "success": self.success, "done": True,
+                return {"state_hash": "s0", "alignment_state_hash": "s0", "success": self.success, "done": True,
                         "valid": True, "observation": "same observation"}
 
         with tempfile.TemporaryDirectory() as folder:

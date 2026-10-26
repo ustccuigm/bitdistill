@@ -484,89 +484,49 @@ def assistant_turns(trajectory: dict) -> list[dict]:
 
 def first_divergence(failure: dict, success: dict) -> dict:
     """Select the first action whose environment transition differs."""
+    if not failure.get("snapshot_root") or not success.get("snapshot_root"):
+        raise ValueError("State-only localization requires snapshots for both trajectories")
     failed = assistant_turns(failure)
     corrected = assistant_turns(success)
     i = j = 0
     mismatch_kind = "none"
+    from steerdistill.transition_verifier import compare_alignment_state, unchanged_state
+
+    def matches(left, right):
+        return compare_alignment_state(
+            failure["snapshot_root"], success["snapshot_root"], left, right,
+            candidate_terminal=left == len(failed) - 1 and not _action_bearing(failed[left]),
+            reference_terminal=right == len(corrected) - 1 and not _action_bearing(corrected[right]),
+        )
+
     while i < len(failed) and j < len(corrected):
-        failed_signature = transition_signature(failure, i)
-        corrected_signature = transition_signature(success, j)
-        if failure.get("snapshot_root") or success.get("snapshot_root"):
-            if _action_bearing(failed[i]) and _action_bearing(corrected[j]):
-                equivalent, _ = local_transition_match(failure, success, i, reference_target=j)
-                if equivalent:
-                    i += 1
-                    j += 1
-                    continue
-                from steerdistill.transition_verifier import unchanged_read
-                # Cross-turn alignment is permitted only across reads proven
-                # not to mutate the environment, followed by a matching effect.
-                aligned = False
-                for side in ("candidate", "reference"):
-                    trajectory, turns, start = (failure, failed, i) if side == "candidate" else (success, corrected, j)
-                    for offset in range(1, len(turns) - start):
-                        if not unchanged_read(trajectory["snapshot_root"], start + offset - 1, trajectory["messages"]):
-                            break
-                        if not _action_bearing(turns[start + offset]):
-                            break
-                        left, right = (i + offset, j) if side == "candidate" else (i, j + offset)
-                        matches, _ = local_transition_match(failure, success, left, reference_target=right)
-                        if matches:
-                            i, j = left + 1, right + 1
-                            aligned = True
-                            break
-                    if aligned:
-                        break
-                if aligned:
-                    continue
-                mismatch_kind = "transition_mismatch"
+        if matches(i, j):
+            i += 1
+            j += 1
+            continue
+        # Skip explanatory turns only when snapshots prove they preserve state.
+        if not _action_bearing(failed[i]) and i + 1 < len(failed) and unchanged_state(failure["snapshot_root"], i):
+            i += 1
+            continue
+        if not _action_bearing(corrected[j]) and j + 1 < len(corrected) and unchanged_state(success["snapshot_root"], j):
+            j += 1
+            continue
+        aligned = False
+        for side in ("candidate", "reference"):
+            trajectory, turns, start = (failure, failed, i) if side == "candidate" else (success, corrected, j)
+            for offset in range(1, len(turns) - start):
+                if not unchanged_state(trajectory["snapshot_root"], start + offset - 1):
+                    break
+                left, right = (i + offset, j) if side == "candidate" else (i, j + offset)
+                if matches(left, right):
+                    i, j = left + 1, right + 1
+                    aligned = True
+                    break
+            if aligned:
                 break
-            if failed_signature == corrected_signature:
-                i += 1
-                j += 1
-                continue
-            mismatch_kind = "action_mismatch"
-            break
-        if failed_signature == corrected_signature:
-            i += 1
-            j += 1
+        if aligned:
             continue
-        # Reasoning-only assistant messages do not create an environment
-        # transition. They may occur in one trace before the corresponding
-        # tool action and must not become a false causal intervention.
-        if not failed_signature[1] and corrected_signature[1]:
-            i += 1
-            continue
-        if not corrected_signature[1] and failed_signature[1]:
-            j += 1
-            continue
-        # A response may contain an extra assistant turn while preserving the
-        # same action-transition path. Align that turn before declaring a
-        # behavioral divergence. The bounded search keeps alignment local and
-        # deterministic; a repeated signature is resolved by the first match.
-        failed_match = next(
-            (offset for offset in range(1, 9)
-             if i + offset < len(failed)
-             and transition_signature(failure, i + offset) == corrected_signature),
-            None,
-        )
-        if failed_match is not None:
-            i += failed_match
-            continue
-        corrected_match = next(
-            (offset for offset in range(1, 9)
-             if j + offset < len(corrected)
-             and transition_signature(success, j + offset) == failed_signature),
-            None,
-        )
-        if corrected_match is not None:
-            j += corrected_match
-            continue
-        mismatch_kind = (
-            "action_mismatch"
-            if failed_signature[0] != corrected_signature[0]
-            else "transition_mismatch"
-        )
+        mismatch_kind = "transition_mismatch"
         break
     index = i
     if mismatch_kind == "none" and (i != len(failed) or j != len(corrected)):

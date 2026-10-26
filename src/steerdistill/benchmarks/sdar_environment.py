@@ -237,7 +237,24 @@ class Environment:
         self.history.append({"before": before, "after": self.observation, "action": action, "response": response})
         return {"action": action, "observation": self.observation, "valid": valid,
                 "done": self.done, "success": self.success, "score": float(self.score),
-                "state_hash": state_hash(self.transition_state())}
+                "state_hash": state_hash(self.transition_state()),
+                "alignment_state_hash": state_hash(self.alignment_state())}
+
+    def alignment_state(self):
+        """Environment state for localization, without rendered observations.
+
+        Search QA has no mutable world database: its retrieved-evidence set is
+        the task's information state. Query wording and assistant prose are not
+        part of that state.
+        """
+        state = self.transition_state()
+        state.pop("observation", None)
+        if self.benchmark == "webshop":
+            # Product choices and page type are state, not rendered prose.
+            # Without these, different searches on page 1 would look identical.
+            state["page_type"] = self.env.server.get_page_name(self.env.browser.current_url)
+            state["available_choices"] = sorted(self.env.get_available_actions()["clickables"])
+        return state
 
     def transition_state(self):
         """Task effects exclude retry counts, query wording and browsing logs."""
@@ -289,7 +306,8 @@ class Environment:
         state = {key: copy.deepcopy(getattr(self, key)) for key in
                  ("turn", "history", "done", "success", "score", "last_action", "observation", "description")}
         state.update(python_random=random.getstate(), numpy_random=np.random.get_state(),
-                     semantic_hash=self.semantic_hash(), transition_hash=state_hash(self.transition_state()))
+                     semantic_hash=self.semantic_hash(), transition_hash=state_hash(self.transition_state()),
+                     alignment_hash=state_hash(self.alignment_state()))
         if self.benchmark == "webshop":
             state["native"] = {
                 "env": {key: copy.deepcopy(getattr(self.env, key)) for key in ("session", "instruction_text", "prev_obs", "prev_actions")},
@@ -322,6 +340,7 @@ class Environment:
         native = state.pop("native")
         expected = state.pop("semantic_hash")
         state.pop("transition_hash", None)
+        state.pop("alignment_hash", None)
         random.setstate(state.pop("python_random"))
         np.random.set_state(state.pop("numpy_random"))
         for key, value in state.items():

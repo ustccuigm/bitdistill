@@ -82,6 +82,7 @@ def rollout(environment, directory, url, model, seed, prefix=None, steer=None, f
                                         "generation": metadata})
         transition = environment.step(text)
         transition["before_state_hash"] = snapshots[-1].get("transition_hash", snapshots[-1]["semantic_hash"])
+        transition["before_alignment_state_hash"] = snapshots[-1]["alignment_hash"]
         transition["prompt_hash"] = state_hash(prompt)
         trajectory["transitions"].append(transition)
         trajectory["messages"].append({"role": "user", "content": transition["observation"]})
@@ -96,16 +97,23 @@ def rollout(environment, directory, url, model, seed, prefix=None, steer=None, f
 
 def divergence(candidate, reference):
     left, right = candidate["transitions"], reference["transitions"]
+    for row in (*left, *right):
+        if not row.get("alignment_state_hash") or not row.get("before_alignment_state_hash"):
+            raise ValueError("State-only localization requires explicit alignment state hashes")
+    def after(row):
+        return row["alignment_state_hash"]
+    def before(row):
+        return row["before_alignment_state_hash"]
     i = j = 0
     while i < len(left) and j < len(right):
-        if left[i]["state_hash"] == right[j]["state_hash"]:
+        if after(left[i]) == after(right[j]) and before(left[i]) == before(right[j]):
             i += 1
             j += 1
-        elif left[i]["state_hash"] == left[i]["before_state_hash"]:
+        elif after(left[i]) == before(left[i]):
             # A state-preserving failed/irrelevant action is the causal turn;
             # it must not be skipped simply because its effect is empty.
             return i, j
-        elif right[j]["state_hash"] == right[j]["before_state_hash"]:
+        elif after(right[j]) == before(right[j]):
             j += 1
         else:
             return i, j
@@ -203,6 +211,7 @@ def revise(environment, initial, plain, directory, args, seed):
                 continue
             # Continue from the exact verified transition, without replaying its action.
             transition["before_state_hash"] = before.get("transition_hash", before["semantic_hash"])
+            transition["before_alignment_state_hash"] = before["alignment_hash"]
             transition["prompt_hash"] = state_hash(prompt)
             prefix["messages"].append({"role": "assistant", "content": response[0],
                                        "model_prompt": prompt, "generation": response[1]})

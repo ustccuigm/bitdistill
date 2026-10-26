@@ -104,12 +104,25 @@ def compare_transition(candidate_root, reference_root, turn, reference_turn, can
     return True, "verified_read_transition"
 
 
-def unchanged_read(snapshot_root, turn, messages):
-    """Only observed, non-error reads may be skipped during alignment."""
+def compare_alignment_state(candidate_root, reference_root, turn, reference_turn,
+                            *, candidate_terminal=False, reference_terminal=False):
+    """Compare state transitions for localization, never returned information."""
+    policy = load_policy(candidate_root)
+    if policy != load_policy(reference_root):
+        raise ValueError("Candidate and reference use different task-state policies")
+    def state(root, index):
+        return snapshot_state(Path(root) / f"turn_{index:04d}", policy.get("ignored_columns"))
+    before = state(candidate_root, turn)
+    expected_before = state(reference_root, reference_turn)
+    # Terminal prose executes no environment action and has no next snapshot.
+    after = before if candidate_terminal else state(candidate_root, turn + 1)
+    expected_after = expected_before if reference_terminal else state(reference_root, reference_turn + 1)
+    return before == expected_before and after == expected_after
+
+
+def unchanged_state(snapshot_root, turn):
+    """State-preserving turns can be aligned without inspecting observations."""
     root = Path(snapshot_root)
-    evidence = observations(messages, turn)
-    if not evidence or error_observation(evidence):
-        return False
     ignored = load_policy(root).get("ignored_columns")
     return snapshot_state(root / f"turn_{turn:04d}", ignored) == snapshot_state(root / f"turn_{turn + 1:04d}", ignored)
 

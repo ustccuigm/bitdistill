@@ -14,6 +14,24 @@ from steerdistill.transition_verifier import check_boundary, compare_transition
 
 
 class TransitionVerifierTest(unittest.TestCase):
+    def test_terminal_prose_uses_existing_state_but_actions_require_post_state(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self.snapshot(root, 0, "confirmed")
+            left = {"snapshot_root": str(root), "messages": [{"role": "assistant", "content": "Done"}]}
+            right = {"snapshot_root": str(root), "messages": [{"role": "assistant", "content": "Completed"}]}
+            self.assertEqual(first_divergence(left, right)["mismatch_kind"], "none")
+            right["messages"][0]["tool_calls"] = [{"function": {"name": "confirm", "arguments": "{}"}}]
+            with self.assertRaises(FileNotFoundError):
+                first_divergence(left, right)
+
+    def test_localization_requires_state_even_for_empty_traces(self):
+        with self.assertRaisesRegex(ValueError, "requires snapshots"):
+            first_divergence({"messages": []}, {"messages": []})
+        from steerdistill.benchmarks.online_rollout import divergence
+        with self.assertRaisesRegex(ValueError, "alignment state hashes"):
+            divergence({"transitions": [{"state_hash": "same"}]}, {"transitions": []})
+
     def test_equivalent_action_is_retained_and_audited_as_student_target(self):
         from steerdistill.common import canonical_decision, prompt_fingerprint
         from steerdistill.store import SkillStore
@@ -89,11 +107,14 @@ class TransitionVerifierTest(unittest.TestCase):
             {"role": "assistant", "content": "<search>Paris capital</search>"},
             {"role": "user", "content": "Doc 1: Paris is the capital of France."}])
         expected = environment.transition_state()
+        aligned = environment.alignment_state()
         environment.env.turns = 9
         environment.env.chat_history[0]["content"] = "<search>capital of France</search>"
         self.assertEqual(environment.transition_state(), expected)
+        self.assertEqual(environment.alignment_state(), aligned)
         environment.env.chat_history[1]["content"] = "Doc 1: An unrelated document."
         self.assertNotEqual(environment.transition_state(), expected)
+        self.assertNotEqual(environment.alignment_state(), aligned)
 
     def test_webshop_effect_excludes_action_counters_not_product_selection(self):
         from steerdistill.benchmarks.sdar_environment import Environment
@@ -102,12 +123,50 @@ class TransitionVerifierTest(unittest.TestCase):
         environment.description = "Buy the requested item"
         environment.observation = "Product A"
         session = {"asin": "A", "options": {"size": "M"}, "actions": {"search": 1}}
-        environment.env = SimpleNamespace(session="s", server=SimpleNamespace(user_sessions={"s": session}))
+        choices = ["A", "B"]
+        environment.env = SimpleNamespace(session="s",
+            browser=SimpleNamespace(current_url="/search_results/s"),
+            get_available_actions=lambda: {"clickables": choices},
+            server=SimpleNamespace(user_sessions={"s": session}, get_page_name=lambda url: url.split("/")[1]))
         expected = json.loads(json.dumps(environment.transition_state()))
+        aligned = environment.alignment_state()
+        environment.observation = "Different rendering of the same product"
+        self.assertEqual(environment.alignment_state(), aligned)
+        self.assertNotEqual(environment.transition_state(), expected)
+        choices.append("C")
+        self.assertNotEqual(environment.alignment_state(), aligned)
+        choices.pop()
+        environment.observation = "Product A"
         session["actions"]["search"] = 5
         self.assertEqual(environment.transition_state(), expected)
         session["options"]["size"] = "L"
         self.assertNotEqual(environment.transition_state(), expected)
+
+    def test_native_alignment_uses_state_not_verification_observations(self):
+        from steerdistill.benchmarks.online_rollout import divergence
+        left = {"state_hash": "render-a", "before_state_hash": "old-a",
+                "alignment_state_hash": "state1", "before_alignment_state_hash": "state0"}
+        right = dict(left, state_hash="render-b", before_state_hash="old-b")
+        self.assertIsNone(divergence({"transitions": [left]}, {"transitions": [right]}))
+        right["alignment_state_hash"] = "state2"
+        self.assertEqual(divergence({"transitions": [left]}, {"transitions": [right]}), (0, 0))
+        right = dict(left, before_alignment_state_hash="different-start")
+        self.assertEqual(divergence({"transitions": [left]}, {"transitions": [right]}), (0, 0))
+
+    def test_alfworld_alignment_ignores_rendering_but_keeps_world_facts(self):
+        from steerdistill.benchmarks.sdar_environment import Environment
+        environment = object.__new__(Environment)
+        environment.benchmark = "alfworld"
+        environment.observation = "You are in the kitchen."
+        environment.base = SimpleNamespace(
+            _pddl_state=SimpleNamespace(facts=["at(kitchen)"]),
+            state=SimpleNamespace(won=False, admissible_commands=["look"]))
+        environment._native_atoms = lambda: ["at(kitchen)"]
+        expected = environment.alignment_state()
+        environment.observation = "Kitchen."
+        self.assertEqual(environment.alignment_state(), expected)
+        environment.base._pddl_state.facts = ["at(bedroom)"]
+        self.assertNotEqual(environment.alignment_state(), expected)
 
     def test_alignment_skips_only_state_preserving_extra_reads(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -122,7 +181,7 @@ class TransitionVerifierTest(unittest.TestCase):
             candidate["messages"].extend(self.trajectory(student, "set_status", "done")["messages"][1:])
             self.assertEqual(first_divergence(candidate, reference)["mismatch_kind"], "none")
             candidate["messages"][2]["content"] = "Error: wrong request"
-            self.assertEqual(first_divergence(candidate, reference)["assistant_turn"], 0)
+            self.assertEqual(first_divergence(candidate, reference)["mismatch_kind"], "none")
 
     def snapshot(self, root, turn, value):
         directory = root / f"turn_{turn:04d}"
@@ -169,6 +228,11 @@ class TransitionVerifierTest(unittest.TestCase):
             self.assertTrue(local_transition_match(candidate, reference, 0)[0])
             candidate["messages"][-1]["content"] = '{"id":1,"price":20}'
             self.assertFalse(local_transition_match(candidate, reference, 0)[0])
+            self.assertEqual(first_divergence(candidate, reference)["mismatch_kind"], "none")
+            for text in ('Error: failed', '', '{"success":false}'):
+                candidate["messages"][-1]["content"] = text
+                self.assertEqual(first_divergence(candidate, reference)["mismatch_kind"], "none")
+                self.assertFalse(local_transition_match(candidate, reference, 0)[0])
 
     def test_boundary_records_failure_and_missing_state_fails_closed(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -186,7 +186,8 @@ class ConfigLoadingTest(unittest.TestCase):
     def test_readme_training_commands_dispatch_to_the_documented_routes(self):
         environment = self.prepare_route_stubs()
         commands = re.findall(r"^bash scripts/run/run_benchmark.sh (.+)$",
-                              (ROOT / "README.md").read_text(), re.MULTILINE)
+                              (ROOT / "README.md").read_text() + "\n" +
+                              (ROOT / "docs/training/README.md").read_text(), re.MULTILINE)
         covered = set()
         for command in commands:
             arguments = shlex.split(command)

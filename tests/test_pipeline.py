@@ -75,6 +75,23 @@ class TinyLM(torch.nn.Module):
 
 
 class PipelineTest(unittest.TestCase):
+    def attach_states(self, trajectory, values):
+        import hashlib
+        import sqlite3
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        trajectory["snapshot_root"] = str(root)
+        for turn, value in enumerate(values):
+            directory = root / f"turn_{turn:04d}"
+            directory.mkdir()
+            database = directory / "state.db"
+            with sqlite3.connect(database) as connection:
+                connection.execute("CREATE TABLE progress (value INTEGER)")
+                connection.execute("INSERT INTO progress VALUES (?)", (value,))
+            (directory / "manifest.json").write_text(json.dumps({
+                "db": "state.db", "db_sha256": hashlib.sha256(database.read_bytes()).hexdigest()}))
+
     def test_tool_call_ids_are_transport_metadata(self):
         from steerdistill.common import canonical_decision
 
@@ -130,6 +147,8 @@ class PipelineTest(unittest.TestCase):
             {"role": "assistant", "content": '<tool_call>{"name":"good"}</tool_call>'},
             {"role": "tool", "content": '{"ok":true}'},
         ]}
+        self.attach_states(failed, [0, 1, 1, -1])
+        self.attach_states(success, [0, 1, 2])
         divergence = first_divergence(failed, success)
         self.assertEqual(divergence["assistant_turn"], 2)
         self.assertEqual(divergence["corrected_assistant_turn"], 1)
@@ -253,6 +272,8 @@ class PipelineTest(unittest.TestCase):
             {"role": "assistant", "content": '<tool_call>{"name":"a"}</tool_call>'},
             {"role": "assistant", "content": '<tool_call>{"name":"good"}</tool_call>'},
         ]}
+        self.attach_states(failed, [0, 1, -1])
+        self.attach_states(success, [0, 1, 2])
         self.assertEqual(first_divergence(failed, success)["assistant_turn"], 1)
         injected = inject_skill([{"role": "system", "content": "base"}], "remember")
         self.assertIn("remember", injected[0]["content"])
@@ -307,10 +328,7 @@ class PipelineTest(unittest.TestCase):
             {"role": "assistant", "content": '<tool_call>{"name":"anchor"}</tool_call>'},
             {"role": "tool", "content": '{"ok": true}'},
         ]}
-        expected = first_divergence(
-            {"messages": [{"role": "assistant", "content": "wrong"}]},
-            {"messages": [{"role": "assistant", "content": '<tool_call>{"name":"correct"}</tool_call>'}]},
-        )["corrected_decision"]
+        expected = canonical_decision(reference["messages"][-1])
         matched, kind = local_transition_match(
             candidate, reference, 0, expected_decision=expected
         )
