@@ -15,7 +15,11 @@ checkpoints; model weights and benchmark data are downloaded separately.
 
 ## Models and benchmarks
 
-**Models:** Qwen3-8B, Qwen3.5-4B, and Gemma 4 12B-it.
+**Models and training guides:**
+
+- [Qwen3-8B](docs/training/README.md#qwen3-8b)
+- [Qwen3.5-4B](docs/training/README.md#qwen35-4b)
+- [Gemma 4 12B-it](docs/training/README.md#gemma-4-12b-it)
 
 **Benchmarks:** BFCL V4, tau2-Bench, WebShop, ALFWorld, and Search QA.
 
