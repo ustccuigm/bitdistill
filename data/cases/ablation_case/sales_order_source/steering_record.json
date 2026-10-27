@@ -1,0 +1,184 @@
+{
+  "active_step_index": 2,
+  "analysis_schema": "causal-steer-v2",
+  "analyzer_policy": "/mnt/genming/Arctic-AWM-BitDistiller-full/backbones/google-gemma-4-12B-it-text",
+  "causal_divergence": {
+    "assistant_turn": 1,
+    "common_assistant_turns": 1,
+    "corrected_decision": "[{\"arguments\":{\"sku\":\"OIL-FLTR-001\"},\"name\":\"mcp_server_get_part_by_sku\"}]",
+    "corrected_turn_count": 13,
+    "failed_decision": "[{\"arguments\":{\"name\":\"Joe's Auto Repair\",\"price_tier\":\"silver\"},\"name\":\"mcp_server_list_customer_accounts\"}]",
+    "failed_turn_count": 14
+  },
+  "causal_prefix_decisions": [
+    "[{\"arguments\":{\"name\":\"Joe's Auto Repair\",\"price_tier\":\"silver\"},\"name\":\"mcp_server_list_customer_accounts\"}]"
+  ],
+  "causal_signature": "causal_37e57a66e9748550",
+  "corrected_run_dir": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle002/repairs/24d606cfa3fad6023dc0/teacher/runs/b2b_commerce_1/task_1/attempt_1",
+  "created_at": "2026-09-11T10:32:07.688590+00:00",
+  "cycle": 2,
+  "decision": "create",
+  "divergence": {
+    "assistant_turn": 1,
+    "common_assistant_turns": 1,
+    "corrected_decision": "[{\"arguments\":{\"sku\":\"OIL-FLTR-001\"},\"name\":\"mcp_server_get_part_by_sku\"}]",
+    "corrected_turn_count": 13,
+    "failed_decision": "[{\"arguments\":{\"name\":\"Joe's Auto Repair\",\"price_tier\":\"silver\"},\"name\":\"mcp_server_list_customer_accounts\"}]",
+    "failed_turn_count": 14
+  },
+  "evidence_id": "evidence_6b6abaeb11d6671c",
+  "failed_run_dir": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle002/repairs/24d606cfa3fad6023dc0/plain/runs/b2b_commerce_1/task_1/attempt_3",
+  "failure_divergences": {
+    "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle001/repairs/8dfaa57879c2917be92e/plain/runs/b2b_commerce_1/task_1/attempt_3": {
+      "assistant_turn": 2,
+      "common_assistant_turns": 2,
+      "corrected_decision": "[{\"arguments\":{\"customer_account_id\":1,\"order_date\":\"2025-10-23\",\"order_number\":\"SO-JOE-001\",\"requested_ship_date\":\"2026-01-05\",\"status\":\"open\",\"warehouse_id\":1},\"name\":\"mcp_server_create_sales_order\"}]",
+      "corrected_turn_count": 13,
+      "failed_decision": "[{\"arguments\":{\"sku\":\"OIL-FLTR-001\"},\"name\":\"mcp_server_get_part_by_sku\"}]",
+      "failed_turn_count": 10
+    },
+    "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle002/repairs/24d606cfa3fad6023dc0/plain/runs/b2b_commerce_1/task_1/attempt_3": {
+      "assistant_turn": 1,
+      "common_assistant_turns": 1,
+      "corrected_decision": "[{\"arguments\":{\"sku\":\"OIL-FLTR-001\"},\"name\":\"mcp_server_get_part_by_sku\"}]",
+      "corrected_turn_count": 13,
+      "failed_decision": "[{\"arguments\":{\"name\":\"Joe's Auto Repair\",\"price_tier\":\"silver\"},\"name\":\"mcp_server_list_customer_accounts\"}]",
+      "failed_turn_count": 14
+    }
+  },
+  "failure_mechanism": "The policy called mcp_server_list_customer_accounts where the verified state required mcp_server_get_part_by_sku.",
+  "failure_signatures": [],
+  "failure_type": "wrong_tool",
+  "parent_version": 1,
+  "plain_policy": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/checkpoints/steer-int4-g64-cycle001-awq-runtime",
+  "repair_lineage": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle002/repairs/24d606cfa3fad6023dc0",
+  "skill": "Teacher-grounded causal steering memory. Apply only rules whose preconditions hold.\n\n[Steer 1]\nFailure type: wrong_tool\nFailure mechanism: The policy called mcp_server_get_part_by_sku where the verified state required mcp_server_create_sales_order.\nRule: {\"decision_rule\": \"Use mcp_server_create_sales_order for the next state transition instead of mcp_server_get_part_by_sku. Teacher refinement: Immediately call 'mcp_server_create_sales_order' to initialize the order with the provided customer_account_id, order_number, requested_ship_date, and warehouse_id before performing any SKU-specific lookups.\", \"expected_transition\": \"The system returns a successful sales order object with a unique order_id.\", \"precondition\": \"The user has requested a sales order for a specific customer and list of SKUs, and the customer/warehouse IDs have been identified.\", \"recovery_check\": \"Verify that the tool called is 'mcp_server_create_sales_order' and not 'mcp_server_get_part_by_sku'.\"}\n\n[Steer 2]\nFailure type: wrong_tool\nFailure mechanism: The policy called mcp_server_list_customer_accounts where the verified state required mcp_server_get_part_by_sku.\nRule: {\"decision_rule\": \"Use mcp_server_get_part_by_sku for the next state transition instead of mcp_server_list_customer_accounts. Teacher refinement: Do not call mcp_server_list_customer_accounts if the customer identity is already known; instead, immediately proceed to fetch the details of the first SKU in the order using mcp_server_get_part_by_sku.\", \"expected_transition\": \"The system returns the metadata (id, price, etc.) for the first requested SKU.\", \"precondition\": \"The user has provided a specific customer name and price tier, and the task requires creating a sales order with specific SKUs.\", \"recovery_check\": \"Verify that the tool called is 'mcp_server_get_part_by_sku' for the first SKU ('OIL-FLTR-001') rather than a customer listing tool.\"}",
+  "skill_id": "skill_1535e677c754eca9",
+  "source_kind": "teacher",
+  "source_policy": "/mnt/genming/Arctic-AWM-BitDistiller-full/backbones/google-gemma-4-12B-it-text",
+  "status": "proposed",
+  "status_history": [
+    {
+      "cycle": 2,
+      "status": "proposed"
+    }
+  ],
+  "steer": "Teacher-grounded causal steering memory. Apply only rules whose preconditions hold.\n\n[Steer 1]\nFailure type: wrong_tool\nFailure mechanism: The policy called mcp_server_get_part_by_sku where the verified state required mcp_server_create_sales_order.\nRule: {\"decision_rule\": \"Use mcp_server_create_sales_order for the next state transition instead of mcp_server_get_part_by_sku. Teacher refinement: Immediately call 'mcp_server_create_sales_order' to initialize the order with the provided customer_account_id, order_number, requested_ship_date, and warehouse_id before performing any SKU-specific lookups.\", \"expected_transition\": \"The system returns a successful sales order object with a unique order_id.\", \"precondition\": \"The user has requested a sales order for a specific customer and list of SKUs, and the customer/warehouse IDs have been identified.\", \"recovery_check\": \"Verify that the tool called is 'mcp_server_create_sales_order' and not 'mcp_server_get_part_by_sku'.\"}\n\n[Steer 2]\nFailure type: wrong_tool\nFailure mechanism: The policy called mcp_server_list_customer_accounts where the verified state required mcp_server_get_part_by_sku.\nRule: {\"decision_rule\": \"Use mcp_server_get_part_by_sku for the next state transition instead of mcp_server_list_customer_accounts. Teacher refinement: Do not call mcp_server_list_customer_accounts if the customer identity is already known; instead, immediately proceed to fetch the details of the first SKU in the order using mcp_server_get_part_by_sku.\", \"expected_transition\": \"The system returns the metadata (id, price, etc.) for the first requested SKU.\", \"precondition\": \"The user has provided a specific customer name and price tier, and the task requires creating a sales order with specific SKUs.\", \"recovery_check\": \"Verify that the tool called is 'mcp_server_get_part_by_sku' for the first SKU ('OIL-FLTR-001') rather than a customer listing tool.\"}",
+  "steer_reference_policy": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/checkpoints/steer-int4-g64-cycle001-awq-runtime",
+  "steer_steps": [
+    {
+      "action_delta": {
+        "changed_arguments": [],
+        "expected": {
+          "arguments": {
+            "customer_account_id": 1,
+            "order_date": "2025-10-23",
+            "order_number": "SO-JOE-001",
+            "requested_ship_date": "2026-01-05",
+            "status": "open",
+            "warehouse_id": 1
+          },
+          "kind": "tool_action",
+          "tool": "mcp_server_create_sales_order"
+        },
+        "failed": {
+          "arguments": {
+            "sku": "OIL-FLTR-001"
+          },
+          "kind": "tool_action",
+          "tool": "mcp_server_get_part_by_sku"
+        },
+        "failure_type": "wrong_tool",
+        "signature": "causal_25047b41a38a1906"
+      },
+      "assistant_turn": 2,
+      "causal_signature": "causal_25047b41a38a1906",
+      "corrected_run_dir": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle001/repairs/8dfaa57879c2917be92e/teacher/runs/b2b_commerce_1/task_1/attempt_1",
+      "cumulative_steer": "Teacher-grounded causal steering memory. Apply only rules whose preconditions hold.\n\n[Steer 1]\nFailure type: wrong_tool\nFailure mechanism: The policy called mcp_server_get_part_by_sku where the verified state required mcp_server_create_sales_order.\nRule: {\"decision_rule\": \"Use mcp_server_create_sales_order for the next state transition instead of mcp_server_get_part_by_sku. Teacher refinement: Immediately call 'mcp_server_create_sales_order' to initialize the order with the provided customer_account_id, order_number, requested_ship_date, and warehouse_id before performing any SKU-specific lookups.\", \"expected_transition\": \"The system returns a successful sales order object with a unique order_id.\", \"precondition\": \"The user has requested a sales order for a specific customer and list of SKUs, and the customer/warehouse IDs have been identified.\", \"recovery_check\": \"Verify that the tool called is 'mcp_server_create_sales_order' and not 'mcp_server_get_part_by_sku'.\"}",
+      "expected_decision": "[{\"arguments\":{\"customer_account_id\":1,\"order_date\":\"2025-10-23\",\"order_number\":\"SO-JOE-001\",\"requested_ship_date\":\"2026-01-05\",\"status\":\"open\",\"warehouse_id\":1},\"name\":\"mcp_server_create_sales_order\"}]",
+      "failed_decision": "[{\"arguments\":{\"sku\":\"OIL-FLTR-001\"},\"name\":\"mcp_server_get_part_by_sku\"}]",
+      "failed_run_dir": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle001/repairs/8dfaa57879c2917be92e/plain/runs/b2b_commerce_1/task_1/attempt_3",
+      "failure_mechanism": "The policy called mcp_server_get_part_by_sku where the verified state required mcp_server_create_sales_order.",
+      "failure_type": "wrong_tool",
+      "index": 1,
+      "relation_to_prior": "new",
+      "source_kind": "teacher",
+      "source_policy": "/mnt/genming/Arctic-AWM-BitDistiller-full/backbones/google-gemma-4-12B-it-text",
+      "status": "proposed",
+      "steer": "{\"decision_rule\": \"Use mcp_server_create_sales_order for the next state transition instead of mcp_server_get_part_by_sku. Teacher refinement: Immediately call 'mcp_server_create_sales_order' to initialize the order with the provided customer_account_id, order_number, requested_ship_date, and warehouse_id before performing any SKU-specific lookups.\", \"expected_transition\": \"The system returns a successful sales order object with a unique order_id.\", \"precondition\": \"The user has requested a sales order for a specific customer and list of SKUs, and the customer/warehouse IDs have been identified.\", \"recovery_check\": \"Verify that the tool called is 'mcp_server_create_sales_order' and not 'mcp_server_get_part_by_sku'.\"}",
+      "steer_fields": {
+        "decision_rule": "Use mcp_server_create_sales_order for the next state transition instead of mcp_server_get_part_by_sku. Teacher refinement: Immediately call 'mcp_server_create_sales_order' to initialize the order with the provided customer_account_id, order_number, requested_ship_date, and warehouse_id before performing any SKU-specific lookups.",
+        "expected_transition": "The system returns a successful sales order object with a unique order_id.",
+        "precondition": "The user has requested a sales order for a specific customer and list of SKUs, and the customer/warehouse IDs have been identified.",
+        "recovery_check": "Verify that the tool called is 'mcp_server_create_sales_order' and not 'mcp_server_get_part_by_sku'."
+      },
+      "steer_generation_finish_reason": "tool_calls",
+      "steer_reference_policy": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/checkpoints/initial-clipped-int4-g64-awq-runtime",
+      "steer_reference_run_dir": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle001/repairs/8dfaa57879c2917be92e/steer_reference",
+      "step_id": "steer_step_82033a2bfb6dbd0c",
+      "summary": "The agent incorrectly attempted to fetch part details before creating the sales order, whereas the successful trajectory showed that the sales order must be created first to establish the order context before adding lines or verifying parts.",
+      "teacher_failure_explanation": "The agent prioritized information gathering (get_part_by_sku) over the primary action (create_sales_order) required to initiate the transaction flow.",
+      "teacher_reported_causal_turn": 2,
+      "teacher_reported_failure_type": "wrong_tool",
+      "teacher_reported_relation": "new"
+    },
+    {
+      "action_delta": {
+        "changed_arguments": [],
+        "expected": {
+          "arguments": {
+            "sku": "OIL-FLTR-001"
+          },
+          "kind": "tool_action",
+          "tool": "mcp_server_get_part_by_sku"
+        },
+        "failed": {
+          "arguments": {
+            "name": "Joe's Auto Repair",
+            "price_tier": "silver"
+          },
+          "kind": "tool_action",
+          "tool": "mcp_server_list_customer_accounts"
+        },
+        "failure_type": "wrong_tool",
+        "signature": "causal_37e57a66e9748550"
+      },
+      "assistant_turn": 1,
+      "causal_signature": "causal_37e57a66e9748550",
+      "corrected_run_dir": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle002/repairs/24d606cfa3fad6023dc0/teacher/runs/b2b_commerce_1/task_1/attempt_1",
+      "cumulative_steer": "Teacher-grounded causal steering memory. Apply only rules whose preconditions hold.\n\n[Steer 1]\nFailure type: wrong_tool\nFailure mechanism: The policy called mcp_server_get_part_by_sku where the verified state required mcp_server_create_sales_order.\nRule: {\"decision_rule\": \"Use mcp_server_create_sales_order for the next state transition instead of mcp_server_get_part_by_sku. Teacher refinement: Immediately call 'mcp_server_create_sales_order' to initialize the order with the provided customer_account_id, order_number, requested_ship_date, and warehouse_id before performing any SKU-specific lookups.\", \"expected_transition\": \"The system returns a successful sales order object with a unique order_id.\", \"precondition\": \"The user has requested a sales order for a specific customer and list of SKUs, and the customer/warehouse IDs have been identified.\", \"recovery_check\": \"Verify that the tool called is 'mcp_server_create_sales_order' and not 'mcp_server_get_part_by_sku'.\"}\n\n[Steer 2]\nFailure type: wrong_tool\nFailure mechanism: The policy called mcp_server_list_customer_accounts where the verified state required mcp_server_get_part_by_sku.\nRule: {\"decision_rule\": \"Use mcp_server_get_part_by_sku for the next state transition instead of mcp_server_list_customer_accounts. Teacher refinement: Do not call mcp_server_list_customer_accounts if the customer identity is already known; instead, immediately proceed to fetch the details of the first SKU in the order using mcp_server_get_part_by_sku.\", \"expected_transition\": \"The system returns the metadata (id, price, etc.) for the first requested SKU.\", \"precondition\": \"The user has provided a specific customer name and price tier, and the task requires creating a sales order with specific SKUs.\", \"recovery_check\": \"Verify that the tool called is 'mcp_server_get_part_by_sku' for the first SKU ('OIL-FLTR-001') rather than a customer listing tool.\"}",
+      "expected_decision": "[{\"arguments\":{\"sku\":\"OIL-FLTR-001\"},\"name\":\"mcp_server_get_part_by_sku\"}]",
+      "failed_decision": "[{\"arguments\":{\"name\":\"Joe's Auto Repair\",\"price_tier\":\"silver\"},\"name\":\"mcp_server_list_customer_accounts\"}]",
+      "failed_run_dir": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle002/repairs/24d606cfa3fad6023dc0/plain/runs/b2b_commerce_1/task_1/attempt_3",
+      "failure_mechanism": "The policy called mcp_server_list_customer_accounts where the verified state required mcp_server_get_part_by_sku.",
+      "failure_type": "wrong_tool",
+      "index": 2,
+      "relation_to_prior": "new",
+      "source_kind": "teacher",
+      "source_policy": "/mnt/genming/Arctic-AWM-BitDistiller-full/backbones/google-gemma-4-12B-it-text",
+      "status": "proposed",
+      "steer": "{\"decision_rule\": \"Use mcp_server_get_part_by_sku for the next state transition instead of mcp_server_list_customer_accounts. Teacher refinement: Do not call mcp_server_list_customer_accounts if the customer identity is already known; instead, immediately proceed to fetch the details of the first SKU in the order using mcp_server_get_part_by_sku.\", \"expected_transition\": \"The system returns the metadata (id, price, etc.) for the first requested SKU.\", \"precondition\": \"The user has provided a specific customer name and price tier, and the task requires creating a sales order with specific SKUs.\", \"recovery_check\": \"Verify that the tool called is 'mcp_server_get_part_by_sku' for the first SKU ('OIL-FLTR-001') rather than a customer listing tool.\"}",
+      "steer_fields": {
+        "decision_rule": "Use mcp_server_get_part_by_sku for the next state transition instead of mcp_server_list_customer_accounts. Teacher refinement: Do not call mcp_server_list_customer_accounts if the customer identity is already known; instead, immediately proceed to fetch the details of the first SKU in the order using mcp_server_get_part_by_sku.",
+        "expected_transition": "The system returns the metadata (id, price, etc.) for the first requested SKU.",
+        "precondition": "The user has provided a specific customer name and price tier, and the task requires creating a sales order with specific SKUs.",
+        "recovery_check": "Verify that the tool called is 'mcp_server_get_part_by_sku' for the first SKU ('OIL-FLTR-001') rather than a customer listing tool."
+      },
+      "steer_generation_finish_reason": "tool_calls",
+      "steer_reference_policy": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/checkpoints/steer-int4-g64-cycle001-awq-runtime",
+      "steer_reference_run_dir": "/mnt/genming/Arctic-AWM-BitDistiller-full/arctic_quant/gemma4_12b/q_resteer_w4a16/cycles/cycle002/repairs/24d606cfa3fad6023dc0/steer_reference",
+      "step_id": "steer_step_5bf98b110061ca43",
+      "summary": "The agent incorrectly attempted to list customer accounts using a name and price tier that were already provided in the prompt, instead of proceeding to fetch the specific part details required to build the order lines.",
+      "teacher_failure_explanation": "The policy called mcp_server_list_customer_accounts to verify a customer whose details were already explicitly provided, skipping the necessary step of retrieving part metadata for the order lines.",
+      "teacher_reported_causal_turn": 1,
+      "teacher_reported_failure_type": "wrong_tool",
+      "teacher_reported_relation": "new"
+    }
+  ],
+  "summary": "The agent incorrectly attempted to list customer accounts using a name and price tier that were already provided in the prompt, instead of proceeding to fetch the specific part details required to build the order lines.",
+  "task_key": "b2b_commerce_1:1",
+  "task_text": "For customer_account 'Joe's Auto Repair' (price_tier 'silver'), create a sales_order with a requested_ship_date of '2026-01-05' containing three order_lines: 10 units of part SKU 'OIL-FLTR-001', 4 units of 'BRK-TOY-001', and 2 units of 'BAT-12V-600CCA', letting the system apply the appropriate discount_rules and setting backorder_status to 'allow' for any lines that cannot be fully filled.",
+  "updated_at": "2026-09-11T10:32:14.408153+00:00",
+  "verification_runs": [],
+  "version": 2
+}

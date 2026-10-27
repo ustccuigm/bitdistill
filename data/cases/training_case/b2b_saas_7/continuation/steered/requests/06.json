@@ -1,0 +1,3244 @@
+{
+  "model": "case-student",
+  "messages": [
+    {
+      "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool.\n\nSteering guidance for the current decision:\nTeacher-grounded causal steering memory. Apply only rules whose preconditions hold.\n\n[Steer 1]\nFailure type: wrong_tool\nFailure mechanism: The policy called mcp_server_list_menu_items where the verified state required mcp_server_list_menus.\nRule: {\"decision_rule\": \"Use mcp_server_list_menus for the next state transition instead of mcp_server_list_menu_items. Teacher refinement: Call 'mcp_server_list_menus' with the name 'Ghost Kitchen Late Night' to obtain the menu ID before attempting to list menu items or location versions.\", \"expected_transition\": \"The tool returns a list containing the menu object with its unique ID (e.g., id: 4).\", \"precondition\": \"The location 'Midtown Cloud Kitchen' has been identified, but the specific menu 'Ghost Kitchen Late Night' has not yet been retrieved.\", \"recovery_check\": \"Verify that the next action uses the retrieved menu ID to call 'mcp_server_list_location_menu_versions' or 'mcp_server_list_menu_items' with proper context.\"}",
+      "role": "system"
+    },
+    {
+      "content": "Publish a new version of the 'Ghost Kitchen Late Night' menu for the 'Midtown Cloud Kitchen' location that adds the 'Loaded Kimchi Fries' menu_item, unpublishes the 'Classic Nachos' item, and records an audit note 'Shifted to Korean-inspired snacks based on sales data'.",
+      "role": "user"
+    },
+    {
+      "content": "",
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-aae01e432421086f",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_locations",
+            "arguments": "{\"name\": \"Midtown Cloud Kitchen\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-aae01e432421086f",
+      "content": "{\"locations\": [{\"id\": 3, \"name\": \"Midtown Cloud Kitchen\", \"region\": \"Northeast\", \"created_at\": \"2024-11-03T10:00:00\", \"updated_at\": null}]}"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "refusal": null,
+      "annotations": null,
+      "audio": null,
+      "function_call": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-ae0a29ed1345e057",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_menus",
+            "arguments": "{\"name\": \"Ghost Kitchen Late Night\"}"
+          }
+        }
+      ],
+      "reasoning": "The user wants to publish a new version of the 'Ghost Kitchen Late Night' menu for the 'Midtown Cloud Kitchen' location.\n\nFirst, I need to find the `menu_id` for 'Ghost Kitchen Late Night'.\nThen, I need to find the `location_id` for 'Midtown Cloud Kitchen' (which I've already found as 3).\nI also need to find the `menu_item_id` for 'Loaded Kimchi Fries' and 'Classic Nachos'.\n\nPlan:\n1. List menus to find 'Ghost Kitchen Late Night' ID.\n2. List menu items to find 'Loaded Kimchi Fries' and 'Classic Nachos' IDs.\n3. List location menu versions for 'Midtown Cloud Kitchen' (location_id 3) to see the current version number.\n4. Create a new location menu version for 'Midtown Cloud Kitchen' with the new menu and audit note.\n5. Create a location menu item for 'Loaded Kimchi Fries'.\n6. Update the 'Classic Nachos' location menu item to be unpublished.\n\nLet's start by listing menus.thought"
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-ae0a29ed1345e057",
+      "content": "{\"menus\": [{\"id\": 4, \"name\": \"Ghost Kitchen Late Night\", \"season\": \"All Year\", \"is_template\": 1, \"base_menu_id\": null, \"default_daypart\": \"late-night\", \"created_at\": \"2024-12-10T22:00:00\", \"updated_at\": null}]}"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "refusal": null,
+      "annotations": null,
+      "audio": null,
+      "function_call": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-9ea41b541b6ab918",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_menu_items",
+            "arguments": "{\"internal_name\": \"Loaded Kimchi Fries\"}"
+          }
+        }
+      ],
+      "reasoning": "I have the `menu_id` for 'Ghost Kitchen Late Night' as 4.\nThe `location_id` for 'Midtown Cloud Kitchen' is 3.\n\nNow I need to find the `menu_item_id` for 'Loaded Kimchi Fries' and 'Classic Nachos'.\nI'll list menu items."
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9ea41b541b6ab918",
+      "content": "{\"menu_items\": []}"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "refusal": null,
+      "annotations": null,
+      "audio": null,
+      "function_call": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-96714b9e5b9928d4",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_menu_items",
+            "arguments": "{\"limit\": 100}"
+          }
+        }
+      ],
+      "reasoning": "Wait, `list_menu_items` with `internal_name` \"Loaded Kimchi Fries\" returned nothing. I'll try searching by `display_name` or just list all menu items to find them.\nActually, I'll try searching for \"Loaded Kimchi Fries\" again, maybe it's a different name. I'll list all menu items to see what's available."
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-96714b9e5b9928d4",
+      "content": "{\"menu_items\": [{\"id\": 1, \"internal_name\": \"classic_margherita_pizza\", \"recipe_id\": 1, \"display_name\": \"Classic Margherita Pizza\", \"menu_description\": \"12-inch pizza with tomato, basil, and fresh mozzarella.\", \"base_selling_price\": 18.0, \"active\": 1, \"food_cost_percent\": 24.0, \"suggested_price_min\": 16.0, \"suggested_price_max\": 20.0, \"created_at\": \"2025-01-16T10:00:00\", \"updated_at\": null}, {\"id\": 2, \"internal_name\": \"gluten_free_fried_chicken\", \"recipe_id\": 2, \"display_name\": \"Gluten-Free Fried Chicken\", \"menu_description\": \"Crispy rice-flour fried chicken served with slaw.\", \"base_selling_price\": 22.0, \"active\": 1, \"food_cost_percent\": 28.0, \"suggested_price_min\": 20.0, \"suggested_price_max\": 24.0, \"created_at\": \"2024-12-26T11:00:00\", \"updated_at\": null}, {\"id\": 3, \"internal_name\": \"vegan_ramen_base_bowl\", \"recipe_id\": 3, \"display_name\": \"Vegan Ramen Bowl\", \"menu_description\": \"Umami-rich vegan ramen with tofu and greens.\", \"base_selling_price\": 15.0, \"active\": 1, \"food_cost_percent\": 30.0, \"suggested_price_min\": 13.0, \"suggested_price_max\": 17.0, \"created_at\": \"2024-12-27T12:00:00\", \"updated_at\": null}, {\"id\": 4, \"internal_name\": \"vegan_spicy_ramen\", \"recipe_id\": 3, \"display_name\": \"Vegan Spicy Ramen Bowl\", \"menu_description\": \"Rich vegetable broth with tofu, chili oil, and seasonal greens.\", \"base_selling_price\": 16.5, \"active\": 1, \"food_cost_percent\": 32.0, \"suggested_price_min\": 15.0, \"suggested_price_max\": 18.0, \"created_at\": \"2025-01-05T13:00:00\", \"updated_at\": null}, {\"id\": 5, \"internal_name\": \"grilled_salmon_with_quinoa\", \"recipe_id\": 4, \"display_name\": \"Grilled Salmon with Quinoa\", \"menu_description\": \"Char-grilled salmon over herbed quinoa and greens.\", \"base_selling_price\": 26.0, \"active\": 1, \"food_cost_percent\": 34.0, \"suggested_price_min\": 24.0, \"suggested_price_max\": 30.0, \"created_at\": \"2024-12-28T13:00:00\", \"updated_at\": null}, {\"id\": 6, \"internal_name\": \"loaded_kimchi_fries\", \"recipe_id\": 5, \"display_name\": \"Loaded Kimchi Fries\", \"menu_description\": \"Crispy fries topped with kimchi and melted cheese.\", \"base_selling_price\": 14.0, \"active\": 1, \"food_cost_percent\": 38.0, \"suggested_price_min\": 12.0, \"suggested_price_max\": 16.0, \"created_at\": \"2024-12-29T14:00:00\", \"updated_at\": null}, {\"id\": 7, \"internal_name\": \"classic_nachos\", \"recipe_id\": 6, \"display_name\": \"Classic Nachos\", \"menu_description\": \"Tortilla chips with cheese, salsa, and jalapeños.\", \"base_selling_price\": 13.0, \"active\": 1, \"food_cost_percent\": 29.0, \"suggested_price_min\": 11.0, \"suggested_price_max\": 15.0, \"created_at\": \"2024-12-29T14:05:00\", \"updated_at\": null}, {\"id\": 8, \"internal_name\": \"braised_short_rib_pot_pie\", \"recipe_id\": 7, \"display_name\": \"Braised Short Rib Pot Pie\", \"menu_description\": \"Slow-braised short rib in a flaky crust.\", \"base_selling_price\": 29.0, \"active\": 1, \"food_cost_percent\": 36.0, \"suggested_price_min\": 27.0, \"suggested_price_max\": 33.0, \"created_at\": \"2024-12-30T15:00:00\", \"updated_at\": null}, {\"id\": 9, \"internal_name\": \"truffle_cauliflower_gratin\", \"recipe_id\": 8, \"display_name\": \"Truffle Cauliflower Gratin\", \"menu_description\": \"Roasted cauliflower baked in truffled cheese sauce.\", \"base_selling_price\": 21.0, \"active\": 1, \"food_cost_percent\": 31.0, \"suggested_price_min\": 19.0, \"suggested_price_max\": 23.0, \"created_at\": \"2024-12-30T15:05:00\", \"updated_at\": null}, {\"id\": 10, \"internal_name\": \"house_salad_green_leaf\", \"recipe_id\": null, \"display_name\": \"House Green Leaf Salad\", \"menu_description\": \"Simple salad using green leaf lettuce and vinaigrette.\", \"base_selling_price\": 11.0, \"active\": 1, \"food_cost_percent\": 27.0, \"suggested_price_min\": 10.0, \"suggested_price_max\": 13.0, \"created_at\": \"2024-12-22T12:00:00\", \"updated_at\": null}, {\"id\": 11, \"internal_name\": \"caesar_salad_romaine\", \"recipe_id\": null, \"display_name\": \"Romaine Caesar Salad\", \"menu_description\": \"Crisp romaine with parmesan and croutons.\", \"base_selling_price\": 13.5, \"active\": 1, \"food_cost_percent\": 33.0, \"suggested_price_min\": 12.0, \"suggested_price_max\": 15.0, \"created_at\": \"2024-12-22T12:05:00\", \"updated_at\": null}]}"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "refusal": null,
+      "annotations": null,
+      "audio": null,
+      "function_call": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-9f301497cd015ff5",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_location_menu_versions",
+            "arguments": "{\"location_id\": 3}"
+          }
+        }
+      ],
+      "reasoning": "I have the following IDs:\n- `menu_id` for 'Ghost Kitchen Late Night': 4\n- `location_id` for 'Midtown Cloud Kitchen': 3\n- `menu_item_id` for 'Loaded Kimchi Fries': 6\n- `menu_item_id` for 'Classic Nachos': 7\n\nNow I need to find the current version number for the 'Midtown Cloud Kitchen' location to determine the next version number."
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9f301497cd015ff5",
+      "content": "{\"location_menu_versions\": [{\"id\": 1, \"location_id\": 3, \"menu_id\": 4, \"version_number\": 1, \"is_published\": 1, \"published_at\": \"2024-12-20T22:30:00\", \"audit_note\": \"Initial late night rollout\", \"created_at\": \"2024-12-20T22:00:00\", \"updated_at\": null, \"created_by\": 2}, {\"id\": 2, \"location_id\": 3, \"menu_id\": 4, \"version_number\": 2, \"is_published\": 1, \"published_at\": \"2025-01-02T23:00:00\", \"audit_note\": \"Shifted to Korean-inspired snacks based on sales data\", \"created_at\": \"2025-01-02T22:45:00\", \"updated_at\": null, \"created_by\": 2}]}"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "refusal": null,
+      "annotations": null,
+      "audio": null,
+      "function_call": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-ba04bff70d182153",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_location_menu_items",
+            "arguments": "{\"location_id\": 3}"
+          }
+        }
+      ],
+      "reasoning": "The current version number is 2. So the next version number should be 3.\n\nPlan:\n1. Create a new location menu version for 'Midtown Cloud Kitchen' (location_id 3) with `menu_id` 4, `version_number` 3, and audit note 'Shifted to Korean-inspired snacks based on sales data'.\n2. Create a location menu item for 'Loaded Kimchi Fries' (menu_item_id 6) at location 3.\n3. Update the 'Classic Nachos' (menu_item_id 7) at location 3 to be unpublished.\n\nWait, I need to check if 'Classic Nachos' already exists at that location."
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-ba04bff70d182153",
+      "content": "{\"location_menu_items\": [{\"id\": 5, \"location_id\": 3, \"menu_item_id\": 6, \"menu_version_id\": 1, \"override_selling_price\": null, \"is_published\": 1, \"created_at\": \"2024-12-20T22:05:00\", \"updated_at\": null}, {\"id\": 6, \"location_id\": 3, \"menu_item_id\": 7, \"menu_version_id\": 1, \"override_selling_price\": null, \"is_published\": 1, \"created_at\": \"2024-12-20T22:06:00\", \"updated_at\": null}, {\"id\": 7, \"location_id\": 3, \"menu_item_id\": 6, \"menu_version_id\": 2, \"override_selling_price\": null, \"is_published\": 1, \"created_at\": \"2025-01-02T22:46:00\", \"updated_at\": null}, {\"id\": 8, \"location_id\": 3, \"menu_item_id\": 7, \"menu_version_id\": 2, \"override_selling_price\": null, \"is_published\": 0, \"created_at\": \"2025-01-02T22:46:30\", \"updated_at\": null}, {\"id\": 9, \"location_id\": 3, \"menu_item_id\": 6, \"menu_version_id\": null, \"override_selling_price\": null, \"is_published\": 1, \"created_at\": \"2024-12-20T22:20:00\", \"updated_at\": null}, {\"id\": 10, \"location_id\": 3, \"menu_item_id\": 7, \"menu_version_id\": null, \"override_selling_price\": null, \"is_published\": 0, \"created_at\": \"2024-12-20T22:21:00\", \"updated_at\": null}]}"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "refusal": null,
+      "annotations": null,
+      "audio": null,
+      "function_call": null,
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-8240891ab4a509c1",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_create_location_menu_version",
+            "arguments": "{\"audit_note\": \"Shifted to Korean-inspired snacks based on sales data\", \"is_published\": 1, \"location_id\": 3, \"menu_id\": 4, \"version_number\": 3}"
+          }
+        }
+      ],
+      "reasoning": "I see multiple entries for `menu_item_id` 7 (Classic Nachos) at location 3.\nSpecifically:\n- ID 6: `menu_item_id` 7, `menu_version_id` 1, `is_published` 1\n- ID 8: `menu_item_id` 7, `menu_version_id` 2, `is_published` 0\n- ID 10: `menu_item_id` 7, `menu_version_id` null, `is_published` 0\n\nThe user wants to \"unpublish the 'Classic Nachos' item\".\nI should probably unpublish the one associated with the current version (version 2).\nWait, the user wants to \"Publish a new version... that adds the 'Loaded Kimchi Fries' menu_item, unpublishes the 'Classic Nachos' item\".\n\nLet's create the new version first."
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-8240891ab4a509c1",
+      "content": "{\"id\": 5, \"location_id\": 3, \"menu_id\": 4, \"version_number\": 3, \"is_published\": 1, \"published_at\": null, \"audit_note\": \"Shifted to Korean-inspired snacks based on sales data\", \"created_at\": \"2026-10-27T12:15:11.457378\", \"updated_at\": \"2026-10-27T12:15:11.457378\", \"created_by\": 1}"
+    }
+  ],
+  "temperature": 0,
+  "max_tokens": 8192,
+  "seed": 42,
+  "stop_token_ids": [
+    1,
+    50,
+    106
+  ],
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  },
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_recalculate_menu_item_cost_cache",
+        "description": "Recalculate cost cache\n\nRecalculate cost cache for menu items\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"recalculated_items\": [\n    {\n      \"menu_item_id\": 1,\n      \"total_ingredient_cost\": 1.0,\n      \"food_cost_percent\": 1.0,\n      \"suggested_price_min\": 1.0,\n      \"suggested_price_max\": 1.0,\n      \"last_calculated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "menu_item_ids": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "menu_item_ids",
+              "description": "Optional list of menu_item IDs",
+              "example": [
+                500,
+                510,
+                520
+              ],
+              "type": "array"
+            }
+          },
+          "title": "recalculate_menu_item_cost_cacheArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_worst_margin_items",
+        "description": "Worst-margin items\n\nGet worst-margin menu items grouped by location and daypart\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"menu_item_display_name\": \"Menu Item Display Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "threshold_percent": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Minimum food_cost_percent to consider as bad margin",
+              "default": 35.0,
+              "title": "threshold_percent",
+              "type": "number"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Total number of worst-margin items to return",
+              "default": 10,
+              "title": "limit",
+              "type": "integer"
+            }
+          },
+          "title": "get_worst_margin_itemsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_generate_price_list_margin_impact_report",
+        "description": "Price list margin impact\n\nGenerate margin impact report for a price list\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"price_list_id\": 1,\n  \"margin_threshold_percent\": 1.0,\n  \"affected_menu_items\": [\n    {\n      \"menu_item_id\": 1,\n      \"menu_item_display_name\": \"Menu Item Display Name\",\n      \"total_ingredient_cost\": 1.0,\n      \"food_cost_percent\": 1.0,\n      \"margin_percent\": 1.0,\n      \"suggested_price_min\": 1.0,\n      \"suggested_price_max\": 1.0\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "price_list_id": {
+              "type": "integer",
+              "title": "price_list_id",
+              "description": "Price list that was updated",
+              "example": 5
+            },
+            "margin_threshold_percent": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "margin_threshold_percent",
+              "description": "Minimum acceptable margin",
+              "default": 70.0,
+              "example": 70.0,
+              "type": "number"
+            }
+          },
+          "title": "generate_price_list_margin_impact_reportArguments",
+          "required": [
+            "price_list_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_suppliers",
+        "description": "List suppliers\n\nList suppliers with optional name filter\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"suppliers\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter suppliers by exact or partial name match",
+              "title": "name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of suppliers to return",
+              "default": 20,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of suppliers to skip for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_suppliersArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_ingredient",
+        "description": "Create ingredient\n\nCreate a new ingredient\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"storage_type\": \"Storage Type\",\n  \"base_unit\": \"Base Unit\",\n  \"unit_cost\": 1.0,\n  \"is_leaf_lettuce\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Ingredient name (must be unique)",
+              "example": "Organic Roma Tomato"
+            },
+            "storage_type": {
+              "type": "string",
+              "title": "storage_type",
+              "description": "Storage type for the ingredient",
+              "example": "refrigerated"
+            },
+            "base_unit": {
+              "type": "string",
+              "title": "base_unit",
+              "description": "Base unit for costing and inventory",
+              "example": "lb"
+            },
+            "unit_cost": {
+              "type": "number",
+              "title": "unit_cost",
+              "description": "Base unit cost in USD",
+              "example": 1.2
+            },
+            "allergen_flags": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "allergen_flags",
+              "description": "Comma-separated allergen flags or JSON string; empty if none",
+              "example": "",
+              "type": "string"
+            },
+            "is_leaf_lettuce": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_leaf_lettuce",
+              "description": "Flag 1 if this ingredient is leaf lettuce, else 0",
+              "default": 0,
+              "example": 0,
+              "type": "integer"
+            }
+          },
+          "title": "create_ingredientArguments",
+          "required": [
+            "name",
+            "storage_type",
+            "base_unit",
+            "unit_cost"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_ingredients",
+        "description": "List ingredients\n\nList ingredients with optional filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"ingredients\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"storage_type\": \"Storage Type\",\n      \"base_unit\": \"Base Unit\",\n      \"unit_cost\": 1.0,\n      \"is_leaf_lettuce\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter ingredients by exact or partial name",
+              "title": "name",
+              "type": "string"
+            },
+            "is_leaf_lettuce": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by lettuce flag (1 = leaf lettuce, 0 = not)",
+              "title": "is_leaf_lettuce",
+              "type": "integer"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of ingredients to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of ingredients to skip for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_ingredientsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_ingredient_supplier",
+        "description": "Create ingredient-supplier\n\nLink ingredient to supplier with optional price\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"ingredient_id\": 1,\n  \"supplier_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ingredient_id": {
+              "type": "integer",
+              "title": "ingredient_id",
+              "description": "ID of ingredient being supplied",
+              "example": 42
+            },
+            "supplier_id": {
+              "type": "integer",
+              "title": "supplier_id",
+              "description": "ID of supplier providing the ingredient",
+              "example": 3
+            },
+            "supplier_sku": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "supplier_sku",
+              "description": "Supplier-specific SKU identifier",
+              "example": "FF-RT-001",
+              "type": "string"
+            },
+            "unit_cost": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "unit_cost",
+              "description": "Supplier-specific unit cost override",
+              "example": 1.2,
+              "type": "number"
+            },
+            "price_list_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "price_list_id",
+              "description": "Associated price_list ID if this cost belongs to a list",
+              "example": 5,
+              "type": "integer"
+            }
+          },
+          "title": "create_ingredient_supplierArguments",
+          "required": [
+            "ingredient_id",
+            "supplier_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_ingredient_suppliers",
+        "description": "List ingredient-suppliers\n\nList ingredient-supplier links\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"ingredient_suppliers\": [\n    {\n      \"id\": 1,\n      \"ingredient_id\": 1,\n      \"supplier_id\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ingredient_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by ingredient ID",
+              "title": "ingredient_id",
+              "type": "integer"
+            },
+            "supplier_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by supplier ID",
+              "title": "supplier_id",
+              "type": "integer"
+            },
+            "price_list_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by price list ID",
+              "title": "price_list_id",
+              "type": "integer"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum rows to return",
+              "default": 100,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Rows to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_ingredient_suppliersArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_price_lists",
+        "description": "List price lists\n\nList price lists with optional filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"price_lists\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter price lists by exact or partial name",
+              "title": "name",
+              "type": "string"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by region name",
+              "title": "region",
+              "type": "string"
+            },
+            "active_on": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO date; between start_date and end_date",
+              "title": "active_on",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max rows to return",
+              "default": 20,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Rows to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_price_listsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_recipe",
+        "description": "Create recipe\n\nCreate a new recipe\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"yield_quantity\": 1.0,\n  \"yield_unit\": \"Yield Unit\",\n  \"active\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Recipe name (unique)",
+              "example": "Classic Margherita Pizza"
+            },
+            "yield_quantity": {
+              "type": "number",
+              "title": "yield_quantity",
+              "description": "Total yield quantity",
+              "example": 1.0
+            },
+            "yield_unit": {
+              "type": "string",
+              "title": "yield_unit",
+              "description": "Yield unit label",
+              "example": "pizza"
+            },
+            "prep_time_minutes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "prep_time_minutes",
+              "description": "Preparation time in minutes",
+              "example": 18,
+              "type": "integer"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active",
+              "description": "1 if recipe is active, 0 otherwise",
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "create_recipeArguments",
+          "required": [
+            "name",
+            "yield_quantity",
+            "yield_unit"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_recipes",
+        "description": "List recipes\n\nList recipes with optional filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"recipes\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"yield_quantity\": 1.0,\n      \"yield_unit\": \"Yield Unit\",\n      \"active\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter recipes by exact or partial name",
+              "title": "name",
+              "type": "string"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active flag (1 or 0)",
+              "title": "active",
+              "type": "integer"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max recipes to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Recipes to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_recipesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_menu_item",
+        "description": "Create menu item\n\nCreate a new menu item\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"internal_name\": \"Internal Name\",\n  \"display_name\": \"Display Name\",\n  \"active\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "internal_name": {
+              "type": "string",
+              "title": "internal_name",
+              "description": "Internal name (unique)",
+              "example": "vegan_spicy_ramen"
+            },
+            "recipe_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "recipe_id",
+              "description": "Linked recipe ID",
+              "example": 250,
+              "type": "integer"
+            },
+            "display_name": {
+              "type": "string",
+              "title": "display_name",
+              "description": "Customer-facing display name",
+              "example": "Vegan Spicy Ramen Bowl"
+            },
+            "menu_description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "menu_description",
+              "description": "Description shown on menu",
+              "example": "Rich vegetable broth",
+              "type": "string"
+            },
+            "base_selling_price": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "base_selling_price",
+              "description": "Default selling price",
+              "example": 16.5,
+              "type": "number"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active",
+              "description": "1 if item is active, 0 otherwise",
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "create_menu_itemArguments",
+          "required": [
+            "internal_name",
+            "display_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_menu_items",
+        "description": "List menu items\n\nList menu items with optional filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"menu_items\": [\n    {\n      \"id\": 1,\n      \"internal_name\": \"Internal Name\",\n      \"display_name\": \"Display Name\",\n      \"active\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "internal_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact or partial internal_name",
+              "title": "internal_name",
+              "type": "string"
+            },
+            "recipe_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by linked recipe ID",
+              "title": "recipe_id",
+              "type": "integer"
+            },
+            "max_food_cost_percent": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return items with food_cost_percent <= this value",
+              "title": "max_food_cost_percent",
+              "type": "number"
+            },
+            "min_food_cost_percent": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return items with food_cost_percent >= this value",
+              "title": "min_food_cost_percent",
+              "type": "number"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active flag (1 or 0)",
+              "title": "active",
+              "type": "integer"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max menu items to return",
+              "default": 100,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Menu items to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_menu_itemsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_availability_window",
+        "description": "Create availability window\n\nCreate a generic availability window\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"owner_type\": \"Owner Type\",\n  \"owner_id\": 1,\n  \"day_of_week\": 1,\n  \"start_time\": \"Start Time\",\n  \"end_time\": \"End Time\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner_type": {
+              "type": "string",
+              "title": "owner_type",
+              "description": "Type of owner",
+              "example": "menu_item"
+            },
+            "owner_id": {
+              "type": "integer",
+              "title": "owner_id",
+              "description": "ID of the owner entity",
+              "example": 500
+            },
+            "day_of_week": {
+              "type": "integer",
+              "title": "day_of_week",
+              "description": "Day of week (0=Monday, 6=Sunday)",
+              "example": 0
+            },
+            "start_time": {
+              "type": "string",
+              "title": "start_time",
+              "description": "Start time (HH:MM)",
+              "example": "11:00"
+            },
+            "end_time": {
+              "type": "string",
+              "title": "end_time",
+              "description": "End time (HH:MM)",
+              "example": "15:00"
+            }
+          },
+          "title": "create_availability_windowArguments",
+          "required": [
+            "owner_type",
+            "owner_id",
+            "day_of_week",
+            "start_time",
+            "end_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_availability_windows",
+        "description": "List availability windows\n\nList availability windows with filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"availability_windows\": [\n    {\n      \"id\": 1,\n      \"owner_type\": \"Owner Type\",\n      \"owner_id\": 1,\n      \"day_of_week\": 1,\n      \"start_time\": \"Start Time\",\n      \"end_time\": \"End Time\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "owner_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner type filter",
+              "title": "owner_type",
+              "type": "string"
+            },
+            "owner_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner ID filter",
+              "title": "owner_id",
+              "type": "integer"
+            },
+            "day_of_week": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Day of week filter",
+              "title": "day_of_week",
+              "type": "integer"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max windows to return",
+              "default": 100,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Windows to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_availability_windowsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_menus",
+        "description": "List menus\n\nList menus with optional filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"menus\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"is_template\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact or partial menu name",
+              "title": "name",
+              "type": "string"
+            },
+            "is_template": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter templates (1) vs menus (0)",
+              "title": "is_template",
+              "type": "integer"
+            },
+            "season": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by season label",
+              "title": "season",
+              "type": "string"
+            },
+            "base_menu_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by base menu ID",
+              "title": "base_menu_id",
+              "type": "integer"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max menus to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Menus to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_menusArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_menu",
+        "description": "Create menu\n\nCreate a new menu\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"is_template\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Menu name (unique)",
+              "example": "Summer 2025 Brunch Menu"
+            },
+            "season": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "season",
+              "description": "Season metadata label",
+              "example": "Summer 2025",
+              "type": "string"
+            },
+            "is_template": {
+              "type": "integer",
+              "title": "is_template",
+              "description": "1 if template, 0 if location-specific base",
+              "example": 1
+            },
+            "base_menu_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "base_menu_id",
+              "description": "ID of base menu if this menu is derived",
+              "example": 35,
+              "type": "integer"
+            },
+            "default_daypart": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "default_daypart",
+              "description": "Default daypart for menu",
+              "example": "brunch",
+              "type": "string"
+            }
+          },
+          "title": "create_menuArguments",
+          "required": [
+            "name",
+            "is_template"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_locations",
+        "description": "List locations\n\nList locations with optional filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"locations\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact or partial location name",
+              "title": "name",
+              "type": "string"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by region tag",
+              "title": "region",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max locations to return",
+              "default": 20,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Locations to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_locationsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_location_menu_template",
+        "description": "Create location menu template\n\nAttach a menu template to a location\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"location_id\": 1,\n  \"menu_id\": 1,\n  \"weekends_only\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "type": "integer",
+              "title": "location_id",
+              "description": "Location ID",
+              "example": 10
+            },
+            "menu_id": {
+              "type": "integer",
+              "title": "menu_id",
+              "description": "Menu template ID",
+              "example": 45
+            },
+            "weekends_only": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "weekends_only",
+              "description": "1 if weekends only",
+              "default": 0,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "create_location_menu_templateArguments",
+          "required": [
+            "location_id",
+            "menu_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_location_menu_templates",
+        "description": "List location menu templates\n\nList location menu templates\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"location_menu_templates\": [\n    {\n      \"id\": 1,\n      \"location_id\": 1,\n      \"menu_id\": 1,\n      \"weekends_only\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by location ID",
+              "title": "location_id",
+              "type": "integer"
+            },
+            "menu_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by menu ID",
+              "title": "menu_id",
+              "type": "integer"
+            }
+          },
+          "title": "list_location_menu_templatesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_location_menu_version",
+        "description": "Create location menu version\n\nCreate a new location menu version\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"location_id\": 1,\n  \"menu_id\": 1,\n  \"version_number\": 1,\n  \"is_published\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "type": "integer",
+              "title": "location_id",
+              "description": "Location ID",
+              "example": 20
+            },
+            "menu_id": {
+              "type": "integer",
+              "title": "menu_id",
+              "description": "Menu ID",
+              "example": 60
+            },
+            "version_number": {
+              "type": "integer",
+              "title": "version_number",
+              "description": "Version number for this menu at the location",
+              "example": 2
+            },
+            "is_published": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_published",
+              "description": "1 if published, 0 if draft",
+              "default": 0,
+              "example": 0,
+              "type": "integer"
+            },
+            "audit_note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "audit_note",
+              "description": "Audit note describing purpose of this version",
+              "example": "Added Korean-inspired snacks",
+              "type": "string"
+            }
+          },
+          "title": "create_location_menu_versionArguments",
+          "required": [
+            "location_id",
+            "menu_id",
+            "version_number"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_location_menu_versions",
+        "description": "List location menu versions\n\nList location menu versions\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"location_menu_versions\": [\n    {\n      \"id\": 1,\n      \"location_id\": 1,\n      \"menu_id\": 1,\n      \"version_number\": 1,\n      \"is_published\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by location ID",
+              "title": "location_id",
+              "type": "integer"
+            },
+            "menu_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by menu ID",
+              "title": "menu_id",
+              "type": "integer"
+            },
+            "is_published": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by published flag (1/0)",
+              "title": "is_published",
+              "type": "integer"
+            }
+          },
+          "title": "list_location_menu_versionsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_location_menu_item",
+        "description": "Create location menu item\n\nCreate a location-specific menu item override\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"location_id\": 1,\n  \"menu_item_id\": 1,\n  \"is_published\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "type": "integer",
+              "title": "location_id",
+              "description": "Location ID",
+              "example": 10
+            },
+            "menu_item_id": {
+              "type": "integer",
+              "title": "menu_item_id",
+              "description": "Menu item ID",
+              "example": 510
+            },
+            "menu_version_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "menu_version_id",
+              "description": "Location menu version ID",
+              "example": 1100,
+              "type": "integer"
+            },
+            "override_selling_price": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "override_selling_price",
+              "description": "Location-specific selling price",
+              "example": 28.0,
+              "type": "number"
+            },
+            "is_published": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_published",
+              "description": "1 if item is published at location, else 0",
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "create_location_menu_itemArguments",
+          "required": [
+            "location_id",
+            "menu_item_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_location_menu_items",
+        "description": "List location menu items\n\nList location-specific menu items\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"location_menu_items\": [\n    {\n      \"id\": 1,\n      \"location_id\": 1,\n      \"menu_item_id\": 1,\n      \"is_published\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by location ID",
+              "title": "location_id",
+              "type": "integer"
+            },
+            "menu_item_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by menu item ID",
+              "title": "menu_item_id",
+              "type": "integer"
+            },
+            "menu_version_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by menu version ID",
+              "title": "menu_version_id",
+              "type": "integer"
+            },
+            "is_published": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by published flag (1/0)",
+              "title": "is_published",
+              "type": "integer"
+            }
+          },
+          "title": "list_location_menu_itemsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_menu_item_cost_cache",
+        "description": "List cost cache\n\nList menu item cost cache entries\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"cost_cache_entries\": [\n    {\n      \"menu_item_id\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "menu_item_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by a specific menu_item ID",
+              "title": "menu_item_id",
+              "type": "integer"
+            },
+            "min_food_cost_percent": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter entries where food_cost_percent >= value",
+              "title": "min_food_cost_percent",
+              "type": "number"
+            },
+            "max_food_cost_percent": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter entries where food_cost_percent <= value",
+              "title": "max_food_cost_percent",
+              "type": "number"
+            }
+          },
+          "title": "list_menu_item_cost_cacheArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_bulk_increase_leaf_lettuce_costs",
+        "description": "Increase lettuce costs\n\nBulk increase leaf-lettuce costs for a price list\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"price_list_id\": 1,\n  \"percentage_increase\": 1.0,\n  \"updated_rows\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "price_list_id": {
+              "type": "integer",
+              "description": "Target price list ID",
+              "title": "price_list_id"
+            },
+            "percentage_increase": {
+              "type": "number",
+              "title": "percentage_increase",
+              "description": "Percentage increase to apply",
+              "example": 5.0
+            }
+          },
+          "title": "bulk_increase_leaf_lettuce_costsArguments",
+          "required": [
+            "price_list_id",
+            "percentage_increase"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_recipe_ingredient_line",
+        "description": "Create ingredient line\n\nAdd an ingredient line to a recipe\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"recipe_id\": 1,\n  \"ingredient_id\": 1,\n  \"position\": 1,\n  \"quantity\": 1.0,\n  \"unit\": \"Unit\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "recipe_id": {
+              "type": "integer",
+              "description": "Parent recipe ID",
+              "title": "recipe_id"
+            },
+            "ingredient_id": {
+              "type": "integer",
+              "title": "ingredient_id",
+              "description": "Ingredient ID used in the recipe",
+              "example": 50
+            },
+            "position": {
+              "type": "integer",
+              "title": "position",
+              "description": "Ordering position within the ingredient list",
+              "example": 1
+            },
+            "quantity": {
+              "type": "number",
+              "title": "quantity",
+              "description": "Quantity of ingredient",
+              "example": 4.0
+            },
+            "unit": {
+              "type": "string",
+              "title": "unit",
+              "description": "Unit of measure for this ingredient line",
+              "example": "oz"
+            },
+            "line_allergen_flags": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "line_allergen_flags",
+              "description": "Line-specific allergen flags",
+              "example": "egg",
+              "type": "string"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "notes",
+              "description": "Optional preparation or sourcing notes",
+              "example": "Use low-moisture mozzarella",
+              "type": "string"
+            }
+          },
+          "title": "create_recipe_ingredient_lineArguments",
+          "required": [
+            "recipe_id",
+            "ingredient_id",
+            "position",
+            "quantity",
+            "unit"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_recipe_ingredient_lines",
+        "description": "List ingredient lines\n\nList ingredient lines for a recipe\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"ingredient_lines\": [\n    {\n      \"id\": 1,\n      \"recipe_id\": 1,\n      \"ingredient_id\": 1,\n      \"position\": 1,\n      \"quantity\": 1.0,\n      \"unit\": \"Unit\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "recipe_id": {
+              "type": "integer",
+              "description": "Recipe ID",
+              "title": "recipe_id"
+            }
+          },
+          "title": "list_recipe_ingredient_linesArguments",
+          "required": [
+            "recipe_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_recipe_step",
+        "description": "Create recipe step\n\nAdd a preparation step to a recipe\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"recipe_id\": 1,\n  \"step_number\": 1,\n  \"description\": \"Description\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "recipe_id": {
+              "type": "integer",
+              "description": "Parent recipe ID",
+              "title": "recipe_id"
+            },
+            "step_number": {
+              "type": "integer",
+              "title": "step_number",
+              "description": "Sequential step number, starting from 1",
+              "example": 1
+            },
+            "description": {
+              "type": "string",
+              "title": "description",
+              "description": "Text describing the preparation step",
+              "example": "Stretch the dough."
+            }
+          },
+          "title": "create_recipe_stepArguments",
+          "required": [
+            "recipe_id",
+            "step_number",
+            "description"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_recipe_steps",
+        "description": "List recipe steps\n\nList preparation steps for a recipe\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"steps\": [\n    {\n      \"id\": 1,\n      \"recipe_id\": 1,\n      \"step_number\": 1,\n      \"description\": \"Description\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "recipe_id": {
+              "type": "integer",
+              "description": "Recipe ID",
+              "title": "recipe_id"
+            }
+          },
+          "title": "list_recipe_stepsArguments",
+          "required": [
+            "recipe_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_menu_item_tag",
+        "description": "Create menu item tag\n\nAdd a tag to a menu item\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"menu_item_id\": 1,\n  \"tag\": \"Tag\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "menu_item_id": {
+              "type": "integer",
+              "description": "Menu item ID to tag",
+              "title": "menu_item_id"
+            },
+            "tag": {
+              "type": "string",
+              "title": "tag",
+              "description": "Tag label",
+              "example": "vegan"
+            }
+          },
+          "title": "create_menu_item_tagArguments",
+          "required": [
+            "menu_item_id",
+            "tag"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_menu_item_tags",
+        "description": "List menu item tags\n\nList tags for a menu item\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"tags\": [\n    {\n      \"id\": 1,\n      \"menu_item_id\": 1,\n      \"tag\": \"Tag\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "menu_item_id": {
+              "type": "integer",
+              "description": "Menu item ID",
+              "title": "menu_item_id"
+            }
+          },
+          "title": "list_menu_item_tagsArguments",
+          "required": [
+            "menu_item_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_menu_section",
+        "description": "Create menu section\n\nCreate a new menu section\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"menu_id\": 1,\n  \"name\": \"Name\",\n  \"position\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "menu_id": {
+              "type": "integer",
+              "description": "Parent menu ID",
+              "title": "menu_id"
+            },
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Section name",
+              "example": "Winter Specials"
+            },
+            "position": {
+              "type": "integer",
+              "title": "position",
+              "description": "Section ordering position within the menu",
+              "example": 3
+            }
+          },
+          "title": "create_menu_sectionArguments",
+          "required": [
+            "menu_id",
+            "name",
+            "position"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_menu_sections",
+        "description": "List menu sections\n\nList sections for a menu\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"sections\": [\n    {\n      \"id\": 1,\n      \"menu_id\": 1,\n      \"name\": \"Name\",\n      \"position\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "menu_id": {
+              "type": "integer",
+              "description": "Menu ID",
+              "title": "menu_id"
+            }
+          },
+          "title": "list_menu_sectionsArguments",
+          "required": [
+            "menu_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_menu_section_item",
+        "description": "Create menu section item\n\nAdd a menu item to a section\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"menu_section_id\": 1,\n  \"menu_item_id\": 1,\n  \"position\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "section_id": {
+              "type": "integer",
+              "description": "Menu section ID",
+              "title": "section_id"
+            },
+            "menu_item_id": {
+              "type": "integer",
+              "title": "menu_item_id",
+              "description": "Menu item ID to include in this section",
+              "example": 520
+            },
+            "position": {
+              "type": "integer",
+              "title": "position",
+              "description": "Ordering position within the section",
+              "example": 1
+            }
+          },
+          "title": "create_menu_section_itemArguments",
+          "required": [
+            "section_id",
+            "menu_item_id",
+            "position"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_menu_section_items",
+        "description": "List menu section items\n\nList items in a menu section\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"section_items\": [\n    {\n      \"id\": 1,\n      \"menu_section_id\": 1,\n      \"menu_item_id\": 1,\n      \"position\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "section_id": {
+              "type": "integer",
+              "description": "Menu section ID",
+              "title": "section_id"
+            }
+          },
+          "title": "list_menu_section_itemsArguments",
+          "required": [
+            "section_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_location_menu_item_availability",
+        "description": "Create location menu item availability\n\nAdd availability to a location menu item\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"location_menu_item_id\": 1,\n  \"day_of_week\": 1,\n  \"start_time\": \"Start Time\",\n  \"end_time\": \"End Time\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_menu_item_id": {
+              "type": "integer",
+              "description": "Location menu item ID",
+              "title": "location_menu_item_id"
+            },
+            "day_of_week": {
+              "type": "integer",
+              "title": "day_of_week",
+              "description": "Day of week (0=Monday, 6=Sunday)",
+              "example": 4
+            },
+            "start_time": {
+              "type": "string",
+              "title": "start_time",
+              "description": "Start time (HH:MM, 24-hour)",
+              "example": "17:00"
+            },
+            "end_time": {
+              "type": "string",
+              "title": "end_time",
+              "description": "End time (HH:MM, 24-hour)",
+              "example": "22:00"
+            }
+          },
+          "title": "create_location_menu_item_availabilityArguments",
+          "required": [
+            "location_menu_item_id",
+            "day_of_week",
+            "start_time",
+            "end_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_location_menu_item_availability",
+        "description": "List location menu item availability\n\nList availability for a location menu item\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"availability\": [\n    {\n      \"id\": 1,\n      \"location_menu_item_id\": 1,\n      \"day_of_week\": 1,\n      \"start_time\": \"Start Time\",\n      \"end_time\": \"End Time\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_menu_item_id": {
+              "type": "integer",
+              "description": "Location menu item ID",
+              "title": "location_menu_item_id"
+            }
+          },
+          "title": "list_location_menu_item_availabilityArguments",
+          "required": [
+            "location_menu_item_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_clone_menu_with_structure",
+        "description": "Clone menu\n\nClone a menu with sections and items\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"new_menu\": {\n    \"id\": 1,\n    \"name\": \"Name\",\n    \"is_template\": 1\n  },\n  \"cloned_sections\": [\n    {\n      \"old_section_id\": 1,\n      \"new_section_id\": 1,\n      \"name\": \"Name\",\n      \"position\": 1\n    }\n  ],\n  \"cloned_section_items\": [\n    {\n      \"old_section_item_id\": 1,\n      \"new_section_item_id\": 1,\n      \"new_section_id\": 1,\n      \"menu_item_id\": 1,\n      \"position\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "menu_id": {
+              "type": "integer",
+              "description": "Source menu ID to clone",
+              "title": "menu_id"
+            },
+            "new_name": {
+              "type": "string",
+              "title": "new_name",
+              "description": "Name for the cloned menu",
+              "example": "Summer 2025 Brunch Menu"
+            },
+            "new_season": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "new_season",
+              "description": "Optional new season label for cloned menu",
+              "example": "Summer 2025",
+              "type": "string"
+            },
+            "is_template": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_template",
+              "description": "Template flag for cloned menu (1 or 0)",
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "clone_menu_with_structureArguments",
+          "required": [
+            "menu_id",
+            "new_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_supplier",
+        "description": "Get supplier\n\nGet a single supplier by ID\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "supplier_id": {
+              "type": "integer",
+              "description": "Supplier ID to fetch",
+              "title": "supplier_id"
+            }
+          },
+          "title": "get_supplierArguments",
+          "required": [
+            "supplier_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_ingredient",
+        "description": "Patch ingredient\n\nUpdate an ingredient partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"storage_type\": \"Storage Type\",\n  \"base_unit\": \"Base Unit\",\n  \"unit_cost\": 1.0,\n  \"is_leaf_lettuce\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ingredient_id": {
+              "type": "integer",
+              "description": "Ingredient ID to update",
+              "title": "ingredient_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "New ingredient name",
+              "example": "Organic Green Leaf Lettuce",
+              "type": "string"
+            },
+            "storage_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "storage_type",
+              "description": "New storage type",
+              "example": "refrigerated",
+              "type": "string"
+            },
+            "base_unit": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "base_unit",
+              "description": "New base unit",
+              "example": "lb",
+              "type": "string"
+            },
+            "unit_cost": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "unit_cost",
+              "description": "New unit cost",
+              "example": 1.35,
+              "type": "number"
+            },
+            "allergen_flags": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "allergen_flags",
+              "description": "Updated allergen flags string",
+              "example": "sesame",
+              "type": "string"
+            },
+            "is_leaf_lettuce": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_leaf_lettuce",
+              "description": "1 if now treated as leaf lettuce, else 0",
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "patch_ingredientArguments",
+          "required": [
+            "ingredient_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_ingredient_supplier",
+        "description": "Patch ingredient-supplier\n\nUpdate ingredient-supplier link partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"ingredient_id\": 1,\n  \"supplier_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "Ingredient-supplier row ID",
+              "title": "id"
+            },
+            "supplier_sku": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "supplier_sku",
+              "description": "New supplier SKU",
+              "example": "FF-RT-001-NEW",
+              "type": "string"
+            },
+            "unit_cost": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "unit_cost",
+              "description": "New unit cost for this link",
+              "example": 1.25,
+              "type": "number"
+            },
+            "price_list_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "price_list_id",
+              "description": "New price list ID or null",
+              "example": 6,
+              "type": "integer"
+            }
+          },
+          "title": "patch_ingredient_supplierArguments",
+          "required": [
+            "id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_recipe",
+        "description": "Patch recipe\n\nUpdate a recipe header partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"yield_quantity\": 1.0,\n  \"yield_unit\": \"Yield Unit\",\n  \"active\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "recipe_id": {
+              "type": "integer",
+              "description": "Recipe ID to update",
+              "title": "recipe_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "New recipe name",
+              "example": "Updated",
+              "type": "string"
+            },
+            "yield_quantity": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "yield_quantity",
+              "description": "New yield quantity",
+              "example": 4.0,
+              "type": "number"
+            },
+            "yield_unit": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "yield_unit",
+              "description": "New yield unit",
+              "example": "portions",
+              "type": "string"
+            },
+            "prep_time_minutes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "prep_time_minutes",
+              "description": "New prep time in minutes",
+              "example": 30,
+              "type": "integer"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active",
+              "description": "1 if active, 0 if inactive",
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "patch_recipeArguments",
+          "required": [
+            "recipe_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_recipe_ingredient_line",
+        "description": "Patch ingredient line\n\nUpdate a recipe ingredient line partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"recipe_id\": 1,\n  \"ingredient_id\": 1,\n  \"position\": 1,\n  \"quantity\": 1.0,\n  \"unit\": \"Unit\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "line_id": {
+              "type": "integer",
+              "description": "Ingredient line ID",
+              "title": "line_id"
+            },
+            "position": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "position",
+              "description": "New ordering position",
+              "example": 3,
+              "type": "integer"
+            },
+            "quantity": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "quantity",
+              "description": "New quantity for this line",
+              "example": 5.0,
+              "type": "number"
+            },
+            "unit": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "unit",
+              "description": "New unit of measure",
+              "example": "oz",
+              "type": "string"
+            },
+            "line_allergen_flags": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "line_allergen_flags",
+              "description": "New allergen flags value",
+              "example": "egg",
+              "type": "string"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "notes",
+              "description": "New notes",
+              "example": "Contains egg from buttermilk",
+              "type": "string"
+            }
+          },
+          "title": "patch_recipe_ingredient_lineArguments",
+          "required": [
+            "line_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_recipe_step",
+        "description": "Patch recipe step\n\nUpdate a recipe step partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"recipe_id\": 1,\n  \"step_number\": 1,\n  \"description\": \"Description\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "step_id": {
+              "type": "integer",
+              "description": "Recipe step ID",
+              "title": "step_id"
+            },
+            "step_number": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "step_number",
+              "description": "New step order number",
+              "example": 3,
+              "type": "integer"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "New step description text",
+              "example": "Bake at 500F.",
+              "type": "string"
+            }
+          },
+          "title": "patch_recipe_stepArguments",
+          "required": [
+            "step_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_menu_item",
+        "description": "Patch menu item\n\nUpdate a menu item partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"internal_name\": \"Internal Name\",\n  \"display_name\": \"Display Name\",\n  \"active\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "menu_item_id": {
+              "type": "integer",
+              "description": "Menu item ID",
+              "title": "menu_item_id"
+            },
+            "internal_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "internal_name",
+              "description": "New internal name",
+              "example": "grilled_salmon_quinoa_dinner",
+              "type": "string"
+            },
+            "recipe_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "recipe_id",
+              "description": "New linked recipe ID",
+              "example": 260,
+              "type": "integer"
+            },
+            "display_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "display_name",
+              "description": "New display name",
+              "example": "Grilled Salmon with Quinoa",
+              "type": "string"
+            },
+            "menu_description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "menu_description",
+              "description": "New menu description",
+              "example": "Dinner portion",
+              "type": "string"
+            },
+            "base_selling_price": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "base_selling_price",
+              "description": "New base selling price",
+              "example": 27.0,
+              "type": "number"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active",
+              "description": "1 to activate, 0 to deactivate",
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "patch_menu_itemArguments",
+          "required": [
+            "menu_item_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_delete_menu_item_tag",
+        "description": "Delete menu item tag\n\nDelete a menu item tag\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"deleted\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "tag_id": {
+              "type": "integer",
+              "description": "Menu item tag ID to delete",
+              "title": "tag_id"
+            }
+          },
+          "title": "delete_menu_item_tagArguments",
+          "required": [
+            "tag_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_delete_availability_window",
+        "description": "Delete availability window\n\nDelete an availability window\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"deleted\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "Availability window ID",
+              "title": "id"
+            }
+          },
+          "title": "delete_availability_windowArguments",
+          "required": [
+            "id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_menu",
+        "description": "Patch menu\n\nUpdate a menu partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"is_template\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "menu_id": {
+              "type": "integer",
+              "description": "Menu ID to update",
+              "title": "menu_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "New menu name",
+              "example": "Updated",
+              "type": "string"
+            },
+            "season": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "season",
+              "description": "New season label",
+              "example": "Spring 2025",
+              "type": "string"
+            },
+            "is_template": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_template",
+              "description": "1 if template, 0 otherwise",
+              "example": 1,
+              "type": "integer"
+            },
+            "base_menu_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "base_menu_id",
+              "description": "New base menu ID",
+              "example": 35,
+              "type": "integer"
+            },
+            "default_daypart": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "default_daypart",
+              "description": "New default daypart",
+              "example": "brunch",
+              "type": "string"
+            }
+          },
+          "title": "patch_menuArguments",
+          "required": [
+            "menu_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_menu_section",
+        "description": "Patch menu section\n\nUpdate a menu section partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"menu_id\": 1,\n  \"name\": \"Name\",\n  \"position\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "section_id": {
+              "type": "integer",
+              "description": "Section ID",
+              "title": "section_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "New section name",
+              "example": "Mains",
+              "type": "string"
+            },
+            "position": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "position",
+              "description": "New section position",
+              "example": 3,
+              "type": "integer"
+            }
+          },
+          "title": "patch_menu_sectionArguments",
+          "required": [
+            "section_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_menu_section_item",
+        "description": "Patch menu section item\n\nUpdate a menu section item partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"menu_section_id\": 1,\n  \"menu_item_id\": 1,\n  \"position\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "section_item_id": {
+              "type": "integer",
+              "description": "Menu section item ID",
+              "title": "section_item_id"
+            },
+            "menu_item_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "menu_item_id",
+              "description": "New menu item ID for this position",
+              "example": 521,
+              "type": "integer"
+            },
+            "position": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "position",
+              "description": "New ordering position",
+              "example": 2,
+              "type": "integer"
+            }
+          },
+          "title": "patch_menu_section_itemArguments",
+          "required": [
+            "section_item_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_location_menu_template",
+        "description": "Patch location menu template\n\nUpdate a location menu template link\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"location_id\": 1,\n  \"menu_id\": 1,\n  \"weekends_only\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "Location-menu template link ID",
+              "title": "id"
+            },
+            "location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "location_id",
+              "description": "New location ID",
+              "example": 11,
+              "type": "integer"
+            },
+            "menu_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "menu_id",
+              "description": "New menu ID",
+              "example": 46,
+              "type": "integer"
+            },
+            "weekends_only": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "weekends_only",
+              "description": "Updated weekends-only flag",
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "patch_location_menu_templateArguments",
+          "required": [
+            "id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_location_menu_version",
+        "description": "Patch location menu version\n\nUpdate a location menu version partially\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"location_id\": 1,\n  \"menu_id\": 1,\n  \"version_number\": 1,\n  \"is_published\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "version_id": {
+              "type": "integer",
+              "description": "Location menu version ID",
+              "title": "version_id"
+            },
+            "version_number": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "version_number",
+              "description": "New version number",
+              "example": 3,
+              "type": "integer"
+            },
+            "is_published": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_published",
+              "description": "Set 1 to publish, 0 to unpublish",
+              "example": 1,
+              "type": "integer"
+            },
+            "published_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "published_at",
+              "description": "Explicit published timestamp or null",
+              "example": "2025-04-01T22:05:00Z",
+              "type": "string"
+            },
+            "audit_note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "audit_note",
+              "description": "Updated audit note",
+              "example": "Shifted to new snacks",
+              "type": "string"
+            }
+          },
+          "title": "patch_location_menu_versionArguments",
+          "required": [
+            "version_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_location_menu_item",
+        "description": "Patch location menu item\n\nUpdate a location menu item override\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"location_id\": 1,\n  \"menu_item_id\": 1,\n  \"is_published\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "Location menu item ID",
+              "title": "id"
+            },
+            "menu_version_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "menu_version_id",
+              "description": "New menu version ID or null",
+              "example": 1101,
+              "type": "integer"
+            },
+            "override_selling_price": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "override_selling_price",
+              "description": "New override selling price",
+              "example": 28.0,
+              "type": "number"
+            },
+            "is_published": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_published",
+              "description": "New published flag",
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "patch_location_menu_itemArguments",
+          "required": [
+            "id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_delete_location_menu_item_availability",
+        "description": "Delete location menu item availability\n\nDelete location menu item availability\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"deleted\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "Location menu item availability ID",
+              "title": "id"
+            }
+          },
+          "title": "delete_location_menu_item_availabilityArguments",
+          "required": [
+            "id"
+          ]
+        }
+      }
+    }
+  ],
+  "tool_choice": "auto"
+}

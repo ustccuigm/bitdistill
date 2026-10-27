@@ -1,11 +1,9 @@
-# Training case
+# Training steering cases
 
-整理的数据包含Asset、Service、Menu三个训练steering案例，分别保存指导前记录、指导后候选、steering分析和prompt，以及补充的隔离环境执行结果。
+Asset、Service、Menu三个任务的整理数据：指导前轨迹、保存的steering分析和prompt、指导后候选动作，以及同一前置状态上的无指导/有指导完整续跑。
 
-| 案例 | 当前执行结果 |
-|---|---|
-| [Asset](asset_management_3/SUMMARY.md) | 两种参数均触发响应类型校验错误；未验证修正成功 |
-| [Service](appointment_booking_3/SUMMARY.md) | 原接口不存在；修正调用成功创建服务，局部效果已观察到 |
-| [Menu](b2b_saas_7/SUMMARY.md) | 两种查询都合法；修正查询取得菜单ID，不代表原动作非法 |
+- [Asset](asset_management_3/SUMMARY.md)
+- [Service](appointment_booking_3/SUMMARY.md)
+- [Menu](b2b_saas_7/SUMMARY.md)
 
-这些结果不等同于三个完整任务全部成功。当前记录不包含新生成的teacher分析、四路消融或完整模型续跑。执行环境使用隔离数据库，没有修改训练环境或原始记录。
+最终任务验收见[continuation_results.json](continuation_results.json)。各案例continuation文件夹保存请求、响应、工具执行、初始与最终数据库及代码verifier结果。局部调用成功与整个任务成功分别记录；原有的动作差异不会自动被视为因果错误。

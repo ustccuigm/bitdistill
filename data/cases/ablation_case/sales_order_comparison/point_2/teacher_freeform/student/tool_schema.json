@@ -1,0 +1,5820 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PartsRack Wholesale Inventory API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/inventory/by-sku": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get inventory summary by SKU",
+        "description": "Summarize quantities by warehouse for a part referenced by SKU.",
+        "operationId": "get_inventory_by_sku",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Part SKU to summarize",
+              "title": "Sku"
+            },
+            "description": "Part SKU to summarize",
+            "example": "BRK-TOY-001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryBySkuResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inventory/search": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Find inventory rows by part and warehouse",
+        "description": "List inventory rows filtered by part_id or warehouse_id or bin_id.",
+        "operationId": "search_inventory",
+        "parameters": [
+          {
+            "name": "part_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by part ID",
+              "title": "Part Id"
+            },
+            "description": "Filter by part ID",
+            "example": 101
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by warehouse ID",
+              "title": "Warehouse Id"
+            },
+            "description": "Filter by warehouse ID",
+            "example": 1
+          },
+          {
+            "name": "bin_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by bin ID",
+              "title": "Bin Id"
+            },
+            "description": "Filter by bin ID",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventorySearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inventory/movements": {
+      "post": {
+        "tags": [
+          "inventory_movements"
+        ],
+        "summary": "Record an inventory movement between bins",
+        "description": "Insert an inventory_movements row and adjust inventory rows for a bin transfer.",
+        "operationId": "create_inventory_movement",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryMovementCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryMovementResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/apply-rules": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "summary": "Apply pricing rules to a sales order line",
+        "description": "Calculate unit_price and discount_percent for a line using price_tier_rules and part defaults.",
+        "operationId": "apply_pricing_rules_to_line",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyPricingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyPricingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/recalculate-open-lines": {
+      "post": {
+        "tags": [
+          "pricing",
+          "sales_orders"
+        ],
+        "summary": "Recalculate prices for open order lines by rule",
+        "description": "Recompute unit_price and discount_percent for matching open sales_order_lines created on a date.",
+        "operationId": "recalculate_open_sales_order_lines",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecalculateOpenLinesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecalculateOpenLinesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sales-orders/allocate-line": {
+      "post": {
+        "tags": [
+          "sales_orders",
+          "inventory"
+        ],
+        "summary": "Allocate inventory to a sales order line",
+        "description": "Increase quantity_allocated for a line and increase quantity_reserved in inventory.",
+        "operationId": "allocate_inventory_to_sales_order_line",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllocateInventoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocateInventoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/pick-list": {
+      "get": {
+        "tags": [
+          "reports",
+          "warehouse_operations"
+        ],
+        "summary": "Generate pick list for a warehouse and ship date",
+        "description": "Return pick_list lines for open orders shipping on a date from a warehouse grouped by bin.",
+        "operationId": "generate_pick_list",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Warehouse preparing the picks",
+              "title": "Warehouse Id"
+            },
+            "description": "Warehouse preparing the picks",
+            "example": 2
+          },
+          {
+            "name": "ship_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Requested ship date YYYY-MM-DD to pick for",
+              "title": "Ship Date"
+            },
+            "description": "Requested ship date YYYY-MM-DD to pick for",
+            "example": "2026-01-03"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/stock-aging": {
+      "get": {
+        "tags": [
+          "reports",
+          "inventory"
+        ],
+        "summary": "Run stock aging report for a warehouse and category",
+        "description": "Return parts with quantity_on_hand and average age in days exceeding threshold, sorted by quantity.",
+        "operationId": "stock_aging_report",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Warehouse to analyze",
+              "title": "Warehouse Id"
+            },
+            "description": "Warehouse to analyze",
+            "example": 5
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Part category filter",
+              "title": "Category"
+            },
+            "description": "Part category filter",
+            "example": "Suspension"
+          },
+          {
+            "name": "min_quantity_on_hand",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Minimum on-hand quantity threshold",
+              "title": "Min Quantity On Hand"
+            },
+            "description": "Minimum on-hand quantity threshold",
+            "example": 50
+          },
+          {
+            "name": "min_average_age_days",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Minimum average age in days",
+              "title": "Min Average Age Days"
+            },
+            "description": "Minimum average age in days",
+            "example": 90
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockAgingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/fill-rate": {
+      "get": {
+        "tags": [
+          "reports",
+          "sales_orders"
+        ],
+        "summary": "Calculate fill rate and top moving parts for a period",
+        "description": "Compute percent of orders fully filled on requested_ship_date plus top 10 parts by shipped qty.",
+        "operationId": "fill_rate_report",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Start date YYYY-MM-DD of analysis window",
+              "title": "Start Date"
+            },
+            "description": "Start date YYYY-MM-DD of analysis window",
+            "example": "2026-01-01"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "End date YYYY-MM-DD of analysis window",
+              "title": "End Date"
+            },
+            "description": "End date YYYY-MM-DD of analysis window",
+            "example": "2026-01-30"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FillRateReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parts": {
+      "post": {
+        "tags": [
+          "parts"
+        ],
+        "summary": "Create a new part with pricing",
+        "description": "Create a parts row using SKU, manufacturer, part_number, category, and default prices.",
+        "operationId": "create_part",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouses": {
+      "get": {
+        "tags": [
+          "warehouses"
+        ],
+        "summary": "List warehouses with optional filters",
+        "description": "Retrieve warehouses filtered by name or postal_code for routing and allocation.",
+        "operationId": "list_warehouses",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by warehouse name (partial match)",
+              "title": "Name"
+            },
+            "description": "Filter by warehouse name (partial match)",
+            "example": "Downtown"
+          },
+          {
+            "name": "postal_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by postal_code",
+              "title": "Postal Code"
+            },
+            "description": "Filter by postal_code",
+            "example": "94107"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "warehouses"
+        ],
+        "summary": "Create a new warehouse",
+        "description": "Insert a new warehouses row for storing and shipping inventory.",
+        "operationId": "create_warehouse",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WarehouseCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inventory": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Create or set an inventory record",
+        "description": "Create an inventory row for a part, warehouse, and bin with explicit quantities.",
+        "operationId": "create_inventory_record",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "List customer accounts",
+        "description": "Retrieve customer_accounts filtered by name, price_tier, or customer_group.",
+        "operationId": "list_customer_accounts",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter customers by name (partial match)",
+              "title": "Name"
+            },
+            "description": "Filter customers by name (partial match)",
+            "example": "Joe's Auto"
+          },
+          {
+            "name": "price_tier",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by price tier",
+              "title": "Price Tier"
+            },
+            "description": "Filter by price tier",
+            "example": "silver"
+          },
+          {
+            "name": "customer_group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by customer group",
+              "title": "Customer Group"
+            },
+            "description": "Filter by customer group",
+            "example": "gold"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/price-tier-rules": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "summary": "Create a price tier rule",
+        "description": "Insert a price_tier_rules row defining discount for tier, group, and category.",
+        "operationId": "create_price_tier_rule",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceTierRuleCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceTierRuleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "pricing"
+        ],
+        "summary": "List price tier rules",
+        "description": "Retrieve price_tier_rules optionally filtered by tier, group, or category.",
+        "operationId": "list_price_tier_rules",
+        "parameters": [
+          {
+            "name": "price_tier",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by price tier",
+              "title": "Price Tier"
+            },
+            "description": "Filter by price tier",
+            "example": "silver"
+          },
+          {
+            "name": "customer_group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by customer group",
+              "title": "Customer Group"
+            },
+            "description": "Filter by customer group",
+            "example": "gold"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category",
+              "title": "Category"
+            },
+            "description": "Filter by category",
+            "example": "Batteries"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active flag 1/0",
+              "title": "Is Active"
+            },
+            "description": "Filter by active flag 1/0",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceTierRuleListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/suppliers": {
+      "get": {
+        "tags": [
+          "suppliers"
+        ],
+        "summary": "List suppliers with optional name filter",
+        "description": "Retrieve suppliers filtered by name for PO creation.",
+        "operationId": "list_suppliers",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter suppliers by name (partial match)",
+              "title": "Name"
+            },
+            "description": "Filter suppliers by name (partial match)",
+            "example": "ACME"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchase-orders": {
+      "post": {
+        "tags": [
+          "purchase_orders"
+        ],
+        "summary": "Create a purchase order header",
+        "description": "Insert a purchase_orders row with draft status for a supplier and warehouse.",
+        "operationId": "create_purchase_order",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseOrderCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sales-orders": {
+      "post": {
+        "tags": [
+          "sales_orders"
+        ],
+        "summary": "Create a sales order header",
+        "description": "Insert a sales_orders row for a customer, warehouse, and requested_ship_date.",
+        "operationId": "create_sales_order",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesOrderCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse-service-zones": {
+      "get": {
+        "tags": [
+          "service_zones"
+        ],
+        "summary": "List warehouse service zones",
+        "description": "Retrieve warehouse_service_zones to see transit_days by postal_code_prefix.",
+        "operationId": "list_warehouse_service_zones",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by warehouse ID",
+              "title": "Warehouse Id"
+            },
+            "description": "Filter by warehouse ID",
+            "example": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseServiceZoneListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/availability": {
+      "get": {
+        "tags": [
+          "availability"
+        ],
+        "summary": "Check availability and ETA for a SKU and destination ZIP",
+        "description": "Find best warehouse with available quantity and estimated_delivery_date using transit_days.",
+        "operationId": "check_availability_by_sku_and_zip",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Part SKU to check availability",
+              "title": "Sku"
+            },
+            "description": "Part SKU to check availability",
+            "example": "ALT-HON-2.4L"
+          },
+          {
+            "name": "destination_zip",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Destination ZIP/postal code",
+              "title": "Destination Zip"
+            },
+            "description": "Destination ZIP/postal code",
+            "example": "94107"
+          },
+          {
+            "name": "ship_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Planned ship date YYYY-MM-DD for ETA calc; defaults to today",
+              "title": "Ship Date"
+            },
+            "description": "Planned ship date YYYY-MM-DD for ETA calc; defaults to today",
+            "example": "2026-01-02"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipments": {
+      "post": {
+        "tags": [
+          "shipments"
+        ],
+        "summary": "Create a shipment for a sales order",
+        "description": "Insert a shipments row with carrier, tracking_number, ship_date, and warehouse.",
+        "operationId": "create_shipment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parts/{part_id}/compatibility/bulk": {
+      "post": {
+        "tags": [
+          "part_compatibility"
+        ],
+        "summary": "Bulk add compatibility rows for a part",
+        "description": "Create multiple part_compatibility rows in one request for a given part.",
+        "operationId": "bulk_add_part_compatibility",
+        "parameters": [
+          {
+            "name": "part_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Part ID owning the compatibility rows",
+              "title": "Part Id"
+            },
+            "description": "Part ID owning the compatibility rows",
+            "example": 101
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartCompatibilityBulkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartCompatibilityListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parts/by-sku/{sku}": {
+      "get": {
+        "tags": [
+          "parts"
+        ],
+        "summary": "Get part details by SKU",
+        "description": "Retrieve a single part row by its SKU for use when only SKU is known.",
+        "operationId": "get_part_by_sku",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "SKU to look up",
+              "title": "Sku"
+            },
+            "description": "SKU to look up",
+            "example": "BRK-TOY-001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parts/{part_id}/compatibility": {
+      "post": {
+        "tags": [
+          "part_compatibility"
+        ],
+        "summary": "Add a compatibility record for a part",
+        "description": "Create a single part_compatibility row for a given part and vehicle range.",
+        "operationId": "add_part_compatibility",
+        "parameters": [
+          {
+            "name": "part_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Part ID owning the compatibility",
+              "title": "Part Id"
+            },
+            "description": "Part ID owning the compatibility",
+            "example": 101
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartCompatibilityCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartCompatibilityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "part_compatibility"
+        ],
+        "summary": "List compatibility entries for a part",
+        "description": "Retrieve all part_compatibility rows for a specific part ID.",
+        "operationId": "list_part_compatibility",
+        "parameters": [
+          {
+            "name": "part_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Part ID to list compatibilities",
+              "title": "Part Id"
+            },
+            "description": "Part ID to list compatibilities",
+            "example": 101
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartCompatibilityListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouses/{warehouse_id}/bins": {
+      "post": {
+        "tags": [
+          "warehouse_bins"
+        ],
+        "summary": "Create a bin in a warehouse",
+        "description": "Insert a new warehouse_bins row for a specific warehouse.",
+        "operationId": "create_warehouse_bin",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Owning warehouse ID",
+              "title": "Warehouse Id"
+            },
+            "description": "Owning warehouse ID",
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WarehouseBinCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseBinResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "warehouse_bins"
+        ],
+        "summary": "List bins in a warehouse",
+        "description": "Retrieve all warehouse_bins for a given warehouse_id.",
+        "operationId": "list_warehouse_bins",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Warehouse whose bins to list",
+              "title": "Warehouse Id"
+            },
+            "description": "Warehouse whose bins to list",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseBinListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchase-orders/{purchase_order_id}/lines": {
+      "post": {
+        "tags": [
+          "purchase_order_lines"
+        ],
+        "summary": "Add a line to a purchase order",
+        "description": "Insert a purchase_order_lines row for a part on a purchase order.",
+        "operationId": "create_purchase_order_line",
+        "parameters": [
+          {
+            "name": "purchase_order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Parent purchase order ID",
+              "title": "Purchase Order Id"
+            },
+            "description": "Parent purchase order ID",
+            "example": 600
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseOrderLineCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderLineResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sales-orders/by-number/{order_number}": {
+      "get": {
+        "tags": [
+          "sales_orders"
+        ],
+        "summary": "Get sales order by order_number",
+        "description": "Retrieve a sales_orders row using its order_number string.",
+        "operationId": "get_sales_order_by_number",
+        "parameters": [
+          {
+            "name": "order_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Order number to look up",
+              "title": "Order Number"
+            },
+            "description": "Order number to look up",
+            "example": "SO-2026-00045"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sales-orders/{sales_order_id}/lines": {
+      "post": {
+        "tags": [
+          "sales_order_lines"
+        ],
+        "summary": "Add a line to a sales order",
+        "description": "Insert a sales_order_lines row with pricing and backorder_status.",
+        "operationId": "create_sales_order_line",
+        "parameters": [
+          {
+            "name": "sales_order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Parent sales order ID",
+              "title": "Sales Order Id"
+            },
+            "description": "Parent sales order ID",
+            "example": 700
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesOrderLineCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderLineResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "sales_order_lines"
+        ],
+        "summary": "List lines for a sales order",
+        "description": "Retrieve all sales_order_lines for a given sales order ID.",
+        "operationId": "list_sales_order_lines",
+        "parameters": [
+          {
+            "name": "sales_order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Sales order ID",
+              "title": "Sales Order Id"
+            },
+            "description": "Sales order ID",
+            "example": 700
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderLineListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipments/{shipment_id}/lines": {
+      "post": {
+        "tags": [
+          "shipment_lines"
+        ],
+        "summary": "Add a line to a shipment",
+        "description": "Insert a shipment_lines row, linking to a sales_order_line and optional bin.",
+        "operationId": "create_shipment_line",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Parent shipment ID",
+              "title": "Shipment Id"
+            },
+            "description": "Parent shipment ID",
+            "example": 900
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentLineCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentLineResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "shipment_lines"
+        ],
+        "summary": "List lines for a shipment",
+        "description": "Retrieve shipment_lines for a given shipment_id including quantities and bins.",
+        "operationId": "list_shipment_lines",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Shipment ID",
+              "title": "Shipment Id"
+            },
+            "description": "Shipment ID",
+            "example": 900
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentLineListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipments/by-order/{sales_order_id}": {
+      "get": {
+        "tags": [
+          "shipments"
+        ],
+        "summary": "List shipments for a sales order",
+        "description": "Retrieve shipments rows for a specific sales_order_id.",
+        "operationId": "list_shipments_for_order",
+        "parameters": [
+          {
+            "name": "sales_order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Sales order ID",
+              "title": "Sales Order Id"
+            },
+            "description": "Sales order ID",
+            "example": 700
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parts/{part_id}": {
+      "get": {
+        "tags": [
+          "parts"
+        ],
+        "summary": "Get part details by ID",
+        "description": "Retrieve a single part row by its ID including core attributes.",
+        "operationId": "get_part_by_id",
+        "parameters": [
+          {
+            "name": "part_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Part ID to retrieve",
+              "title": "Part Id"
+            },
+            "description": "Part ID to retrieve",
+            "example": 101
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "parts"
+        ],
+        "summary": "Update part core fields",
+        "description": "Partially update manufacturer, part_number, category, or prices for a part.",
+        "operationId": "update_part",
+        "parameters": [
+          {
+            "name": "part_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "ID of the part to update",
+              "title": "Part Id"
+            },
+            "description": "ID of the part to update",
+            "example": 101
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inventory/{inventory_id}": {
+      "patch": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Update inventory quantities for a row",
+        "description": "Adjust quantity_on_hand, quantity_reserved, or reorder_point on a single inventory row.",
+        "operationId": "update_inventory_row",
+        "parameters": [
+          {
+            "name": "inventory_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Inventory row ID",
+              "title": "Inventory Id"
+            },
+            "description": "Inventory row ID",
+            "example": 1001
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchase-orders/{purchase_order_id}": {
+      "patch": {
+        "tags": [
+          "purchase_orders"
+        ],
+        "summary": "Update purchase order header fields",
+        "description": "Update status or expected_receipt_date of a purchase_orders row.",
+        "operationId": "update_purchase_order",
+        "parameters": [
+          {
+            "name": "purchase_order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "PO ID",
+              "title": "Purchase Order Id"
+            },
+            "description": "PO ID",
+            "example": 600
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseOrderUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sales-orders/{sales_order_id}": {
+      "patch": {
+        "tags": [
+          "sales_orders"
+        ],
+        "summary": "Update sales order header status or dates",
+        "description": "Change status or requested_ship_date fields on a sales_orders row.",
+        "operationId": "update_sales_order",
+        "parameters": [
+          {
+            "name": "sales_order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Sales order ID",
+              "title": "Sales Order Id"
+            },
+            "description": "Sales order ID",
+            "example": 700
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesOrderUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sales-order-lines/{sales_order_line_id}": {
+      "patch": {
+        "tags": [
+          "sales_order_lines"
+        ],
+        "summary": "Update sales order line quantities or backorder status",
+        "description": "Update quantity_shipped or backorder_status on a sales_order_lines row.",
+        "operationId": "update_sales_order_line",
+        "parameters": [
+          {
+            "name": "sales_order_line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Line ID to update",
+              "title": "Sales Order Line Id"
+            },
+            "description": "Line ID to update",
+            "example": 8001
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesOrderLineUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderLineUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouses/{warehouse_id}/bins/by-code/{bin_code}": {
+      "get": {
+        "tags": [
+          "warehouse_bins"
+        ],
+        "summary": "Get bin by warehouse and code",
+        "description": "Find a single bin in a warehouse using its bin_code.",
+        "operationId": "get_bin_by_code",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Warehouse ID",
+              "title": "Warehouse Id"
+            },
+            "description": "Warehouse ID",
+            "example": 2
+          },
+          {
+            "name": "bin_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Bin code to locate",
+              "title": "Bin Code"
+            },
+            "description": "Bin code to locate",
+            "example": "B-01-02"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseBinResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AllocateInventoryRequest": {
+        "properties": {
+          "sales_order_line_id": {
+            "type": "integer",
+            "title": "Sales Order Line Id",
+            "description": "Line to allocate inventory to",
+            "example": 8001
+          },
+          "inventory_id": {
+            "type": "integer",
+            "title": "Inventory Id",
+            "description": "Inventory row used for allocation",
+            "example": 1001
+          },
+          "quantity_to_allocate": {
+            "type": "integer",
+            "title": "Quantity To Allocate",
+            "description": "Quantity being allocated",
+            "example": 10
+          }
+        },
+        "type": "object",
+        "required": [
+          "sales_order_line_id",
+          "inventory_id",
+          "quantity_to_allocate"
+        ],
+        "title": "AllocateInventoryRequest"
+      },
+      "AllocateInventoryResponse": {
+        "properties": {
+          "sales_order_line_id": {
+            "type": "integer",
+            "title": "Sales Order Line Id",
+            "description": "Line ID",
+            "example": 8001
+          },
+          "new_quantity_allocated": {
+            "type": "integer",
+            "title": "New Quantity Allocated",
+            "description": "Updated allocated quantity on line",
+            "example": 10
+          },
+          "inventory_id": {
+            "type": "integer",
+            "title": "Inventory Id",
+            "description": "Inventory ID used",
+            "example": 1001
+          },
+          "new_inventory_reserved": {
+            "type": "integer",
+            "title": "New Inventory Reserved",
+            "description": "Updated reserved quantity in inventory row",
+            "example": 10
+          }
+        },
+        "type": "object",
+        "required": [
+          "sales_order_line_id",
+          "new_quantity_allocated",
+          "inventory_id",
+          "new_inventory_reserved"
+        ],
+        "title": "AllocateInventoryResponse"
+      },
+      "ApplyPricingRequest": {
+        "properties": {
+          "customer_account_id": {
+            "type": "integer",
+            "title": "Customer Account Id",
+            "description": "Customer placing the order",
+            "example": 5
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part being ordered",
+            "example": 301
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Part category for this line",
+            "example": "Batteries"
+          },
+          "quantity_ordered": {
+            "type": "integer",
+            "title": "Quantity Ordered",
+            "description": "Ordered quantity",
+            "example": 4
+          },
+          "order_date": {
+            "type": "string",
+            "title": "Order Date",
+            "description": "Order date YYYY-MM-DD for rule validity",
+            "example": "2026-01-01"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_account_id",
+          "part_id",
+          "category",
+          "quantity_ordered",
+          "order_date"
+        ],
+        "title": "ApplyPricingRequest"
+      },
+      "ApplyPricingResponse": {
+        "properties": {
+          "unit_list_price": {
+            "type": "number",
+            "title": "Unit List Price",
+            "description": "Base unit list price from parts",
+            "example": 150.0
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price",
+            "description": "Calculated unit price after discount",
+            "example": 132.0
+          },
+          "discount_percent": {
+            "type": "number",
+            "title": "Discount Percent",
+            "description": "Total discount percent applied",
+            "example": 12.0
+          },
+          "applied_rule_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Applied Rule Ids",
+            "description": "IDs of rules that affected pricing",
+            "example": [
+              300
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_list_price",
+          "unit_price",
+          "discount_percent",
+          "applied_rule_ids"
+        ],
+        "title": "ApplyPricingResponse"
+      },
+      "AvailabilityAlternativeItem": {
+        "properties": {
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 3
+          },
+          "warehouse_name": {
+            "type": "string",
+            "title": "Warehouse Name",
+            "description": "Warehouse name",
+            "example": "West Coast DC"
+          },
+          "available_quantity": {
+            "type": "integer",
+            "title": "Available Quantity",
+            "description": "Available quantity",
+            "example": 8
+          },
+          "estimated_delivery_date": {
+            "type": "string",
+            "title": "Estimated Delivery Date",
+            "description": "ETA date",
+            "example": "2026-01-06"
+          }
+        },
+        "type": "object",
+        "required": [
+          "warehouse_id",
+          "warehouse_name",
+          "available_quantity",
+          "estimated_delivery_date"
+        ],
+        "title": "AvailabilityAlternativeItem"
+      },
+      "AvailabilityBestWarehouse": {
+        "properties": {
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 2
+          },
+          "warehouse_name": {
+            "type": "string",
+            "title": "Warehouse Name",
+            "description": "Warehouse name",
+            "example": "Central DC"
+          },
+          "available_quantity": {
+            "type": "integer",
+            "title": "Available Quantity",
+            "description": "Total available quantity (on_hand - reserved)",
+            "example": 15
+          },
+          "estimated_delivery_date": {
+            "type": "string",
+            "title": "Estimated Delivery Date",
+            "description": "Estimated delivery date YYYY-MM-DD",
+            "example": "2026-01-05"
+          }
+        },
+        "type": "object",
+        "required": [
+          "warehouse_id",
+          "warehouse_name",
+          "available_quantity",
+          "estimated_delivery_date"
+        ],
+        "title": "AvailabilityBestWarehouse"
+      },
+      "AvailabilityResponse": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "Requested SKU",
+            "example": "ALT-HON-2.4L"
+          },
+          "part_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 350
+          },
+          "best_warehouse": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AvailabilityBestWarehouse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Selected warehouse offering soonest delivery"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityAlternativeItem"
+            },
+            "type": "array",
+            "title": "Alternatives",
+            "description": "Other warehouses with availability and ETA",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "alternatives"
+        ],
+        "title": "AvailabilityResponse"
+      },
+      "CustomerListResponse": {
+        "properties": {
+          "customers": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerResponse"
+            },
+            "type": "array",
+            "title": "Customers",
+            "description": "Matching customer accounts",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "customers"
+        ],
+        "title": "CustomerListResponse"
+      },
+      "CustomerResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Customer ID",
+            "example": 5
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Customer name",
+            "example": "Joe's Auto Repair"
+          },
+          "price_tier": {
+            "type": "string",
+            "title": "Price Tier",
+            "description": "Price tier code",
+            "example": "silver"
+          },
+          "customer_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Group",
+            "description": "Customer group",
+            "example": "independent_shop"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "Primary email",
+            "example": "joe@example.com"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone",
+            "description": "Phone number",
+            "example": "+1-555-0100"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "price_tier"
+        ],
+        "title": "CustomerResponse"
+      },
+      "FillRateReportResponse": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "title": "Start Date",
+            "description": "Start date of window",
+            "example": "2026-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date",
+            "description": "End date of window",
+            "example": "2026-01-30"
+          },
+          "total_orders": {
+            "type": "integer",
+            "title": "Total Orders",
+            "description": "Number of sales orders in window",
+            "example": 250
+          },
+          "orders_filled_on_time": {
+            "type": "integer",
+            "title": "Orders Filled On Time",
+            "description": "Orders fully shipped on their requested_ship_date",
+            "example": 210
+          },
+          "fill_rate_percent": {
+            "type": "number",
+            "title": "Fill Rate Percent",
+            "description": "Percentage of orders filled on time",
+            "example": 84.0
+          },
+          "top_moving_parts": {
+            "items": {
+              "$ref": "#/components/schemas/FillRateTopPartItem"
+            },
+            "type": "array",
+            "title": "Top Moving Parts",
+            "description": "Top 10 parts by shipped quantity in window",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date",
+          "end_date",
+          "total_orders",
+          "orders_filled_on_time",
+          "fill_rate_percent",
+          "top_moving_parts"
+        ],
+        "title": "FillRateReportResponse"
+      },
+      "FillRateTopPartItem": {
+        "properties": {
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 101
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "SKU",
+            "example": "OIL-FLTR-001"
+          },
+          "total_quantity_shipped": {
+            "type": "integer",
+            "title": "Total Quantity Shipped",
+            "description": "Total shipped quantity",
+            "example": 750
+          }
+        },
+        "type": "object",
+        "required": [
+          "part_id",
+          "sku",
+          "total_quantity_shipped"
+        ],
+        "title": "FillRateTopPartItem"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InventoryBySkuResponse": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "Requested SKU",
+            "example": "BRK-TOY-001"
+          },
+          "part_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 101
+          },
+          "warehouses": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryBySkuWarehouseItem"
+            },
+            "type": "array",
+            "title": "Warehouses",
+            "description": "Per-warehouse inventory summary",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "warehouses"
+        ],
+        "title": "InventoryBySkuResponse"
+      },
+      "InventoryBySkuWarehouseItem": {
+        "properties": {
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 1
+          },
+          "warehouse_name": {
+            "type": "string",
+            "title": "Warehouse Name",
+            "description": "Warehouse name",
+            "example": "Downtown Warehouse"
+          },
+          "total_on_hand": {
+            "type": "integer",
+            "title": "Total On Hand",
+            "description": "Total on-hand in this warehouse",
+            "example": 120
+          },
+          "total_reserved": {
+            "type": "integer",
+            "title": "Total Reserved",
+            "description": "Total reserved in this warehouse",
+            "example": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "warehouse_id",
+          "warehouse_name",
+          "total_on_hand",
+          "total_reserved"
+        ],
+        "title": "InventoryBySkuWarehouseItem"
+      },
+      "InventoryCreateRequest": {
+        "properties": {
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID for this inventory row",
+            "example": 101
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse where inventory is stored",
+            "example": 1
+          },
+          "bin_id": {
+            "type": "integer",
+            "title": "Bin Id",
+            "description": "Bin ID within the warehouse",
+            "example": 10
+          },
+          "quantity_on_hand": {
+            "type": "integer",
+            "title": "Quantity On Hand",
+            "description": "Initial on-hand quantity",
+            "example": 120
+          },
+          "quantity_reserved": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Reserved",
+            "description": "Initial reserved quantity",
+            "default": 0,
+            "example": 0
+          },
+          "reorder_point": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reorder Point",
+            "description": "Reorder point threshold",
+            "default": 0,
+            "example": 30
+          }
+        },
+        "type": "object",
+        "required": [
+          "part_id",
+          "warehouse_id",
+          "bin_id",
+          "quantity_on_hand"
+        ],
+        "title": "InventoryCreateRequest"
+      },
+      "InventoryMovementCreateRequest": {
+        "properties": {
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part being moved",
+            "example": 201
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse where movement occurs",
+            "example": 2
+          },
+          "from_bin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Bin Id",
+            "description": "Source bin ID (nullable for adjustments)",
+            "example": 22
+          },
+          "to_bin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Bin Id",
+            "description": "Destination bin ID (nullable for adjustments)",
+            "example": 23
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "description": "Quantity moved (positive integer)",
+            "example": 25
+          },
+          "movement_type": {
+            "type": "string",
+            "title": "Movement Type",
+            "description": "Movement type e.g. TRANSFER, SHIPMENT, RECEIPT, ADJUSTMENT",
+            "example": "TRANSFER"
+          },
+          "reference_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Type",
+            "description": "Related document type e.g. SALES_ORDER, SHIPMENT",
+            "example": "SALES_ORDER"
+          },
+          "reference_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Id",
+            "description": "ID of related document",
+            "example": 450
+          }
+        },
+        "type": "object",
+        "required": [
+          "part_id",
+          "warehouse_id",
+          "quantity",
+          "movement_type"
+        ],
+        "title": "InventoryMovementCreateRequest"
+      },
+      "InventoryMovementResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Movement ID",
+            "example": 9001
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 201
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 2
+          },
+          "from_bin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Bin Id",
+            "description": "Source bin ID",
+            "example": 22
+          },
+          "to_bin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Bin Id",
+            "description": "Destination bin ID",
+            "example": 23
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "description": "Quantity moved",
+            "example": 25
+          },
+          "movement_type": {
+            "type": "string",
+            "title": "Movement Type",
+            "description": "Movement type",
+            "example": "TRANSFER"
+          },
+          "reference_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Type",
+            "description": "Reference type",
+            "example": "SALES_ORDER"
+          },
+          "reference_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Id",
+            "description": "Reference ID",
+            "example": 450
+          },
+          "movement_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Movement Date",
+            "description": "Movement timestamp",
+            "example": "2026-01-01T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "part_id",
+          "warehouse_id",
+          "quantity",
+          "movement_type",
+          "movement_date"
+        ],
+        "title": "InventoryMovementResponse"
+      },
+      "InventoryResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Inventory row ID",
+            "example": 1001
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 101
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 1
+          },
+          "bin_id": {
+            "type": "integer",
+            "title": "Bin Id",
+            "description": "Bin ID",
+            "example": 10
+          },
+          "quantity_on_hand": {
+            "type": "integer",
+            "title": "Quantity On Hand",
+            "description": "On-hand quantity",
+            "example": 120
+          },
+          "quantity_reserved": {
+            "type": "integer",
+            "title": "Quantity Reserved",
+            "description": "Reserved quantity",
+            "example": 0
+          },
+          "reorder_point": {
+            "type": "integer",
+            "title": "Reorder Point",
+            "description": "Reorder point",
+            "example": 30
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "part_id",
+          "warehouse_id",
+          "bin_id",
+          "quantity_on_hand",
+          "quantity_reserved",
+          "reorder_point"
+        ],
+        "title": "InventoryResponse"
+      },
+      "InventorySearchResponse": {
+        "properties": {
+          "inventory": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryResponse"
+            },
+            "type": "array",
+            "title": "Inventory",
+            "description": "Matching inventory rows",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "inventory"
+        ],
+        "title": "InventorySearchResponse"
+      },
+      "InventoryUpdateRequest": {
+        "properties": {
+          "quantity_on_hand": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity On Hand",
+            "description": "New on-hand quantity",
+            "example": 115
+          },
+          "quantity_reserved": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Reserved",
+            "description": "New reserved quantity",
+            "example": 5
+          },
+          "reorder_point": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reorder Point",
+            "description": "New reorder point",
+            "example": 25
+          }
+        },
+        "type": "object",
+        "title": "InventoryUpdateRequest"
+      },
+      "PartCompatibilityBulkItem": {
+        "properties": {
+          "make": {
+            "type": "string",
+            "title": "Make",
+            "description": "Vehicle make",
+            "example": "Toyota"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Vehicle model",
+            "example": "Corolla"
+          },
+          "year_start": {
+            "type": "integer",
+            "title": "Year Start",
+            "description": "Start year",
+            "example": 2015
+          },
+          "year_end": {
+            "type": "integer",
+            "title": "Year End",
+            "description": "End year",
+            "example": 2019
+          }
+        },
+        "type": "object",
+        "required": [
+          "make",
+          "model",
+          "year_start",
+          "year_end"
+        ],
+        "title": "PartCompatibilityBulkItem"
+      },
+      "PartCompatibilityBulkRequest": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PartCompatibilityBulkItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of compatibility definitions",
+            "example": [
+              {
+                "make": "Toyota",
+                "model": "Corolla",
+                "year_end": 2019,
+                "year_start": 2015
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "PartCompatibilityBulkRequest"
+      },
+      "PartCompatibilityCreateRequest": {
+        "properties": {
+          "make": {
+            "type": "string",
+            "title": "Make",
+            "description": "Vehicle make",
+            "example": "Toyota"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Vehicle model",
+            "example": "Corolla"
+          },
+          "year_start": {
+            "type": "integer",
+            "title": "Year Start",
+            "description": "First compatible model year",
+            "example": 2015
+          },
+          "year_end": {
+            "type": "integer",
+            "title": "Year End",
+            "description": "Last compatible model year",
+            "example": 2019
+          }
+        },
+        "type": "object",
+        "required": [
+          "make",
+          "model",
+          "year_start",
+          "year_end"
+        ],
+        "title": "PartCompatibilityCreateRequest"
+      },
+      "PartCompatibilityListResponse": {
+        "properties": {
+          "compatibility": {
+            "items": {
+              "$ref": "#/components/schemas/PartCompatibilityResponse"
+            },
+            "type": "array",
+            "title": "Compatibility",
+            "description": "Compatibility records for the part",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "compatibility"
+        ],
+        "title": "PartCompatibilityListResponse"
+      },
+      "PartCompatibilityResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Compatibility row ID",
+            "example": 501
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 101
+          },
+          "make": {
+            "type": "string",
+            "title": "Make",
+            "description": "Vehicle make",
+            "example": "Toyota"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Vehicle model",
+            "example": "Corolla"
+          },
+          "year_start": {
+            "type": "integer",
+            "title": "Year Start",
+            "description": "Start year",
+            "example": 2015
+          },
+          "year_end": {
+            "type": "integer",
+            "title": "Year End",
+            "description": "End year",
+            "example": 2019
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-12-31T10:20:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "part_id",
+          "make",
+          "model",
+          "year_start",
+          "year_end"
+        ],
+        "title": "PartCompatibilityResponse"
+      },
+      "PartCreateRequest": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "Unique stock-keeping unit for the part",
+            "example": "BRK-TOY-001"
+          },
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manufacturer",
+            "description": "Manufacturer name",
+            "example": "Bosch"
+          },
+          "part_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Number",
+            "description": "Manufacturer part number",
+            "example": "0986ABC123"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Human-readable part description",
+            "example": "Front brake pad set"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Part category for pricing and reporting",
+            "example": "Brakes"
+          },
+          "default_cost_price": {
+            "type": "number",
+            "title": "Default Cost Price",
+            "description": "Default cost price in USD",
+            "example": 45.0
+          },
+          "default_list_price": {
+            "type": "number",
+            "title": "Default List Price",
+            "description": "Default list price in USD",
+            "example": 89.99
+          },
+          "default_core_charge": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Core Charge",
+            "description": "Default core charge in USD",
+            "default": 0.0,
+            "example": 10.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "category",
+          "default_cost_price",
+          "default_list_price"
+        ],
+        "title": "PartCreateRequest"
+      },
+      "PartResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Generated part ID",
+            "example": 101
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "Unique SKU",
+            "example": "BRK-TOY-001"
+          },
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manufacturer",
+            "description": "Manufacturer name",
+            "example": "Bosch"
+          },
+          "part_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Number",
+            "description": "Manufacturer part number",
+            "example": "0986ABC123"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Part description",
+            "example": "Front brake pad set"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Part category",
+            "example": "Brakes"
+          },
+          "default_cost_price": {
+            "type": "number",
+            "title": "Default Cost Price",
+            "description": "Default cost price",
+            "example": 45.0
+          },
+          "default_list_price": {
+            "type": "number",
+            "title": "Default List Price",
+            "description": "Default list price",
+            "example": 89.99
+          },
+          "default_core_charge": {
+            "type": "number",
+            "title": "Default Core Charge",
+            "description": "Default core charge",
+            "example": 10.0
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-12-31T10:15:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Last updated timestamp",
+            "example": "2025-12-31T11:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sku",
+          "category",
+          "default_cost_price",
+          "default_list_price",
+          "default_core_charge"
+        ],
+        "title": "PartResponse"
+      },
+      "PartUpdateRequest": {
+        "properties": {
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manufacturer",
+            "description": "New manufacturer name",
+            "example": "Bosch"
+          },
+          "part_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Number",
+            "description": "New part number",
+            "example": "0986ABC123"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "New description",
+            "example": "Updated front brake pad set"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "New category",
+            "example": "Brakes"
+          },
+          "default_cost_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Cost Price",
+            "description": "New default cost",
+            "example": 47.5
+          },
+          "default_list_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default List Price",
+            "description": "New default list price",
+            "example": 92.0
+          },
+          "default_core_charge": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Core Charge",
+            "description": "New default core charge",
+            "example": 12.0
+          }
+        },
+        "type": "object",
+        "title": "PartUpdateRequest"
+      },
+      "PickListItem": {
+        "properties": {
+          "bin_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bin Code",
+            "description": "Pick bin code",
+            "example": "B-01-02"
+          },
+          "warehouse_bin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Bin Id",
+            "description": "Bin ID",
+            "example": 22
+          },
+          "order_number": {
+            "type": "string",
+            "title": "Order Number",
+            "description": "Sales order number",
+            "example": "SO-2026-00040"
+          },
+          "sales_order_id": {
+            "type": "integer",
+            "title": "Sales Order Id",
+            "description": "Sales order ID",
+            "example": 695
+          },
+          "sales_order_line_id": {
+            "type": "integer",
+            "title": "Sales Order Line Id",
+            "description": "Sales order line ID",
+            "example": 7990
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name",
+            "description": "Customer name",
+            "example": "Joe's Auto Repair"
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "SKU to pick",
+            "example": "OIL-FLTR-001"
+          },
+          "quantity_to_pick": {
+            "type": "integer",
+            "title": "Quantity To Pick",
+            "description": "Quantity to pick from this bin",
+            "example": 10
+          }
+        },
+        "type": "object",
+        "required": [
+          "order_number",
+          "sales_order_id",
+          "sales_order_line_id",
+          "sku",
+          "quantity_to_pick"
+        ],
+        "title": "PickListItem"
+      },
+      "PickListResponse": {
+        "properties": {
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 2
+          },
+          "ship_date": {
+            "type": "string",
+            "title": "Ship Date",
+            "description": "Ship date",
+            "example": "2026-01-03"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PickListItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Pick list items grouped by bin",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "warehouse_id",
+          "ship_date",
+          "items"
+        ],
+        "title": "PickListResponse"
+      },
+      "PriceTierRuleCreateRequest": {
+        "properties": {
+          "price_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Tier",
+            "description": "Price tier code or null"
+          },
+          "customer_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Group",
+            "description": "Customer group this rule applies to",
+            "example": "gold"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Part category this rule applies to",
+            "example": "Batteries"
+          },
+          "min_quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Quantity",
+            "description": "Minimum quantity on line to apply discount",
+            "default": 1,
+            "example": 3
+          },
+          "discount_percent": {
+            "type": "number",
+            "title": "Discount Percent",
+            "description": "Discount percentage e.g. 12 for 12%",
+            "example": 12.0
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date",
+            "description": "Start date YYYY-MM-DD when rule becomes active",
+            "example": "2026-01-01"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "End date YYYY-MM-DD when rule expires"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "1 for active, 0 for inactive",
+            "default": 1,
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "discount_percent"
+        ],
+        "title": "PriceTierRuleCreateRequest"
+      },
+      "PriceTierRuleListResponse": {
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/PriceTierRuleResponse"
+            },
+            "type": "array",
+            "title": "Rules",
+            "description": "Matching pricing rules",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "rules"
+        ],
+        "title": "PriceTierRuleListResponse"
+      },
+      "PriceTierRuleResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Rule ID",
+            "example": 300
+          },
+          "price_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Tier",
+            "description": "Price tier"
+          },
+          "customer_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Group",
+            "description": "Customer group",
+            "example": "gold"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Category",
+            "example": "Batteries"
+          },
+          "min_quantity": {
+            "type": "integer",
+            "title": "Min Quantity",
+            "description": "Minimum quantity",
+            "example": 3
+          },
+          "discount_percent": {
+            "type": "number",
+            "title": "Discount Percent",
+            "description": "Discount percent",
+            "example": 12.0
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date",
+            "description": "Start date",
+            "example": "2026-01-01"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "End date or null"
+          },
+          "is_active": {
+            "type": "integer",
+            "title": "Is Active",
+            "description": "Active flag",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "min_quantity",
+          "discount_percent",
+          "is_active"
+        ],
+        "title": "PriceTierRuleResponse"
+      },
+      "PurchaseOrderCreateRequest": {
+        "properties": {
+          "po_number": {
+            "type": "string",
+            "title": "Po Number",
+            "description": "Unique purchase order number",
+            "example": "PO-2026-00010"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "title": "Supplier Id",
+            "description": "Supplier placing the PO with",
+            "example": 20
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Destination warehouse for the PO",
+            "example": 4
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Initial PO status such as draft or sent",
+            "example": "draft"
+          },
+          "order_date": {
+            "type": "string",
+            "title": "Order Date",
+            "description": "PO order date YYYY-MM-DD",
+            "example": "2026-01-02"
+          },
+          "expected_receipt_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Receipt Date",
+            "description": "Expected receipt date YYYY-MM-DD",
+            "example": "2026-01-10"
+          }
+        },
+        "type": "object",
+        "required": [
+          "po_number",
+          "supplier_id",
+          "warehouse_id",
+          "status",
+          "order_date"
+        ],
+        "title": "PurchaseOrderCreateRequest"
+      },
+      "PurchaseOrderLineCreateRequest": {
+        "properties": {
+          "line_number": {
+            "type": "integer",
+            "title": "Line Number",
+            "description": "Line number within the PO",
+            "example": 1
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part being ordered",
+            "example": 101
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "SKU of the part",
+            "example": "BRK-TOY-001"
+          },
+          "quantity_ordered": {
+            "type": "integer",
+            "title": "Quantity Ordered",
+            "description": "Quantity ordered from supplier",
+            "example": 200
+          },
+          "unit_cost": {
+            "type": "number",
+            "title": "Unit Cost",
+            "description": "Agreed unit cost",
+            "example": 40.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_number",
+          "part_id",
+          "sku",
+          "quantity_ordered",
+          "unit_cost"
+        ],
+        "title": "PurchaseOrderLineCreateRequest"
+      },
+      "PurchaseOrderLineResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "PO line ID",
+            "example": 610
+          },
+          "purchase_order_id": {
+            "type": "integer",
+            "title": "Purchase Order Id",
+            "description": "PO ID",
+            "example": 600
+          },
+          "line_number": {
+            "type": "integer",
+            "title": "Line Number",
+            "description": "Line number",
+            "example": 1
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 101
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "SKU",
+            "example": "BRK-TOY-001"
+          },
+          "quantity_ordered": {
+            "type": "integer",
+            "title": "Quantity Ordered",
+            "description": "Ordered quantity",
+            "example": 200
+          },
+          "quantity_received": {
+            "type": "integer",
+            "title": "Quantity Received",
+            "description": "Received quantity",
+            "example": 0
+          },
+          "unit_cost": {
+            "type": "number",
+            "title": "Unit Cost",
+            "description": "Unit cost",
+            "example": 40.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "purchase_order_id",
+          "line_number",
+          "part_id",
+          "sku",
+          "quantity_ordered",
+          "quantity_received",
+          "unit_cost"
+        ],
+        "title": "PurchaseOrderLineResponse"
+      },
+      "PurchaseOrderResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Purchase order ID",
+            "example": 600
+          },
+          "po_number": {
+            "type": "string",
+            "title": "Po Number",
+            "description": "PO number",
+            "example": "PO-2026-00010"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "title": "Supplier Id",
+            "description": "Supplier ID",
+            "example": 20
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 4
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Current PO status",
+            "example": "draft"
+          },
+          "order_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Order Date",
+            "description": "Order date",
+            "example": "2026-01-02"
+          },
+          "expected_receipt_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Receipt Date",
+            "description": "Expected receipt date",
+            "example": "2026-01-10"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "po_number",
+          "supplier_id",
+          "warehouse_id",
+          "status",
+          "order_date"
+        ],
+        "title": "PurchaseOrderResponse"
+      },
+      "PurchaseOrderUpdateRequest": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "New status such as sent, received, closed",
+            "example": "sent"
+          },
+          "expected_receipt_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Receipt Date",
+            "description": "New expected receipt date",
+            "example": "2026-01-12"
+          }
+        },
+        "type": "object",
+        "title": "PurchaseOrderUpdateRequest"
+      },
+      "PurchaseOrderUpdateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "PO ID",
+            "example": 600
+          },
+          "po_number": {
+            "type": "string",
+            "title": "Po Number",
+            "description": "PO number",
+            "example": "PO-2026-00010"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Updated status",
+            "example": "sent"
+          },
+          "expected_receipt_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Receipt Date",
+            "description": "Updated expected receipt date",
+            "example": "2026-01-12"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "po_number",
+          "status"
+        ],
+        "title": "PurchaseOrderUpdateResponse"
+      },
+      "RecalculateOpenLinesRequest": {
+        "properties": {
+          "customer_group": {
+            "type": "string",
+            "title": "Customer Group",
+            "description": "Customer group to target",
+            "example": "gold"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Part category filter",
+            "example": "Batteries"
+          },
+          "min_quantity": {
+            "type": "integer",
+            "title": "Min Quantity",
+            "description": "Minimum quantity on line to recalc",
+            "example": 3
+          },
+          "order_date": {
+            "type": "string",
+            "title": "Order Date",
+            "description": "Order date YYYY-MM-DD to filter sales orders",
+            "example": "2026-01-01"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_group",
+          "category",
+          "min_quantity",
+          "order_date"
+        ],
+        "title": "RecalculateOpenLinesRequest"
+      },
+      "RecalculateOpenLinesResponse": {
+        "properties": {
+          "recalculated_lines": {
+            "items": {
+              "$ref": "#/components/schemas/RecalculatedLineItem"
+            },
+            "type": "array",
+            "title": "Recalculated Lines",
+            "description": "Lines that were recalculated",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "recalculated_lines"
+        ],
+        "title": "RecalculateOpenLinesResponse"
+      },
+      "RecalculatedLineItem": {
+        "properties": {
+          "sales_order_line_id": {
+            "type": "integer",
+            "title": "Sales Order Line Id",
+            "description": "Line ID",
+            "example": 8001
+          },
+          "sales_order_id": {
+            "type": "integer",
+            "title": "Sales Order Id",
+            "description": "Order ID",
+            "example": 700
+          },
+          "old_unit_price": {
+            "type": "number",
+            "title": "Old Unit Price",
+            "description": "Previous unit price",
+            "example": 150.0
+          },
+          "new_unit_price": {
+            "type": "number",
+            "title": "New Unit Price",
+            "description": "New unit price",
+            "example": 132.0
+          },
+          "old_discount_percent": {
+            "type": "number",
+            "title": "Old Discount Percent",
+            "description": "Previous discount percent",
+            "example": 0.0
+          },
+          "new_discount_percent": {
+            "type": "number",
+            "title": "New Discount Percent",
+            "description": "New discount percent",
+            "example": 12.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "sales_order_line_id",
+          "sales_order_id",
+          "old_unit_price",
+          "new_unit_price",
+          "old_discount_percent",
+          "new_discount_percent"
+        ],
+        "title": "RecalculatedLineItem"
+      },
+      "SalesOrderCreateRequest": {
+        "properties": {
+          "order_number": {
+            "type": "string",
+            "title": "Order Number",
+            "description": "Unique sales order number",
+            "example": "SO-2026-00045"
+          },
+          "customer_account_id": {
+            "type": "integer",
+            "title": "Customer Account Id",
+            "description": "Customer placing the order",
+            "example": 5
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Shipping warehouse for the order",
+            "example": 2
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Order status such as open, closed, cancelled",
+            "example": "open"
+          },
+          "requested_ship_date": {
+            "type": "string",
+            "title": "Requested Ship Date",
+            "description": "Requested ship date YYYY-MM-DD",
+            "example": "2026-01-05"
+          },
+          "order_date": {
+            "type": "string",
+            "title": "Order Date",
+            "description": "Order creation date YYYY-MM-DD",
+            "example": "2026-01-02"
+          },
+          "ship_to_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship To Name",
+            "description": "Ship-to contact name override",
+            "example": "Joe's Auto Repair"
+          },
+          "ship_to_address_line1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship To Address Line1",
+            "description": "Ship-to address line 1",
+            "example": "456 Service Rd"
+          },
+          "ship_to_city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship To City",
+            "description": "Ship-to city",
+            "example": "San Francisco"
+          },
+          "ship_to_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship To State",
+            "description": "Ship-to state",
+            "example": "CA"
+          },
+          "ship_to_postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship To Postal Code",
+            "description": "Ship-to postal code",
+            "example": "94107"
+          },
+          "ship_to_country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship To Country",
+            "description": "Ship-to country",
+            "example": "US"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order_number",
+          "customer_account_id",
+          "warehouse_id",
+          "status",
+          "requested_ship_date",
+          "order_date"
+        ],
+        "title": "SalesOrderCreateRequest"
+      },
+      "SalesOrderLineCreateRequest": {
+        "properties": {
+          "line_number": {
+            "type": "integer",
+            "title": "Line Number",
+            "description": "Line number within the order",
+            "example": 1
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part being sold",
+            "example": 101
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "SKU of the part",
+            "example": "OIL-FLTR-001"
+          },
+          "quantity_ordered": {
+            "type": "integer",
+            "title": "Quantity Ordered",
+            "description": "Quantity ordered",
+            "example": 10
+          },
+          "backorder_status": {
+            "type": "string",
+            "title": "Backorder Status",
+            "description": "Backorder status e.g. allow, no_backorder, shipped",
+            "example": "allow"
+          },
+          "unit_list_price": {
+            "type": "number",
+            "title": "Unit List Price",
+            "description": "Base unit list price",
+            "example": 9.99
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price",
+            "description": "Final unit price after discount",
+            "example": 8.49
+          },
+          "discount_percent": {
+            "type": "number",
+            "title": "Discount Percent",
+            "description": "Discount percent applied",
+            "example": 15.0
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Part category at order time",
+            "example": "Oil Filters"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_number",
+          "part_id",
+          "sku",
+          "quantity_ordered",
+          "backorder_status",
+          "unit_list_price",
+          "unit_price",
+          "discount_percent",
+          "category"
+        ],
+        "title": "SalesOrderLineCreateRequest"
+      },
+      "SalesOrderLineListResponse": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/SalesOrderLineResponse"
+            },
+            "type": "array",
+            "title": "Lines",
+            "description": "Lines belonging to the order",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines"
+        ],
+        "title": "SalesOrderLineListResponse"
+      },
+      "SalesOrderLineResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Order line ID",
+            "example": 8001
+          },
+          "sales_order_id": {
+            "type": "integer",
+            "title": "Sales Order Id",
+            "description": "Sales order ID",
+            "example": 700
+          },
+          "line_number": {
+            "type": "integer",
+            "title": "Line Number",
+            "description": "Line number",
+            "example": 1
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 101
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "SKU",
+            "example": "OIL-FLTR-001"
+          },
+          "quantity_ordered": {
+            "type": "integer",
+            "title": "Quantity Ordered",
+            "description": "Ordered quantity",
+            "example": 10
+          },
+          "quantity_allocated": {
+            "type": "integer",
+            "title": "Quantity Allocated",
+            "description": "Allocated quantity",
+            "example": 10
+          },
+          "quantity_shipped": {
+            "type": "integer",
+            "title": "Quantity Shipped",
+            "description": "Shipped quantity",
+            "example": 0
+          },
+          "backorder_status": {
+            "type": "string",
+            "title": "Backorder Status",
+            "description": "Backorder status",
+            "example": "allow"
+          },
+          "unit_list_price": {
+            "type": "number",
+            "title": "Unit List Price",
+            "description": "List price",
+            "example": 9.99
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price",
+            "description": "Net unit price",
+            "example": 8.49
+          },
+          "discount_percent": {
+            "type": "number",
+            "title": "Discount Percent",
+            "description": "Discount percent",
+            "example": 15.0
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Category",
+            "example": "Oil Filters"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sales_order_id",
+          "line_number",
+          "part_id",
+          "sku",
+          "quantity_ordered",
+          "quantity_allocated",
+          "quantity_shipped",
+          "backorder_status",
+          "unit_list_price",
+          "unit_price",
+          "discount_percent",
+          "category"
+        ],
+        "title": "SalesOrderLineResponse"
+      },
+      "SalesOrderLineUpdateRequest": {
+        "properties": {
+          "quantity_shipped": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Shipped",
+            "description": "New shipped quantity",
+            "example": 10
+          },
+          "backorder_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backorder Status",
+            "description": "New backorder status such as shipped or backordered",
+            "example": "shipped"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price",
+            "description": "Updated unit price when repricing",
+            "example": 132.0
+          },
+          "discount_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Percent",
+            "description": "Updated discount percent",
+            "example": 12.0
+          }
+        },
+        "type": "object",
+        "title": "SalesOrderLineUpdateRequest"
+      },
+      "SalesOrderLineUpdateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Line ID",
+            "example": 8001
+          },
+          "sales_order_id": {
+            "type": "integer",
+            "title": "Sales Order Id",
+            "description": "Order ID",
+            "example": 700
+          },
+          "quantity_shipped": {
+            "type": "integer",
+            "title": "Quantity Shipped",
+            "description": "Updated shipped quantity",
+            "example": 10
+          },
+          "backorder_status": {
+            "type": "string",
+            "title": "Backorder Status",
+            "description": "Updated backorder status",
+            "example": "shipped"
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price",
+            "description": "Unit price",
+            "example": 132.0
+          },
+          "discount_percent": {
+            "type": "number",
+            "title": "Discount Percent",
+            "description": "Discount percent",
+            "example": 12.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sales_order_id",
+          "quantity_shipped",
+          "backorder_status",
+          "unit_price",
+          "discount_percent"
+        ],
+        "title": "SalesOrderLineUpdateResponse"
+      },
+      "SalesOrderResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Sales order ID",
+            "example": 700
+          },
+          "order_number": {
+            "type": "string",
+            "title": "Order Number",
+            "description": "Order number",
+            "example": "SO-2026-00045"
+          },
+          "customer_account_id": {
+            "type": "integer",
+            "title": "Customer Account Id",
+            "description": "Customer ID",
+            "example": 5
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 2
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Status",
+            "example": "open"
+          },
+          "requested_ship_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Requested Ship Date",
+            "description": "Requested ship date",
+            "example": "2026-01-05"
+          },
+          "order_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Order Date",
+            "description": "Order date",
+            "example": "2026-01-02"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_number",
+          "customer_account_id",
+          "warehouse_id",
+          "status",
+          "requested_ship_date",
+          "order_date"
+        ],
+        "title": "SalesOrderResponse"
+      },
+      "SalesOrderUpdateRequest": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "New order status",
+            "example": "closed"
+          },
+          "requested_ship_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Ship Date",
+            "description": "New requested ship date",
+            "example": "2026-01-06"
+          }
+        },
+        "type": "object",
+        "title": "SalesOrderUpdateRequest"
+      },
+      "SalesOrderUpdateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Sales order ID",
+            "example": 700
+          },
+          "order_number": {
+            "type": "string",
+            "title": "Order Number",
+            "description": "Order number",
+            "example": "SO-2026-00045"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Updated status",
+            "example": "closed"
+          },
+          "requested_ship_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Requested Ship Date",
+            "description": "Updated requested ship date",
+            "example": "2026-01-06"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_number",
+          "status",
+          "requested_ship_date"
+        ],
+        "title": "SalesOrderUpdateResponse"
+      },
+      "ShipmentCreateRequest": {
+        "properties": {
+          "shipment_number": {
+            "type": "string",
+            "title": "Shipment Number",
+            "description": "Unique shipment number",
+            "example": "SH-2026-00090"
+          },
+          "sales_order_id": {
+            "type": "integer",
+            "title": "Sales Order Id",
+            "description": "Sales order being shipped",
+            "example": 700
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse shipping the order",
+            "example": 2
+          },
+          "carrier": {
+            "type": "string",
+            "title": "Carrier",
+            "description": "Carrier name",
+            "example": "UPS Ground"
+          },
+          "service_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Level",
+            "description": "Carrier service level",
+            "example": "Ground"
+          },
+          "tracking_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracking Number",
+            "description": "Tracking number string",
+            "example": "1Z999AA10123456784"
+          },
+          "ship_date": {
+            "type": "string",
+            "title": "Ship Date",
+            "description": "Shipment date YYYY-MM-DD",
+            "example": "2026-01-02"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shipment_number",
+          "sales_order_id",
+          "warehouse_id",
+          "carrier",
+          "ship_date"
+        ],
+        "title": "ShipmentCreateRequest"
+      },
+      "ShipmentLineCreateRequest": {
+        "properties": {
+          "sales_order_line_id": {
+            "type": "integer",
+            "title": "Sales Order Line Id",
+            "description": "Sales order line being shipped",
+            "example": 8001
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 101
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "SKU",
+            "example": "OIL-FLTR-001"
+          },
+          "quantity_shipped": {
+            "type": "integer",
+            "title": "Quantity Shipped",
+            "description": "Quantity shipped on this shipment line",
+            "example": 10
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse fulfilling this line",
+            "example": 2
+          },
+          "bin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bin Id",
+            "description": "Bin from which the item was picked",
+            "example": 22
+          }
+        },
+        "type": "object",
+        "required": [
+          "sales_order_line_id",
+          "part_id",
+          "sku",
+          "quantity_shipped",
+          "warehouse_id"
+        ],
+        "title": "ShipmentLineCreateRequest"
+      },
+      "ShipmentLineListResponse": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ShipmentLineResponse"
+            },
+            "type": "array",
+            "title": "Lines",
+            "description": "Lines in the shipment",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines"
+        ],
+        "title": "ShipmentLineListResponse"
+      },
+      "ShipmentLineResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Shipment line ID",
+            "example": 910
+          },
+          "shipment_id": {
+            "type": "integer",
+            "title": "Shipment Id",
+            "description": "Shipment ID",
+            "example": 900
+          },
+          "sales_order_line_id": {
+            "type": "integer",
+            "title": "Sales Order Line Id",
+            "description": "Sales order line ID",
+            "example": 8001
+          },
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 101
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "SKU",
+            "example": "OIL-FLTR-001"
+          },
+          "quantity_shipped": {
+            "type": "integer",
+            "title": "Quantity Shipped",
+            "description": "Quantity shipped",
+            "example": 10
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 2
+          },
+          "bin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bin Id",
+            "description": "Bin ID",
+            "example": 22
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "shipment_id",
+          "sales_order_line_id",
+          "part_id",
+          "sku",
+          "quantity_shipped",
+          "warehouse_id"
+        ],
+        "title": "ShipmentLineResponse"
+      },
+      "ShipmentListResponse": {
+        "properties": {
+          "shipments": {
+            "items": {
+              "$ref": "#/components/schemas/ShipmentResponse"
+            },
+            "type": "array",
+            "title": "Shipments",
+            "description": "Shipments associated with the order",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "shipments"
+        ],
+        "title": "ShipmentListResponse"
+      },
+      "ShipmentResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Shipment ID",
+            "example": 900
+          },
+          "shipment_number": {
+            "type": "string",
+            "title": "Shipment Number",
+            "description": "Shipment number",
+            "example": "SH-2026-00090"
+          },
+          "sales_order_id": {
+            "type": "integer",
+            "title": "Sales Order Id",
+            "description": "Sales order ID",
+            "example": 700
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 2
+          },
+          "carrier": {
+            "type": "string",
+            "title": "Carrier",
+            "description": "Carrier",
+            "example": "UPS Ground"
+          },
+          "tracking_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracking Number",
+            "description": "Tracking number",
+            "example": "1Z999AA10123456784"
+          },
+          "ship_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Ship Date",
+            "description": "Ship date",
+            "example": "2026-01-02"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "shipment_number",
+          "sales_order_id",
+          "warehouse_id",
+          "carrier",
+          "ship_date"
+        ],
+        "title": "ShipmentResponse"
+      },
+      "StockAgingItem": {
+        "properties": {
+          "part_id": {
+            "type": "integer",
+            "title": "Part Id",
+            "description": "Part ID",
+            "example": 420
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku",
+            "description": "SKU",
+            "example": "SUS-TRK-001"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Part description",
+            "example": "Truck rear shock absorber"
+          },
+          "quantity_on_hand": {
+            "type": "integer",
+            "title": "Quantity On Hand",
+            "description": "Total on-hand quantity at warehouse",
+            "example": 120
+          },
+          "average_age_in_days": {
+            "type": "number",
+            "title": "Average Age In Days",
+            "description": "Weighted average age of on-hand stock",
+            "example": 134.5
+          }
+        },
+        "type": "object",
+        "required": [
+          "part_id",
+          "sku",
+          "quantity_on_hand",
+          "average_age_in_days"
+        ],
+        "title": "StockAgingItem"
+      },
+      "StockAgingResponse": {
+        "properties": {
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 5
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Category filter",
+            "example": "Suspension"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StockAgingItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Aging stock items sorted by quantity_on_hand desc",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "warehouse_id",
+          "category",
+          "items"
+        ],
+        "title": "StockAgingResponse"
+      },
+      "SupplierListItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Supplier ID",
+            "example": 20
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Supplier name",
+            "example": "ACME Brake Parts"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "Contact email",
+            "example": "sales@acmebrakes.com"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone",
+            "description": "Contact phone",
+            "example": "+1-555-0200"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "SupplierListItem"
+      },
+      "SupplierListResponse": {
+        "properties": {
+          "suppliers": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierListItem"
+            },
+            "type": "array",
+            "title": "Suppliers",
+            "description": "Matching suppliers",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "suppliers"
+        ],
+        "title": "SupplierListResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WarehouseBinCreateRequest": {
+        "properties": {
+          "bin_code": {
+            "type": "string",
+            "title": "Bin Code",
+            "description": "Unique bin code within warehouse",
+            "example": "A-03-05"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Bin description",
+            "example": "Aisle A, Row 3, Shelf 5"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bin_code"
+        ],
+        "title": "WarehouseBinCreateRequest"
+      },
+      "WarehouseBinListResponse": {
+        "properties": {
+          "bins": {
+            "items": {
+              "$ref": "#/components/schemas/WarehouseBinResponse"
+            },
+            "type": "array",
+            "title": "Bins",
+            "description": "Bins in the warehouse",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "bins"
+        ],
+        "title": "WarehouseBinListResponse"
+      },
+      "WarehouseBinResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Bin ID",
+            "example": 10
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 1
+          },
+          "bin_code": {
+            "type": "string",
+            "title": "Bin Code",
+            "description": "Bin code",
+            "example": "A-03-05"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Bin description",
+            "example": "Aisle A, Row 3, Shelf 5"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "warehouse_id",
+          "bin_code"
+        ],
+        "title": "WarehouseBinResponse"
+      },
+      "WarehouseCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique warehouse name",
+            "example": "Downtown Warehouse"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "Short code identifier",
+            "example": "DTW"
+          },
+          "address_line1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Line1",
+            "description": "Street address line 1",
+            "example": "123 Market St"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City",
+            "description": "City",
+            "example": "San Francisco"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State",
+            "description": "State",
+            "example": "CA"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code",
+            "description": "Postal code",
+            "example": "94107"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "Country",
+            "example": "US"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude",
+            "description": "Latitude coordinate",
+            "example": 37.776
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude",
+            "description": "Longitude coordinate",
+            "example": -122.394
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "WarehouseCreateRequest"
+      },
+      "WarehouseListResponse": {
+        "properties": {
+          "warehouses": {
+            "items": {
+              "$ref": "#/components/schemas/WarehouseResponse"
+            },
+            "type": "array",
+            "title": "Warehouses",
+            "description": "List of warehouses",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "warehouses"
+        ],
+        "title": "WarehouseListResponse"
+      },
+      "WarehouseResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Warehouse ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Warehouse name",
+            "example": "Downtown Warehouse"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "Short warehouse code",
+            "example": "DTW"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City",
+            "description": "City",
+            "example": "San Francisco"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State",
+            "description": "State or region",
+            "example": "CA"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code",
+            "description": "Postal code",
+            "example": "94107"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "Country",
+            "example": "US"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "WarehouseResponse"
+      },
+      "WarehouseServiceZoneListResponse": {
+        "properties": {
+          "zones": {
+            "items": {
+              "$ref": "#/components/schemas/WarehouseServiceZoneResponse"
+            },
+            "type": "array",
+            "title": "Zones",
+            "description": "Service zones",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "zones"
+        ],
+        "title": "WarehouseServiceZoneListResponse"
+      },
+      "WarehouseServiceZoneResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Zone ID",
+            "example": 10
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id",
+            "description": "Warehouse ID",
+            "example": 2
+          },
+          "postal_code_prefix": {
+            "type": "string",
+            "title": "Postal Code Prefix",
+            "description": "Postal code prefix",
+            "example": "941"
+          },
+          "transit_days": {
+            "type": "integer",
+            "title": "Transit Days",
+            "description": "Estimated transit days",
+            "example": 2
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "warehouse_id",
+          "postal_code_prefix",
+          "transit_days"
+        ],
+        "title": "WarehouseServiceZoneResponse"
+      }
+    }
+  }
+}
