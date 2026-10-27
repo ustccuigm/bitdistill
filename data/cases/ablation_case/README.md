@@ -2,7 +2,7 @@
 
 任务为`b2b_commerce_1:1`：为Joe's Auto Repair创建订单，加入三种零件及指定数量，应用折扣规则，并按任务要求处理backorder。
 
-任务及成功参考轨迹已从保存的训练记录中定位，见[sales_order_source](sales_order_source)。论文图里的四段文字不充当模型实际输出，本次四种steer均通过真实模型请求重新生成。
+任务及成功参考轨迹已从保存的训练记录中定位，见[sales_order_source](sales_order_source)。已完成分支的steer均来自实际模型请求，具体prompt与响应保存在各分支目录。
 
 两个补充对比位置：
 
@@ -13,11 +13,19 @@
 
 这是基于已定位任务和明确前置状态补做的对比，不把不同训练轮次的两条历史steer拼成同一次干预。先查询零件与先创建订单的差别本身不证明动作错误，任务是否完成以实际状态和任务verifier为准。
 
-| 指导方式 | point_1 | point_2 |
-|---|---|---|
-| Teacher / Structured | complete | complete |
-| Teacher / Free-form | others，达到输出上限 | complete |
-| Student / Structured | others | others |
-| External LLM / Structured | API余额不足，未完成 | API余额不足，未完成 |
+## 论文案例展示：订单头尚未创建
 
-实际teacher结构化指导强调按折扣规则计算价格，不能以论文图中的“必须先创建订单再查询零件”替代此次诊断。一个位置的free-form也通过了验收，因此本实验不支持“free-form总会失败”的结论。
+采用point_1展示同一任务、同一干预位置下不同指导方式的实际结果，不汇总为成功率或成功次数。
+
+| 指导方式 | 案例结果 |
+|---|---|
+| Teacher / Structured | 成功：最终订单通过任务验收 |
+| Teacher / Free-form | 失败：续跑达到输出上限，最终订单未通过任务验收 |
+| Student / Structured | 失败：最终订单未通过任务验收 |
+| External LLM / Structured | 待补跑：API余额不足，尚无可判定结果 |
+
+## 补充位置：订单头已创建
+
+point_2保留为独立的补充记录：Teacher / Structured成功，Teacher / Free-form成功，Student / Structured失败；External LLM / Structured待补跑。此处结果不与主展示合并统计。
+
+实际teacher结构化指导强调按折扣规则计算价格。案例解释应对应保存的prompt、工具执行与验收条件，不能将其改写为已证明“必须先创建订单再查询零件”。
