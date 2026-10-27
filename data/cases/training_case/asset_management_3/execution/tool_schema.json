@@ -1,0 +1,5944 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AssetOrbit Fixed Asset Tracker Simplified",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/assets/report/inventory_by_department": {
+      "get": {
+        "tags": [
+          "assets",
+          "reports"
+        ],
+        "summary": "Inventory by department",
+        "description": "Inventory snapshot grouped by department with filters.",
+        "operationId": "inventory_report_by_department",
+        "parameters": [
+          {
+            "name": "department_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by department name",
+              "title": "Department Name"
+            },
+            "description": "Filter by department name",
+            "example": "Finance"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter assets by a single status",
+              "title": "Status"
+            },
+            "description": "Filter assets by a single status",
+            "example": "in_service"
+          },
+          {
+            "name": "location_full_path",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter assets by exact location full_path",
+              "title": "Location Full Path"
+            },
+            "description": "Filter assets by exact location full_path",
+            "example": "HQ > 2nd Floor > Finance"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryReportByDepartmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/report/retired_lost_by_department": {
+      "get": {
+        "tags": [
+          "assets",
+          "reports"
+        ],
+        "summary": "Retired and lost assets by dept",
+        "description": "Report assets with retired or lost status by department.",
+        "operationId": "report_retired_lost_assets_by_department",
+        "parameters": [
+          {
+            "name": "department_name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Target department name to filter assets",
+              "title": "Department Name"
+            },
+            "description": "Target department name to filter assets",
+            "example": "R&D"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetiredLostByDepartmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/report/declining_balance_remaining_life": {
+      "get": {
+        "tags": [
+          "assets",
+          "depreciation",
+          "reports"
+        ],
+        "summary": "Declining balance remaining life",
+        "description": "List assets using declining_balance with remaining life.",
+        "operationId": "report_declining_balance_assets_with_remaining_life",
+        "parameters": [
+          {
+            "name": "min_remaining_years",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Minimum remaining useful life in years",
+              "title": "Min Remaining Years"
+            },
+            "description": "Minimum remaining useful life in years",
+            "example": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecliningBalanceRemainingLifeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Get current authenticated user profile",
+        "description": "Return the current authenticated user (implicitly user_id=1).",
+        "operationId": "get_current_user",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/asset_events/timeline": {
+      "get": {
+        "tags": [
+          "asset_events",
+          "reports"
+        ],
+        "summary": "Asset timeline of events",
+        "description": "Return chronological log of events for a given asset.",
+        "operationId": "get_asset_event_timeline",
+        "parameters": [
+          {
+            "name": "asset_tag",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Asset tag whose timeline is requested",
+              "title": "Asset Tag"
+            },
+            "description": "Asset tag whose timeline is requested",
+            "example": "SRV-DB-002"
+          },
+          {
+            "name": "months_back",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "How many months back from now to include events",
+              "default": 24,
+              "title": "Months Back"
+            },
+            "description": "How many months back from now to include events",
+            "example": 24
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetTimelineResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workflows/checkout_with_move": {
+      "post": {
+        "tags": [
+          "workflows",
+          "asset_checkouts",
+          "asset_events"
+        ],
+        "summary": "Checkout asset and update location",
+        "description": "Checkout an asset, update location and status, and log event.",
+        "operationId": "workflow_checkout_with_move",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowCheckoutWithMoveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowCheckoutWithMoveResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workflows/checkin_with_move": {
+      "post": {
+        "tags": [
+          "workflows",
+          "asset_checkouts",
+          "asset_events"
+        ],
+        "summary": "Checkin asset and update location",
+        "description": "Checkin asset, close checkout, move it, and log event.",
+        "operationId": "workflow_checkin_with_move",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowCheckinWithMoveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowCheckinWithMoveResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workflows/batch_checkout_by_category_location": {
+      "post": {
+        "tags": [
+          "workflows",
+          "asset_checkouts"
+        ],
+        "summary": "Batch checkout by category/location",
+        "description": "Assign all assets in a category at a specific location to a custodian.",
+        "operationId": "workflow_batch_checkout_by_category_location",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowBatchCheckoutByCategoryLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowBatchCheckoutByCategoryLocationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workflows/create_location_hierarchy": {
+      "post": {
+        "tags": [
+          "workflows",
+          "locations"
+        ],
+        "summary": "Create location hierarchy",
+        "description": "Create a set of nested locations (root, children, grandchildren).",
+        "operationId": "workflow_create_location_hierarchy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowCreateLocationHierarchyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowCreateLocationHierarchyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/departments": {
+      "get": {
+        "tags": [
+          "departments",
+          "lookups"
+        ],
+        "summary": "List departments",
+        "description": "Retrieve all departments with optional filters.",
+        "operationId": "list_departments",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter departments by exact name",
+              "title": "Name"
+            },
+            "description": "Filter departments by exact name",
+            "example": "Finance"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive substring search on department name",
+              "title": "Search"
+            },
+            "description": "Case-insensitive substring search on department name",
+            "example": "Eng"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of departments to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of departments to return",
+            "example": 50
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "departments"
+        ],
+        "summary": "Create a new department",
+        "description": "Create a new department record.",
+        "operationId": "create_department",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations": {
+      "get": {
+        "tags": [
+          "locations",
+          "lookups"
+        ],
+        "summary": "List locations",
+        "description": "Retrieve locations with optional filters.",
+        "operationId": "list_locations",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact location name",
+              "title": "Name"
+            },
+            "description": "Filter by exact location name",
+            "example": "Engineering Pod A"
+          },
+          {
+            "name": "full_path",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact full_path",
+              "title": "Full Path"
+            },
+            "description": "Filter by exact full_path",
+            "example": "HQ > 3rd Floor > Engineering Pod A"
+          },
+          {
+            "name": "parent_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter locations by parent_id",
+              "title": "Parent Id"
+            },
+            "description": "Filter locations by parent_id",
+            "example": 10
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive substring search on full_path",
+              "title": "Search"
+            },
+            "description": "Case-insensitive substring search on full_path",
+            "example": "HQ > 2nd Floor"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of locations to return",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of locations to return",
+            "example": 100
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "locations"
+        ],
+        "summary": "Create a new location",
+        "description": "Create a new location with optional parent.",
+        "operationId": "create_location",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": [
+          "categories",
+          "lookups"
+        ],
+        "summary": "List asset categories",
+        "description": "Retrieve categories with optional filters.",
+        "operationId": "list_categories",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter categories by exact name",
+              "title": "Name"
+            },
+            "description": "Filter categories by exact name",
+            "example": "Laptop"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive substring search on name",
+              "title": "Search"
+            },
+            "description": "Case-insensitive substring search on name",
+            "example": "Proj"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of categories to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of categories to return",
+            "example": 50
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoriesListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "Create a new category",
+        "description": "Create a new asset category.",
+        "operationId": "create_category",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/custodians": {
+      "get": {
+        "tags": [
+          "custodians",
+          "lookups"
+        ],
+        "summary": "List custodians",
+        "description": "List custodians with optional filters.",
+        "operationId": "list_custodians",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact custodian name",
+              "title": "Name"
+            },
+            "description": "Filter by exact custodian name",
+            "example": "Maria Lopez (Engineering)"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substring search on custodian name",
+              "title": "Search"
+            },
+            "description": "Substring search on custodian name",
+            "example": "Marketing"
+          },
+          {
+            "name": "department_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter custodians by department_id",
+              "title": "Department Id"
+            },
+            "description": "Filter custodians by department_id",
+            "example": 4
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter custodians by type",
+              "title": "Type"
+            },
+            "description": "Filter custodians by type",
+            "example": "team"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of custodians to return",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of custodians to return",
+            "example": 100
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustodiansListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "custodians"
+        ],
+        "summary": "Create a new custodian",
+        "description": "Create a new custodian for asset assignment.",
+        "operationId": "create_custodian",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustodianCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustodianCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/depreciation_schedules": {
+      "get": {
+        "tags": [
+          "depreciation",
+          "lookups"
+        ],
+        "summary": "List depreciation schedules",
+        "description": "Retrieve depreciation schedules with optional filters.",
+        "operationId": "list_depreciation_schedules",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by depreciation method",
+              "title": "Method"
+            },
+            "description": "Filter by depreciation method",
+            "example": "straight_line"
+          },
+          {
+            "name": "min_useful_life_years",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Minimum useful life years",
+              "title": "Min Useful Life Years"
+            },
+            "description": "Minimum useful life years",
+            "example": 3
+          },
+          {
+            "name": "max_useful_life_years",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum useful life years",
+              "title": "Max Useful Life Years"
+            },
+            "description": "Maximum useful life years",
+            "example": 10
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact depreciation schedule ID",
+              "title": "Id"
+            },
+            "description": "Filter by exact depreciation schedule ID",
+            "example": 4
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of schedules to return",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of schedules to return",
+            "example": 100
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepreciationSchedulesListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "depreciation"
+        ],
+        "summary": "Create a depreciation schedule",
+        "description": "Create a new depreciation schedule.",
+        "operationId": "create_depreciation_schedule",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepreciationScheduleCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepreciationScheduleCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets": {
+      "post": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Create a new asset",
+        "description": "Create a new asset record.",
+        "operationId": "create_asset",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "assets",
+          "reports"
+        ],
+        "summary": "Search assets with filters",
+        "description": "Search assets by status, location, department, category or text.",
+        "operationId": "search_assets",
+        "parameters": [
+          {
+            "name": "asset_tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact asset_tag",
+              "title": "Asset Tag"
+            },
+            "description": "Filter by exact asset_tag",
+            "example": "PRJ-DRN-003"
+          },
+          {
+            "name": "serial_number",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact serial_number",
+              "title": "Serial Number"
+            },
+            "description": "Filter by exact serial_number",
+            "example": "SN-MON-99821"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset status",
+              "title": "Status"
+            },
+            "description": "Filter by asset status",
+            "example": "in_service"
+          },
+          {
+            "name": "location_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by current location ID",
+              "title": "Location Id"
+            },
+            "description": "Filter by current location ID",
+            "example": 22
+          },
+          {
+            "name": "department_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by department ID",
+              "title": "Department Id"
+            },
+            "description": "Filter by department ID",
+            "example": 3
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category ID",
+              "title": "Category Id"
+            },
+            "description": "Filter by category ID",
+            "example": 7
+          },
+          {
+            "name": "depreciation_schedule_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by depreciation schedule ID",
+              "title": "Depreciation Schedule Id"
+            },
+            "description": "Filter by depreciation schedule ID",
+            "example": 5
+          },
+          {
+            "name": "status_in",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of statuses to include",
+              "title": "Status In"
+            },
+            "description": "Comma-separated list of statuses to include",
+            "example": "retired,lost"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substring search in asset_tag or serial_number",
+              "title": "Search"
+            },
+            "description": "Substring search in asset_tag or serial_number",
+            "example": "LPT-ENG"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of assets to return",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of assets to return",
+            "example": 100
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/asset_checkouts": {
+      "post": {
+        "tags": [
+          "asset_checkouts"
+        ],
+        "summary": "Record an asset checkout",
+        "description": "Create a new asset checkout record.",
+        "operationId": "create_asset_checkout",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCheckoutCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetCheckoutCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "asset_checkouts"
+        ],
+        "summary": "List asset checkouts",
+        "description": "Retrieve asset checkouts with filters.",
+        "operationId": "list_asset_checkouts",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset ID",
+              "title": "Asset Id"
+            },
+            "description": "Filter by asset ID",
+            "example": 1020
+          },
+          {
+            "name": "custodian_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by custodian ID",
+              "title": "Custodian Id"
+            },
+            "description": "Filter by custodian ID",
+            "example": 12
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only active checkouts",
+              "title": "Active Only"
+            },
+            "description": "Return only active checkouts",
+            "example": true
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter checkout_date on or after this date",
+              "title": "From Date"
+            },
+            "description": "Filter checkout_date on or after this date",
+            "example": "2024-01-01"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter checkout_date on or before this date",
+              "title": "To Date"
+            },
+            "description": "Filter checkout_date on or before this date",
+            "example": "2024-12-31"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of records to return",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of records to return",
+            "example": 100
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetCheckoutsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/maintenance_records": {
+      "post": {
+        "tags": [
+          "maintenance"
+        ],
+        "summary": "Create a maintenance record",
+        "description": "Create a maintenance record for an asset.",
+        "operationId": "create_maintenance_record",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenanceRecordCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceRecordCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "maintenance"
+        ],
+        "summary": "List maintenance records",
+        "description": "Retrieve maintenance records with filters.",
+        "operationId": "list_maintenance_records",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset ID",
+              "title": "Asset Id"
+            },
+            "description": "Filter by asset ID",
+            "example": 1200
+          },
+          {
+            "name": "service_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by service_type",
+              "title": "Service Type"
+            },
+            "description": "Filter by service_type",
+            "example": "Emergency repair"
+          },
+          {
+            "name": "from_service_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter service_date on or after this date",
+              "title": "From Service Date"
+            },
+            "description": "Filter service_date on or after this date",
+            "example": "2024-01-01"
+          },
+          {
+            "name": "to_service_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter service_date on or before this date",
+              "title": "To Service Date"
+            },
+            "description": "Filter service_date on or before this date",
+            "example": "2024-12-31"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of records to return",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of records to return",
+            "example": 100
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceRecordsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/asset_events": {
+      "post": {
+        "tags": [
+          "asset_events"
+        ],
+        "summary": "Create an asset event",
+        "description": "Create an asset_events row to track changes.",
+        "operationId": "create_asset_event",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetEventCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetEventCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "asset_events"
+        ],
+        "summary": "List asset events",
+        "description": "Retrieve asset_events filtered by asset, type, or time.",
+        "operationId": "list_asset_events",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter events for a single asset_id",
+              "title": "Asset Id"
+            },
+            "description": "Filter events for a single asset_id",
+            "example": 1300
+          },
+          {
+            "name": "asset_tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset_tag",
+              "title": "Asset Tag"
+            },
+            "description": "Filter by asset_tag",
+            "example": "SRV-DB-002"
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by event_type",
+              "title": "Event Type"
+            },
+            "description": "Filter by event_type",
+            "example": "status_change"
+          },
+          {
+            "name": "from_event_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only events at or after this time",
+              "title": "From Event Time"
+            },
+            "description": "Only events at or after this time",
+            "example": "2023-01-01T00:00:00Z"
+          },
+          {
+            "name": "to_event_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only events at or before this time",
+              "title": "To Event Time"
+            },
+            "description": "Only events at or before this time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of events to return",
+              "default": 500,
+              "title": "Limit"
+            },
+            "description": "Maximum number of events to return",
+            "example": 500
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetEventsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/by_tag/{asset_tag}": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Get asset by asset_tag",
+        "description": "Retrieve a single asset by asset_tag.",
+        "operationId": "get_asset_by_tag",
+        "parameters": [
+          {
+            "name": "asset_tag",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Asset tag to look up",
+              "title": "Asset Tag"
+            },
+            "description": "Asset tag to look up",
+            "example": "PRJ-DRN-003"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetGetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/by_serial/{serial_number}": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Get asset by serial_number",
+        "description": "Retrieve a single asset by its serial_number.",
+        "operationId": "get_asset_by_serial",
+        "parameters": [
+          {
+            "name": "serial_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Serial number to look up",
+              "title": "Serial Number"
+            },
+            "description": "Serial number to look up",
+            "example": "SN-MON-99821"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetGetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations/{location_id}": {
+      "get": {
+        "tags": [
+          "locations"
+        ],
+        "summary": "Get location by ID",
+        "description": "Fetch a location by ID.",
+        "operationId": "get_location_by_id",
+        "parameters": [
+          {
+            "name": "location_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Location ID to retrieve",
+              "title": "Location Id"
+            },
+            "description": "Location ID to retrieve",
+            "example": 21
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationGetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "locations"
+        ],
+        "summary": "Partially update a location",
+        "description": "Update location fields without affecting others.",
+        "operationId": "update_location_partial",
+        "parameters": [
+          {
+            "name": "location_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Location ID to update",
+              "title": "Location Id"
+            },
+            "description": "Location ID to update",
+            "example": 21
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocationUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/{asset_id}": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Get asset by ID",
+        "description": "Retrieve a single asset by its ID.",
+        "operationId": "get_asset_by_id",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Asset ID to retrieve",
+              "title": "Asset Id"
+            },
+            "description": "Asset ID to retrieve",
+            "example": 1001
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetGetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Partially update an asset",
+        "description": "Update selected asset fields.",
+        "operationId": "update_asset_partial",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Asset ID to update",
+              "title": "Asset Id"
+            },
+            "description": "Asset ID to update",
+            "example": 1200
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/asset_checkouts/{checkout_id}": {
+      "patch": {
+        "tags": [
+          "asset_checkouts"
+        ],
+        "summary": "Update an asset checkout",
+        "description": "Update checkout properties such as dates or notes.",
+        "operationId": "update_asset_checkout_partial",
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Asset checkout record ID to update",
+              "title": "Checkout Id"
+            },
+            "description": "Asset checkout record ID to update",
+            "example": 500
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCheckoutUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetCheckoutUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AssetCheckoutCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "ID of the asset being checked out",
+            "example": 1020
+          },
+          "custodian_id": {
+            "type": "integer",
+            "title": "Custodian Id",
+            "description": "ID of the custodian receiving the asset",
+            "example": 12
+          },
+          "checkout_date": {
+            "type": "string",
+            "title": "Checkout Date",
+            "description": "Checkout date in ISO or YYYY-MM-DD format",
+            "example": "2025-01-02"
+          },
+          "expected_return_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Return Date",
+            "description": "Expected return date, null if open-ended",
+            "example": "2025-03-31"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional notes about the checkout",
+            "example": "Assigned for Q1 prototype testing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "custodian_id",
+          "checkout_date"
+        ],
+        "title": "AssetCheckoutCreateRequest"
+      },
+      "AssetCheckoutCreateResponse": {
+        "properties": {
+          "asset_checkout": {
+            "$ref": "#/components/schemas/AssetCheckoutModel",
+            "description": "Created asset checkout",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_checkout"
+        ],
+        "title": "AssetCheckoutCreateResponse"
+      },
+      "AssetCheckoutModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Checkout record ID",
+            "example": 500
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Checked-out asset ID",
+            "example": 1020
+          },
+          "custodian_id": {
+            "type": "integer",
+            "title": "Custodian Id",
+            "description": "Custodian ID",
+            "example": 12
+          },
+          "checkout_date": {
+            "type": "string",
+            "title": "Checkout Date",
+            "description": "Checkout date",
+            "example": "2025-01-02"
+          },
+          "expected_return_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Return Date",
+            "description": "Expected return date or null",
+            "example": "2025-03-31"
+          },
+          "actual_return_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Return Date",
+            "description": "Actual return date or null if not returned"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Checkout notes",
+            "example": "Assigned for Q1 prototype testing"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By",
+            "description": "User ID who created the record",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T09:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T09:30:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "custodian_id",
+          "checkout_date",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AssetCheckoutModel"
+      },
+      "AssetCheckoutUpdateRequest": {
+        "properties": {
+          "expected_return_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Return Date",
+            "description": "Updated expected return date",
+            "example": "2025-04-15"
+          },
+          "actual_return_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Return Date",
+            "description": "Date when asset was returned",
+            "example": "2025-03-30"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Updated notes for the checkout",
+            "example": "Returned earlier than expected"
+          }
+        },
+        "type": "object",
+        "title": "AssetCheckoutUpdateRequest"
+      },
+      "AssetCheckoutUpdateResponse": {
+        "properties": {
+          "asset_checkout": {
+            "$ref": "#/components/schemas/AssetCheckoutModel",
+            "description": "Updated asset checkout",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_checkout"
+        ],
+        "title": "AssetCheckoutUpdateResponse"
+      },
+      "AssetCheckoutsListResponse": {
+        "properties": {
+          "asset_checkouts": {
+            "items": {
+              "$ref": "#/components/schemas/AssetCheckoutModel"
+            },
+            "type": "array",
+            "title": "Asset Checkouts",
+            "description": "List of asset checkouts",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_checkouts"
+        ],
+        "title": "AssetCheckoutsListResponse"
+      },
+      "AssetCreateRequest": {
+        "properties": {
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Unique asset tag identifier",
+            "example": "LPT-ENG-001"
+          },
+          "serial_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial Number",
+            "description": "Manufacturer serial number",
+            "example": "SN-DEL-748392"
+          },
+          "category_id": {
+            "type": "integer",
+            "title": "Category Id",
+            "description": "Category ID from categories table",
+            "example": 2
+          },
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id",
+            "description": "Owning department ID",
+            "example": 1
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id",
+            "description": "Current location ID",
+            "example": 15
+          },
+          "depreciation_schedule_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depreciation Schedule Id",
+            "description": "Linked depreciation schedule ID",
+            "example": 4
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Current asset status",
+            "example": "in_service"
+          },
+          "purchase_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Date",
+            "description": "Purchase date in ISO or YYYY-MM-DD format",
+            "example": "2023-04-15"
+          },
+          "purchase_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Cost",
+            "description": "Purchase cost of the asset",
+            "example": 1450.0
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Optional JSON metadata",
+            "example": {
+              "model": "Dell Latitude 7420"
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_tag",
+          "category_id",
+          "status"
+        ],
+        "title": "AssetCreateRequest"
+      },
+      "AssetCreateResponse": {
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/AssetModel",
+            "description": "Created asset",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset"
+        ],
+        "title": "AssetCreateResponse"
+      },
+      "AssetEventCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID associated with the event",
+            "example": 1200
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type",
+            "description": "Type of event",
+            "example": "status_change"
+          },
+          "event_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Time",
+            "description": "Event timestamp; defaults to current time if omitted",
+            "example": "2024-12-10T10:00:00Z"
+          },
+          "old_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Status",
+            "description": "Previous asset status if this is a status change",
+            "example": "in_service"
+          },
+          "new_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Status",
+            "description": "New asset status",
+            "example": "in_repair"
+          },
+          "old_location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Location Id",
+            "description": "Previous location ID if this is a move",
+            "example": 40
+          },
+          "new_location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Location Id",
+            "description": "New location ID after move",
+            "example": 55
+          },
+          "old_custodian_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Custodian Id",
+            "description": "Previous custodian ID for checkout/checkin events",
+            "example": 10
+          },
+          "new_custodian_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Custodian Id",
+            "description": "New custodian ID for checkout/checkin events",
+            "example": 12
+          },
+          "related_checkout_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Related Checkout Id",
+            "description": "Related asset_checkout ID, if applicable",
+            "example": 500
+          },
+          "related_maintenance_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Related Maintenance Id",
+            "description": "Related maintenance_records ID, if applicable",
+            "example": 300
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Optional JSON metadata describing the event",
+            "example": {
+              "reason": "Emergency breakdown"
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "event_type"
+        ],
+        "title": "AssetEventCreateRequest"
+      },
+      "AssetEventCreateResponse": {
+        "properties": {
+          "asset_event": {
+            "$ref": "#/components/schemas/AssetEventModel",
+            "description": "Created asset event",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_event"
+        ],
+        "title": "AssetEventCreateResponse"
+      },
+      "AssetEventModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Asset event ID",
+            "example": 900
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 1200
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type",
+            "description": "Event type",
+            "example": "status_change"
+          },
+          "event_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event Time",
+            "description": "Event timestamp",
+            "example": "2024-12-10T10:00:00Z"
+          },
+          "old_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Status",
+            "description": "Old status",
+            "example": "in_service"
+          },
+          "new_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Status",
+            "description": "New status",
+            "example": "in_repair"
+          },
+          "old_location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Location Id",
+            "description": "Old location ID",
+            "example": 40
+          },
+          "new_location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Location Id",
+            "description": "New location ID",
+            "example": 55
+          },
+          "old_custodian_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Custodian Id",
+            "description": "Old custodian ID",
+            "example": 10
+          },
+          "new_custodian_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Custodian Id",
+            "description": "New custodian ID",
+            "example": 12
+          },
+          "related_checkout_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Related Checkout Id",
+            "description": "Related checkout ID",
+            "example": 500
+          },
+          "related_maintenance_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Related Maintenance Id",
+            "description": "Related maintenance record ID",
+            "example": 300
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Event metadata",
+            "example": {
+              "reason": "Emergency breakdown"
+            }
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By",
+            "description": "User ID who created event",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Event creation timestamp",
+            "example": "2024-12-10T10:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2024-12-10T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "event_type",
+          "event_time",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AssetEventModel"
+      },
+      "AssetEventsListResponse": {
+        "properties": {
+          "asset_events": {
+            "items": {
+              "$ref": "#/components/schemas/AssetEventModel"
+            },
+            "type": "array",
+            "title": "Asset Events",
+            "description": "List of asset events",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_events"
+        ],
+        "title": "AssetEventsListResponse"
+      },
+      "AssetGetResponse": {
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/AssetModel",
+            "description": "Asset record",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset"
+        ],
+        "title": "AssetGetResponse"
+      },
+      "AssetModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Asset ID",
+            "example": 1001
+          },
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Unique asset tag",
+            "example": "LPT-ENG-001"
+          },
+          "serial_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial Number",
+            "description": "Serial number",
+            "example": "SN-DEL-748392"
+          },
+          "category_id": {
+            "type": "integer",
+            "title": "Category Id",
+            "description": "Category ID",
+            "example": 2
+          },
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id",
+            "description": "Department ID",
+            "example": 1
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id",
+            "description": "Location ID",
+            "example": 15
+          },
+          "depreciation_schedule_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depreciation Schedule Id",
+            "description": "Depreciation schedule ID",
+            "example": 4
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Current status",
+            "example": "in_service"
+          },
+          "purchase_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Date",
+            "description": "Purchase date",
+            "example": "2023-04-15"
+          },
+          "purchase_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Cost",
+            "description": "Purchase cost",
+            "example": 1450.0
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "JSON metadata",
+            "example": {
+              "model": "Dell Latitude 7420"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Asset creation timestamp",
+            "example": "2023-04-16T09:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2023-04-16T09:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_tag",
+          "category_id",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AssetModel"
+      },
+      "AssetTimelineEvent": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Event ID",
+            "example": 910
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type",
+            "description": "Event type",
+            "example": "status_change"
+          },
+          "event_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event Time",
+            "description": "Event timestamp in chronological order",
+            "example": "2024-02-01T08:00:00Z"
+          },
+          "old_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Status",
+            "description": "Previous status",
+            "example": "in_service"
+          },
+          "new_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Status",
+            "description": "New status",
+            "example": "in_repair"
+          },
+          "old_location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Location Id",
+            "description": "Previous location ID",
+            "example": 18
+          },
+          "new_location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Location Id",
+            "description": "New location ID",
+            "example": 19
+          },
+          "old_custodian_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Custodian Id",
+            "description": "Previous custodian ID",
+            "example": 20
+          },
+          "new_custodian_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Custodian Id",
+            "description": "New custodian ID",
+            "example": 21
+          },
+          "related_checkout_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Related Checkout Id",
+            "description": "Linked checkout ID",
+            "example": 520
+          },
+          "related_maintenance_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Related Maintenance Id",
+            "description": "Linked maintenance record ID",
+            "example": 330
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Additional event metadata",
+            "example": {
+              "reason": "Scheduled maintenance"
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_type",
+          "event_time"
+        ],
+        "title": "AssetTimelineEvent"
+      },
+      "AssetTimelineResponse": {
+        "properties": {
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Asset tag for which timeline is returned",
+            "example": "SRV-DB-002"
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 1300
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AssetTimelineEvent"
+            },
+            "type": "array",
+            "title": "Events",
+            "description": "List of events",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_tag",
+          "asset_id",
+          "events"
+        ],
+        "title": "AssetTimelineResponse"
+      },
+      "AssetUpdateRequest": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "Updated asset status",
+            "example": "in_repair"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id",
+            "description": "Updated location ID",
+            "example": 40
+          },
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id",
+            "description": "Updated department ID",
+            "example": 2
+          },
+          "depreciation_schedule_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depreciation Schedule Id",
+            "description": "Updated depreciation schedule ID",
+            "example": 9
+          },
+          "purchase_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Date",
+            "description": "Updated purchase date",
+            "example": "2024-03-01"
+          },
+          "purchase_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Cost",
+            "description": "Updated purchase cost",
+            "example": 5000.0
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Updated metadata object",
+            "example": {
+              "warranty_expiry": "2026-03-01"
+            }
+          }
+        },
+        "type": "object",
+        "title": "AssetUpdateRequest"
+      },
+      "AssetUpdateResponse": {
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/AssetModel",
+            "description": "Updated asset",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset"
+        ],
+        "title": "AssetUpdateResponse"
+      },
+      "AssetsListResponse": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/AssetModel"
+            },
+            "type": "array",
+            "title": "Assets",
+            "description": "List of assets",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "assets"
+        ],
+        "title": "AssetsListResponse"
+      },
+      "CategoriesListResponse": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryModel"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "List of categories",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "categories"
+        ],
+        "title": "CategoriesListResponse"
+      },
+      "CategoryCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique category name",
+            "example": "Projectors"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Description of the category",
+            "example": "Portable projection units for events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CategoryCreateRequest"
+      },
+      "CategoryCreateResponse": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/CategoryModel",
+            "description": "Created category",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "category"
+        ],
+        "title": "CategoryCreateResponse"
+      },
+      "CategoryModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Category ID",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Category name",
+            "example": "Laptop"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Category description",
+            "example": "Portable personal computers used by staff"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2023-01-01T09:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2023-06-01T12:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CategoryModel"
+      },
+      "CurrentUserResponse": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserModel",
+            "description": "Current authenticated user profile",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "user"
+        ],
+        "title": "CurrentUserResponse"
+      },
+      "CustodianCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique custodian name",
+            "example": "Marketing Events Team"
+          },
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id",
+            "description": "Department ID associated with the custodian",
+            "example": 6
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type",
+            "description": "Custodian type, defaults to 'individual'",
+            "example": "team"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CustodianCreateRequest"
+      },
+      "CustodianCreateResponse": {
+        "properties": {
+          "custodian": {
+            "$ref": "#/components/schemas/CustodianModel",
+            "description": "Created custodian",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "custodian"
+        ],
+        "title": "CustodianCreateResponse"
+      },
+      "CustodianModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Custodian ID",
+            "example": 8
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Custodian name",
+            "example": "Marketing Events Team"
+          },
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id",
+            "description": "Linked department ID",
+            "example": 6
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Custodian type such as individual or team",
+            "example": "team"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T12:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T12:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CustodianModel"
+      },
+      "CustodiansListResponse": {
+        "properties": {
+          "custodians": {
+            "items": {
+              "$ref": "#/components/schemas/CustodianModel"
+            },
+            "type": "array",
+            "title": "Custodians",
+            "description": "List of custodians",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "custodians"
+        ],
+        "title": "CustodiansListResponse"
+      },
+      "DecliningBalanceAssetEntry": {
+        "properties": {
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Asset tag",
+            "example": "RND-EQ-010"
+          },
+          "purchase_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Cost",
+            "description": "Purchase cost of the asset",
+            "example": 9000.0
+          },
+          "accumulated_depreciation": {
+            "type": "number",
+            "title": "Accumulated Depreciation",
+            "description": "Accumulated depreciation",
+            "example": 2500.0
+          },
+          "department_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Name",
+            "description": "Owning department name",
+            "example": "R&D"
+          },
+          "useful_life_years": {
+            "type": "integer",
+            "title": "Useful Life Years",
+            "description": "Total useful life in years",
+            "example": 10
+          },
+          "remaining_life_years": {
+            "type": "number",
+            "title": "Remaining Life Years",
+            "description": "Estimated remaining life years",
+            "example": 6.5
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_tag",
+          "accumulated_depreciation",
+          "useful_life_years",
+          "remaining_life_years"
+        ],
+        "title": "DecliningBalanceAssetEntry"
+      },
+      "DecliningBalanceRemainingLifeResponse": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/DecliningBalanceAssetEntry"
+            },
+            "type": "array",
+            "title": "Assets",
+            "description": "Assets with declining_balance and remaining life",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "assets"
+        ],
+        "title": "DecliningBalanceRemainingLifeResponse"
+      },
+      "DepartmentCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique department name",
+            "example": "R&D"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "Short department code",
+            "example": "RND"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "DepartmentCreateRequest"
+      },
+      "DepartmentCreateResponse": {
+        "properties": {
+          "department": {
+            "$ref": "#/components/schemas/DepartmentModel",
+            "description": "Created department",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "department"
+        ],
+        "title": "DepartmentCreateResponse"
+      },
+      "DepartmentModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Department ID",
+            "example": 3
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Department name",
+            "example": "Finance"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "Optional short department code",
+            "example": "FIN"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2023-01-10T09:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2023-05-12T14:30:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DepartmentModel"
+      },
+      "DepartmentsListResponse": {
+        "properties": {
+          "departments": {
+            "items": {
+              "$ref": "#/components/schemas/DepartmentModel"
+            },
+            "type": "array",
+            "title": "Departments",
+            "description": "List of departments",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "departments"
+        ],
+        "title": "DepartmentsListResponse"
+      },
+      "DepreciationScheduleCreateRequest": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Depreciation method name",
+            "example": "straight_line"
+          },
+          "useful_life_years": {
+            "type": "integer",
+            "title": "Useful Life Years",
+            "description": "Useful life in years",
+            "example": 3
+          },
+          "salvage_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salvage Value",
+            "description": "Salvage value at end of life, defaults to 0",
+            "default": 0,
+            "example": 200.0
+          },
+          "accumulated_depreciation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accumulated Depreciation",
+            "description": "Current accumulated depreciation, defaults to 0",
+            "default": 0,
+            "example": 0.0
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Optional JSON metadata, such as rate or custom fields",
+            "example": {
+              "rate": 0.4
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "useful_life_years"
+        ],
+        "title": "DepreciationScheduleCreateRequest"
+      },
+      "DepreciationScheduleCreateResponse": {
+        "properties": {
+          "depreciation_schedule": {
+            "$ref": "#/components/schemas/DepreciationScheduleModel",
+            "description": "Created depreciation schedule",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "depreciation_schedule"
+        ],
+        "title": "DepreciationScheduleCreateResponse"
+      },
+      "DepreciationScheduleModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Depreciation schedule ID",
+            "example": 4
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Depreciation method",
+            "example": "straight_line"
+          },
+          "useful_life_years": {
+            "type": "integer",
+            "title": "Useful Life Years",
+            "description": "Total useful life in years",
+            "example": 3
+          },
+          "salvage_value": {
+            "type": "number",
+            "title": "Salvage Value",
+            "description": "Expected salvage value at end of life",
+            "example": 200.0
+          },
+          "accumulated_depreciation": {
+            "type": "number",
+            "title": "Accumulated Depreciation",
+            "description": "Total accumulated depreciation to date",
+            "example": 450.0
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Optional JSON metadata with method-specific details",
+            "example": {
+              "rate": 0.2
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2023-01-01T12:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2024-01-01T12:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "method",
+          "useful_life_years",
+          "salvage_value",
+          "accumulated_depreciation",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DepreciationScheduleModel"
+      },
+      "DepreciationSchedulesListResponse": {
+        "properties": {
+          "depreciation_schedules": {
+            "items": {
+              "$ref": "#/components/schemas/DepreciationScheduleModel"
+            },
+            "type": "array",
+            "title": "Depreciation Schedules",
+            "description": "List of depreciation schedules",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "depreciation_schedules"
+        ],
+        "title": "DepreciationSchedulesListResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InventoryAssetEntry": {
+        "properties": {
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Asset tag",
+            "example": "FIN-LPT-002"
+          },
+          "serial_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial Number",
+            "description": "Serial number",
+            "example": "SN-HP-384920"
+          },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name",
+            "description": "Category name",
+            "example": "Laptop"
+          },
+          "custodian_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custodian Name",
+            "description": "Current custodian name",
+            "example": "Alice Chen"
+          },
+          "location_full_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Full Path",
+            "description": "Current location full_path",
+            "example": "HQ > 2nd Floor > Finance"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Asset status",
+            "example": "in_service"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_tag",
+          "status"
+        ],
+        "title": "InventoryAssetEntry"
+      },
+      "InventoryDepartmentGroup": {
+        "properties": {
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id",
+            "description": "Department ID",
+            "example": 3
+          },
+          "department_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Name",
+            "description": "Department name",
+            "example": "Finance"
+          },
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryAssetEntry"
+            },
+            "type": "array",
+            "title": "Assets",
+            "description": "Assets in department",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "assets"
+        ],
+        "title": "InventoryDepartmentGroup"
+      },
+      "InventoryReportByDepartmentResponse": {
+        "properties": {
+          "departments": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryDepartmentGroup"
+            },
+            "type": "array",
+            "title": "Departments",
+            "description": "Departments inventory report",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "departments"
+        ],
+        "title": "InventoryReportByDepartmentResponse"
+      },
+      "LocationCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Short name of the location",
+            "example": "Zone 1"
+          },
+          "full_path": {
+            "type": "string",
+            "title": "Full Path",
+            "description": "Full hierarchical path of the location",
+            "example": "Warehouse B > Zone 1"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "Parent location ID, null for top-level",
+            "example": 20
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "full_path"
+        ],
+        "title": "LocationCreateRequest"
+      },
+      "LocationCreateResponse": {
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/LocationModel",
+            "description": "Created location",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "location"
+        ],
+        "title": "LocationCreateResponse"
+      },
+      "LocationGetResponse": {
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/LocationModel",
+            "description": "Location record",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "location"
+        ],
+        "title": "LocationGetResponse"
+      },
+      "LocationModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Location ID",
+            "example": 12
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Short location name",
+            "example": "Engineering Pod A"
+          },
+          "full_path": {
+            "type": "string",
+            "title": "Full Path",
+            "description": "Full hierarchical path of the location",
+            "example": "HQ > 3rd Floor > Engineering Pod A"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "Parent location ID, null for top-level",
+            "example": 5
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2023-04-01T09:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2023-08-15T11:20:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "full_path",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "LocationModel"
+      },
+      "LocationUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "New short name for the location",
+            "example": "Zone 1A"
+          },
+          "full_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Path",
+            "description": "New full_path for the location",
+            "example": "Warehouse B > Zone 1A"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "New parent location ID",
+            "example": 19
+          }
+        },
+        "type": "object",
+        "title": "LocationUpdateRequest"
+      },
+      "LocationUpdateResponse": {
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/LocationModel",
+            "description": "Updated location",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "location"
+        ],
+        "title": "LocationUpdateResponse"
+      },
+      "LocationsListResponse": {
+        "properties": {
+          "locations": {
+            "items": {
+              "$ref": "#/components/schemas/LocationModel"
+            },
+            "type": "array",
+            "title": "Locations",
+            "description": "List of locations",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "locations"
+        ],
+        "title": "LocationsListResponse"
+      },
+      "MaintenanceRecordCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID the maintenance applies to",
+            "example": 1200
+          },
+          "service_type": {
+            "type": "string",
+            "title": "Service Type",
+            "description": "Type of maintenance performed",
+            "example": "Emergency repair"
+          },
+          "vendor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor",
+            "description": "Vendor or service provider name",
+            "example": "Precision Machines Ltd"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost",
+            "description": "Cost of maintenance service",
+            "example": 4800.0
+          },
+          "service_date": {
+            "type": "string",
+            "title": "Service Date",
+            "description": "Date when service was performed",
+            "example": "2024-12-10"
+          },
+          "next_due_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Due Date",
+            "description": "Next scheduled maintenance date, if applicable",
+            "example": "2025-06-10"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Additional notes about the maintenance",
+            "example": "Spindle replaced; pressure test completed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "service_type",
+          "service_date"
+        ],
+        "title": "MaintenanceRecordCreateRequest"
+      },
+      "MaintenanceRecordCreateResponse": {
+        "properties": {
+          "maintenance_record": {
+            "$ref": "#/components/schemas/MaintenanceRecordModel",
+            "description": "Created maintenance record",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "maintenance_record"
+        ],
+        "title": "MaintenanceRecordCreateResponse"
+      },
+      "MaintenanceRecordModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Maintenance record ID",
+            "example": 300
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 1200
+          },
+          "service_type": {
+            "type": "string",
+            "title": "Service Type",
+            "description": "Service type",
+            "example": "Emergency repair"
+          },
+          "vendor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor",
+            "description": "Vendor name",
+            "example": "Precision Machines Ltd"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost",
+            "description": "Service cost",
+            "example": 4800.0
+          },
+          "service_date": {
+            "type": "string",
+            "title": "Service Date",
+            "description": "Service date",
+            "example": "2024-12-10"
+          },
+          "next_due_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Due Date",
+            "description": "Next maintenance due date",
+            "example": "2025-06-10"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Maintenance notes",
+            "example": "Spindle replaced; pressure test completed"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By",
+            "description": "User who created the record",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2024-12-10T14:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2024-12-10T14:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "service_type",
+          "service_date",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "MaintenanceRecordModel"
+      },
+      "MaintenanceRecordsListResponse": {
+        "properties": {
+          "maintenance_records": {
+            "items": {
+              "$ref": "#/components/schemas/MaintenanceRecordModel"
+            },
+            "type": "array",
+            "title": "Maintenance Records",
+            "description": "List of maintenance records",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "maintenance_records"
+        ],
+        "title": "MaintenanceRecordsListResponse"
+      },
+      "RetiredLostAssetEntry": {
+        "properties": {
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Asset tag",
+            "example": "RND-SRV-005"
+          },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name",
+            "description": "Category name",
+            "example": "Server"
+          },
+          "purchase_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Date",
+            "description": "Purchase date",
+            "example": "2018-06-01"
+          },
+          "purchase_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Cost",
+            "description": "Purchase cost",
+            "example": 12000.0
+          },
+          "last_known_location_full_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Known Location Full Path",
+            "description": "Last known location full_path",
+            "example": "HQ > Basement > Old Server Room"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_tag"
+        ],
+        "title": "RetiredLostAssetEntry"
+      },
+      "RetiredLostByDepartmentResponse": {
+        "properties": {
+          "department_name": {
+            "type": "string",
+            "title": "Department Name",
+            "description": "Name of the department for which the report is generated",
+            "example": "R&D"
+          },
+          "statuses": {
+            "items": {
+              "$ref": "#/components/schemas/RetiredLostStatusGroup"
+            },
+            "type": "array",
+            "title": "Statuses",
+            "description": "Status groups",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "department_name",
+          "statuses"
+        ],
+        "title": "RetiredLostByDepartmentResponse"
+      },
+      "RetiredLostStatusGroup": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Asset status",
+            "example": "retired"
+          },
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/RetiredLostAssetEntry"
+            },
+            "type": "array",
+            "title": "Assets",
+            "description": "Assets with this status",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "assets"
+        ],
+        "title": "RetiredLostStatusGroup"
+      },
+      "UserModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "User ID",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "description": "Unique username",
+            "example": "admin"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "description": "User email address",
+            "example": "admin@example.com"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "Full name of the user",
+            "example": "System Admin"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Timestamp when user was created",
+            "example": "2023-01-01T10:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp when user was last updated",
+            "example": "2023-06-01T12:30:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "email",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "UserModel"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WorkflowBatchCheckoutAssetEntry": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 1400
+          },
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Asset tag",
+            "example": "PRJ-HQ-001"
+          },
+          "checkout_id": {
+            "type": "integer",
+            "title": "Checkout Id",
+            "description": "Created checkout record ID",
+            "example": 700
+          },
+          "status_after": {
+            "type": "string",
+            "title": "Status After",
+            "description": "Updated asset status after checkout",
+            "example": "in_service"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "asset_tag",
+          "checkout_id",
+          "status_after"
+        ],
+        "title": "WorkflowBatchCheckoutAssetEntry"
+      },
+      "WorkflowBatchCheckoutByCategoryLocationRequest": {
+        "properties": {
+          "category_name": {
+            "type": "string",
+            "title": "Category Name",
+            "description": "Category name of assets to checkout",
+            "example": "Projectors"
+          },
+          "location_full_path": {
+            "type": "string",
+            "title": "Location Full Path",
+            "description": "Location full_path where assets are currently located",
+            "example": "HQ > Ground Floor > Equipment Cage"
+          },
+          "custodian_name": {
+            "type": "string",
+            "title": "Custodian Name",
+            "description": "Custodian receiving all matching assets",
+            "example": "Marketing Events Team"
+          },
+          "checkout_date": {
+            "type": "string",
+            "title": "Checkout Date",
+            "description": "Checkout date applied to all records",
+            "example": "2025-02-01"
+          },
+          "expected_return_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Return Date",
+            "description": "Expected return date, null for open-ended pool assignment"
+          },
+          "ensure_in_service": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ensure In Service",
+            "description": "If true, set asset status to in_service for all checked out assets",
+            "default": false,
+            "example": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_name",
+          "location_full_path",
+          "custodian_name",
+          "checkout_date"
+        ],
+        "title": "WorkflowBatchCheckoutByCategoryLocationRequest"
+      },
+      "WorkflowBatchCheckoutByCategoryLocationResponse": {
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/WorkflowBatchCheckoutSummary",
+            "description": "Summary of batch checkout operation",
+            "example": {}
+          },
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowBatchCheckoutAssetEntry"
+            },
+            "type": "array",
+            "title": "Assets",
+            "description": "List of assets that were checked out",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "assets"
+        ],
+        "title": "WorkflowBatchCheckoutByCategoryLocationResponse"
+      },
+      "WorkflowBatchCheckoutSummary": {
+        "properties": {
+          "total_assets_found": {
+            "type": "integer",
+            "title": "Total Assets Found",
+            "description": "Number of assets matching category and location",
+            "example": 5
+          },
+          "total_checkouts_created": {
+            "type": "integer",
+            "title": "Total Checkouts Created",
+            "description": "Number of checkout records created",
+            "example": 5
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_assets_found",
+          "total_checkouts_created"
+        ],
+        "title": "WorkflowBatchCheckoutSummary"
+      },
+      "WorkflowCheckinAssetPart": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Asset ID",
+            "example": 1105
+          },
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Asset tag",
+            "example": "MON-ENG-021"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "New status",
+            "example": "in_service"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id",
+            "description": "New location ID",
+            "example": 33
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_tag",
+          "status"
+        ],
+        "title": "WorkflowCheckinAssetPart"
+      },
+      "WorkflowCheckinCheckoutPart": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Checkout ID",
+            "example": 610
+          },
+          "actual_return_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Return Date",
+            "description": "Recorded return date",
+            "example": "2025-01-10"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "WorkflowCheckinCheckoutPart"
+      },
+      "WorkflowCheckinEventPart": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Event ID",
+            "example": 960
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type",
+            "description": "Event type",
+            "example": "checkin"
+          },
+          "event_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event Time",
+            "description": "Event timestamp",
+            "example": "2025-01-10T16:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_type",
+          "event_time"
+        ],
+        "title": "WorkflowCheckinEventPart"
+      },
+      "WorkflowCheckinWithMoveRequest": {
+        "properties": {
+          "serial_number": {
+            "type": "string",
+            "title": "Serial Number",
+            "description": "Serial number of the asset to check in",
+            "example": "SN-MON-99821"
+          },
+          "new_location_full_path": {
+            "type": "string",
+            "title": "New Location Full Path",
+            "description": "Location full_path where the asset is placed on checkin",
+            "example": "HQ > 1st Floor > IT Storage Room"
+          },
+          "new_status": {
+            "type": "string",
+            "title": "New Status",
+            "description": "Status after checkin",
+            "example": "in_service"
+          },
+          "checkin_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkin Date",
+            "description": "Checkin date, defaults to now",
+            "example": "2025-01-10"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional notes recorded on checkout and event",
+            "example": "Returned after troubleshooting"
+          }
+        },
+        "type": "object",
+        "required": [
+          "serial_number",
+          "new_location_full_path",
+          "new_status"
+        ],
+        "title": "WorkflowCheckinWithMoveRequest"
+      },
+      "WorkflowCheckinWithMoveResponse": {
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/WorkflowCheckinAssetPart",
+            "description": "Updated asset after checkin",
+            "example": {}
+          },
+          "checkout": {
+            "$ref": "#/components/schemas/WorkflowCheckinCheckoutPart",
+            "description": "Updated checkout record with actual_return_date",
+            "example": {}
+          },
+          "event": {
+            "$ref": "#/components/schemas/WorkflowCheckinEventPart",
+            "description": "Asset event representing checkin and move",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset",
+          "checkout",
+          "event"
+        ],
+        "title": "WorkflowCheckinWithMoveResponse"
+      },
+      "WorkflowCheckoutAssetPart": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Asset ID",
+            "example": 1020
+          },
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Asset tag",
+            "example": "PRJ-DRN-003"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Updated status",
+            "example": "in_service"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id",
+            "description": "New location ID",
+            "example": 45
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_tag",
+          "status"
+        ],
+        "title": "WorkflowCheckoutAssetPart"
+      },
+      "WorkflowCheckoutCheckoutPart": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Checkout ID",
+            "example": 600
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 1020
+          },
+          "custodian_id": {
+            "type": "integer",
+            "title": "Custodian Id",
+            "description": "Custodian ID",
+            "example": 30
+          },
+          "checkout_date": {
+            "type": "string",
+            "title": "Checkout Date",
+            "description": "Checkout date",
+            "example": "2025-01-02"
+          },
+          "expected_return_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Return Date",
+            "description": "Expected return date",
+            "example": "2025-03-31"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "custodian_id",
+          "checkout_date"
+        ],
+        "title": "WorkflowCheckoutCheckoutPart"
+      },
+      "WorkflowCheckoutEventPart": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Event ID",
+            "example": 950
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type",
+            "description": "Event type",
+            "example": "checkout"
+          },
+          "event_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event Time",
+            "description": "Event timestamp",
+            "example": "2025-01-02T09:15:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_type",
+          "event_time"
+        ],
+        "title": "WorkflowCheckoutEventPart"
+      },
+      "WorkflowCheckoutWithMoveRequest": {
+        "properties": {
+          "asset_tag": {
+            "type": "string",
+            "title": "Asset Tag",
+            "description": "Asset tag to checkout",
+            "example": "PRJ-DRN-003"
+          },
+          "custodian_name": {
+            "type": "string",
+            "title": "Custodian Name",
+            "description": "Name of the custodian to assign asset to",
+            "example": "Maria Lopez (Engineering)"
+          },
+          "new_location_full_path": {
+            "type": "string",
+            "title": "New Location Full Path",
+            "description": "New location full_path where asset will reside after checkout",
+            "example": "HQ > 4th Floor > Prototype Lab"
+          },
+          "checkout_date": {
+            "type": "string",
+            "title": "Checkout Date",
+            "description": "Checkout date",
+            "example": "2025-01-02"
+          },
+          "expected_return_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Return Date",
+            "description": "Expected return date, can be null",
+            "example": "2025-03-31"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional notes recorded in checkout and event metadata",
+            "example": "Prototype Phase 1 assignment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_tag",
+          "custodian_name",
+          "new_location_full_path",
+          "checkout_date"
+        ],
+        "title": "WorkflowCheckoutWithMoveRequest"
+      },
+      "WorkflowCheckoutWithMoveResponse": {
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/WorkflowCheckoutAssetPart",
+            "description": "Updated asset after checkout and move",
+            "example": {}
+          },
+          "checkout": {
+            "$ref": "#/components/schemas/WorkflowCheckoutCheckoutPart",
+            "description": "Created checkout record",
+            "example": {}
+          },
+          "event": {
+            "$ref": "#/components/schemas/WorkflowCheckoutEventPart",
+            "description": "Asset event capturing checkout and move",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset",
+          "checkout",
+          "event"
+        ],
+        "title": "WorkflowCheckoutWithMoveResponse"
+      },
+      "WorkflowCreateLocationChild": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Child location name",
+            "example": "Zone 1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "WorkflowCreateLocationChild"
+      },
+      "WorkflowCreateLocationGrandchild": {
+        "properties": {
+          "parent_child_name": {
+            "type": "string",
+            "title": "Parent Child Name",
+            "description": "Name of the parent child location",
+            "example": "Zone 1"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Grandchild location name",
+            "example": "Racking Aisle 1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "parent_child_name",
+          "name"
+        ],
+        "title": "WorkflowCreateLocationGrandchild"
+      },
+      "WorkflowCreateLocationHierarchyRequest": {
+        "properties": {
+          "root_name": {
+            "type": "string",
+            "title": "Root Name",
+            "description": "Name of the top-level location",
+            "example": "Warehouse B"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowCreateLocationChild"
+            },
+            "type": "array",
+            "title": "Children",
+            "description": "List of first-level child locations",
+            "example": [
+              {
+                "name": "Zone 1"
+              },
+              {
+                "name": "Zone 2"
+              }
+            ]
+          },
+          "grandchildren": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/WorkflowCreateLocationGrandchild"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grandchildren",
+            "description": "List of grandchildren definitions",
+            "example": [
+              {
+                "name": "Racking Aisle 1",
+                "parent_child_name": "Zone 1"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "root_name",
+          "children"
+        ],
+        "title": "WorkflowCreateLocationHierarchyRequest"
+      },
+      "WorkflowCreateLocationHierarchyResponse": {
+        "properties": {
+          "root": {
+            "$ref": "#/components/schemas/WorkflowLocationSimple",
+            "description": "Created root location",
+            "example": {}
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowLocationSimple"
+            },
+            "type": "array",
+            "title": "Children",
+            "description": "Created child locations",
+            "example": []
+          },
+          "grandchildren": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowLocationSimple"
+            },
+            "type": "array",
+            "title": "Grandchildren",
+            "description": "Created grandchild locations",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "root",
+          "children",
+          "grandchildren"
+        ],
+        "title": "WorkflowCreateLocationHierarchyResponse"
+      },
+      "WorkflowLocationSimple": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Location ID",
+            "example": 200
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Location name",
+            "example": "Warehouse B"
+          },
+          "full_path": {
+            "type": "string",
+            "title": "Full Path",
+            "description": "Full path",
+            "example": "Warehouse B"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "Parent ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "full_path"
+        ],
+        "title": "WorkflowLocationSimple"
+      }
+    }
+  }
+}

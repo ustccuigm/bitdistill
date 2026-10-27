@@ -1,0 +1,65 @@
+Ablation: teacher instruction and structured steer                      one shared sales-order event
+ Shared intervention event
+ Task. Create a sales order for a known customer and add the requested part.
+ Observed state. The customer is known, but the order header is absent; after the header is created, the target
+ part is still missing before the order line can be added.
+ What the ablation holds fixed. The failed trajectory, verified counterfactual, declared lexical candidate, and
+ current causal turn are shared. Only the steering source or representation changes.
+
+
+ Teacher input: how to write a structured steer                           Teacher output: structured steer
+ prompt
+                                                                          Decision: create / revise / retain / retire
+ Role: causal Steer analyzer for a self-evolving agent.                   Diagnosis: concise summary and failure mechanism
+ Evidence: one failed W4 trajectory plus one independently                Location: causal assistant turn (zero based)
+ verified counterfactual for the same task.                               Structured steer: precondition · decision rule ·
+ Diagnosis: treat lexical mismatch as a candidate; use                    expected transition · recovery check
+ tool observations or the final verifier to locate the
+ earliest causal decision.                                                  Shared-event instantiation: the missing order
+ Output: write one concise procedural correction for the                    header is the precondition; the next action is
+ current turn; preserve valid alternatives and immutable                    header creation; the returned order_id must be
+ verified Steers.                                                           checked and reused.
+ Required content: state precondition, decision rule,
+ expected transition, and concrete recovery check.
+
+   Core principle: diagnose the earliest causally
+   supported decision and turn it into one executable,
+   state-grounded correction.
+
+
+ Same event, four steering variants
+
+ Desired transition: create header → retrieve part → create order line
+ Comparison target: does the rule preserve the missing prerequisite and make the next executable action
+ unambiguous?
+
+
+  Teacher / Structured (Ours)                                          Teacher / Free-form
+  structured steer                                                     unstructured instruction
+    precondition: header absent                                         “Create the order before looking up the part, while
+    decision_rule: create header, then retrieve part,                   also making sure the part is retrieved before
+    then create line                                                    creating the order and its line items.”
+    expected_transition: return and reuse order_id
+    recovery_check: verify header creation and ID reuse                 Order constraints conflict. Header and line creation
+                                                                        are merged into an ambiguous instruction.
+    Preserves the causal transition. The four fields are
+    explicit and composable.
+
+
+  Student / Structured                                                 External LLM / Structured
+  structured but misdiagnosed                                          broad structured rule
+
+    precondition: SKU or line-item fields need checking                 “Create or confirm the sales order, retrieve and
+    decision_rule: retrieve part and retry the line                     validate the product, then add it to the order.”
+    missing: absent-header prerequisite
+                                                                        Less state-specific. “Create or confirm” does not
+    Schema alone is insufficient. It leaves the first                   select the required next action when absence is
+    causal transition unresolved.                                       observed.
+
+
+            Structured teacher supervision = causal diagnosis + executable state transition + recovery check
+
+The figure summarizes the supplied teacher/analyzer protocol and its structured output contract. Raw request syntax is omitted so the
+comparison emphasizes causal diagnosis and executable state transitions; the four bottom panels isolate representation and source quality
+on one fixed event.
+
