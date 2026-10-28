@@ -197,6 +197,16 @@ class OnlineStepTest(unittest.TestCase):
                 self.assertEqual(sampled[1], (str(run / "checkpoints/student-step000001-awq-runtime"), "1"))
                 main()
                 self.assertEqual(len(sampled), 2)
+                config_path = run / "run_config.json"
+                legacy = json.loads(config_path.read_text())
+                for key in ("bits", "activation_bits", "group_size"):
+                    legacy.pop(key)
+                config_path.write_text(json.dumps(legacy))
+                main()
+                self.assertEqual(len(sampled), 2)
+                with patch.dict(os.environ, {"BITS": "2"}):
+                    with self.assertRaisesRegex(ValueError, "inputs changed"):
+                        main()
                 self.assertTrue((run / "steps/step000002/complete.json").is_file())
                 with patch.dict(os.environ, {"MAX_TOKENS": "1024"}):
                     with self.assertRaisesRegex(ValueError, "inputs changed"):

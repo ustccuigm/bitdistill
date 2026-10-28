@@ -4,6 +4,10 @@
 
 Run the commands below from the repository root.
 
+For 2-bit weights or 8-bit activations, see the [precision configurations](precision.md).
+Add `--precision w2a16` or `--precision w4a8` to the commands below after
+installing the inference plugin; the default remains `w4a16`.
+
 Each example starts from the corresponding post-RL BF16 checkpoint.
 `quantize` prepares calibration data, computes clipping bounds, and exports
 the initial quantized student. `train` runs online teacher-steered distillation

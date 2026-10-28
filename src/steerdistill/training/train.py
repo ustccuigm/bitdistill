@@ -302,6 +302,7 @@ def train():
             quant_type=training_args.quant_type,
             q_group_size=training_args.q_group_size,
             w_bit=training_args.bits,
+            activation_bits=training_args.activation_bits,
         )
         if training_args.clip is not None:
             reference_clip = torch.load(training_args.clip, map_location="cpu")
@@ -365,6 +366,7 @@ def train():
             quant_type=training_args.quant_type,
             q_group_size=training_args.q_group_size,
             w_bit=training_args.bits,
+            activation_bits=training_args.activation_bits,
             quant_grid=quant_grid,
         )
         # Persist quantizer provenance so an old checkpoint cannot be silently
@@ -377,6 +379,7 @@ def train():
             ),
             "quant_type": training_args.quant_type,
             "bits": training_args.bits,
+            "activation_bits": training_args.activation_bits,
             "group_size": training_args.q_group_size,
         }
         if training_args.quant_grid_path is not None:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pack SteerDistill asymmetric W4 values into standard AutoAWQ GEMM layout.
+"""Export the learner's quantization grid to a packed inference checkpoint.
 
 This is a format conversion only.  It does not run AWQ calibration, rescaling,
 or a second quantization algorithm: codes/scales/zero-points come directly from
@@ -19,6 +19,7 @@ from transformers import AutoConfig, AutoTokenizer
 from steerdistill.quantization.quantizer import asymmetric_quantize_tensor
 from steerdistill.model_support import load_model
 from steerdistill.quantization.clip_state import load_bounds, clipped_weight
+from steerdistill.quantization.precision import pack_codes, validate_precision
 
 
 AWQ_ORDER = (0, 2, 4, 6, 1, 3, 5, 7)
@@ -53,7 +54,7 @@ def pack_awq(values: torch.Tensor, bits: int = 4) -> torch.Tensor:
     return output
 
 
-def quantized_linear_tensors(module, bits: int, group_size: int) -> dict[str, torch.Tensor]:
+def quantized_linear_tensors(module, bits: int, group_size: int, activation_bits=16) -> dict[str, torch.Tensor]:
     _, scales, zeros, codes = asymmetric_quantize_tensor(
         module.weight,
         n_bit=bits,
@@ -63,9 +64,10 @@ def quantized_linear_tensors(module, bits: int, group_size: int) -> dict[str, to
     )
     # AutoAWQ GEMM stores input-major qweight and group-major scales/zeros;
     # qweight and qzeros are packed along output channels.
+    pack = pack_awq if (bits, activation_bits) == (4, 16) else pack_codes
     return {
-        "qweight": pack_awq(codes.t().contiguous(), bits).cpu(),
-        "qzeros": pack_awq(zeros.t().contiguous(), bits).cpu(),
+        "qweight": pack(codes.t().contiguous(), bits).cpu(),
+        "qzeros": pack(zeros.t().contiguous(), bits).cpu(),
         "scales": scales.t().contiguous().to(torch.float16).cpu(),
     }
 
@@ -76,10 +78,14 @@ def should_quantize(name: str, module: torch.nn.Module) -> bool:
             and not set(parts).intersection({"visual", "vision_tower", "multi_modal_projector"}))
 
 
-def convert(source: Path, output: Path, bits: int, group_size: int, clip: Path | None = None) -> int:
-    if bits != 4:
-        raise ValueError("AWQ/Marlin route is W4A16 only.")
+def convert(source: Path, output: Path, bits: int, group_size: int, clip: Path | None = None, activation_bits=16) -> int:
+    validate_precision(bits, activation_bits)
     config = AutoConfig.from_pretrained(source, trust_remote_code=True)
+    metadata = getattr(config, "steerdistill_quantization", None)
+    if metadata:
+        for key, value in (("bits", bits), ("activation_bits", activation_bits), ("group_size", group_size)):
+            if metadata.get(key, 16 if key == "activation_bits" else None) != value:
+                raise ValueError(f"Source training quantizer disagrees with export {key}={value}")
     model = load_model(
         source,
         config=config,
@@ -89,7 +95,7 @@ def convert(source: Path, output: Path, bits: int, group_size: int, clip: Path |
         device_map="cpu",
     ).eval()
     if clip is not None:
-        bounds = load_bounds(clip)
+        bounds = load_bounds(clip, bits, group_size)
         modules = dict(model.named_modules())
         with torch.no_grad():
             for name, values in bounds.items():
@@ -101,7 +107,7 @@ def convert(source: Path, output: Path, bits: int, group_size: int, clip: Path |
     for name, module in model.named_modules():
         if not should_quantize(name, module):
             continue
-        tensors = quantized_linear_tensors(module, bits, group_size)
+        tensors = quantized_linear_tensors(module, bits, group_size, activation_bits)
         state.pop(f"{name}.weight", None)
         for suffix, tensor in tensors.items():
             state[f"{name}.{suffix}"] = tensor
@@ -127,7 +133,8 @@ def convert(source: Path, output: Path, bits: int, group_size: int, clip: Path |
 
     output.mkdir(parents=True, exist_ok=True)
     quant_config = {
-        "quant_method": "awq",
+        "quant_method": "awq" if (bits, activation_bits) == (4, 16) else "steerdistill",
+        "activation_bits": activation_bits,
         "zero_point": True,
         "q_group_size": group_size,
         "w_bit": bits,
@@ -155,8 +162,8 @@ def convert(source: Path, output: Path, bits: int, group_size: int, clip: Path |
     AutoTokenizer.from_pretrained(source, trust_remote_code=True).save_pretrained(output)
     copy_processor_metadata(source, output)
     print(
-        f"STEERDISTILL_AWQ_PACK_SIGNAL status=ready source={source} output={output} "
-        f"bits={bits} group_size={group_size} linears={converted}",
+        f"STEERDISTILL_PACK_SIGNAL status=ready source={source} output={output} "
+        f"bits={bits} activation_bits={activation_bits} group_size={group_size} linears={converted}",
         flush=True,
     )
     return converted
@@ -167,10 +174,11 @@ def main() -> None:
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--bits", type=int, default=4)
+    parser.add_argument("--activation-bits", type=int, default=16)
     parser.add_argument("--group-size", type=int, default=64)
     parser.add_argument("--clip", type=Path, help="Apply only for the initial BF16-to-W4 export")
     args = parser.parse_args()
-    convert(args.source, args.output, args.bits, args.group_size, args.clip)
+    convert(args.source, args.output, args.bits, args.group_size, args.clip, args.activation_bits)
 
 
 if __name__ == "__main__":

@@ -119,6 +119,7 @@ esac
   --report_to none \
   --remove_unused_columns False \
   --bits "$BITS" \
+  --activation_bits "${ACTIVATION_BITS:-16}" \
   --quant_type "$QUANT_TYPE" \
   --q_group_size "$GROUP_SIZE" \
   "${QUANT_GRID_ARGS[@]}" \

@@ -57,6 +57,7 @@ class TrainingArguments(transformers.TrainingArguments):
         default=64,
         metadata={"help": "Quantization Group Size."}
     )
+    activation_bits: int = field(default=16, metadata={"help": "16 or dynamic per-token symmetric INT8 linear inputs."})
     quant_type: str = field(
         default="int2-asym",
         metadata={"help": "Quantization type: ste-n2f3 or int{2,3,4,8}-asym."}

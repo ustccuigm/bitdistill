@@ -1,6 +1,7 @@
 """Fail before calibration/training when the rollout runtime lacks the model."""
 import argparse
 import json
+import os
 from pathlib import Path
 
 
@@ -9,6 +10,11 @@ def main():
     parser.add_argument("model", type=Path)
     args = parser.parse_args()
     from vllm.model_executor.models import ModelRegistry
+    if os.getenv("QUANT_PRECISION", "w4a16") != "w4a16":
+        from vllm.plugins import load_general_plugins
+        from vllm.model_executor.layers.quantization import get_quantization_config
+        load_general_plugins()
+        get_quantization_config("steerdistill")
     config = json.loads((args.model / "config.json").read_text())
     architectures = config.get("architectures") or []
     from vllm.config import ModelConfig

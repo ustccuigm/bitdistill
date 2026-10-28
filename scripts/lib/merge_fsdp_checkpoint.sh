@@ -34,7 +34,7 @@ if [[ -s "$CHECKPOINT_DIR/config.json" ]]; then
   cp "$CHECKPOINT_DIR/config.json" "$HF_OUTPUT/config.json"
 fi
 if [[ "${WRITE_QUANTIZER_METADATA:-0}" == 1 ]]; then
-  "$PYTHON_BIN" - "$HF_OUTPUT/config.json" "$BITS" "$GROUP_SIZE" "$QUANT_TYPE" <<'PY'
+  "$PYTHON_BIN" - "$HF_OUTPUT/config.json" "$BITS" "$GROUP_SIZE" "$QUANT_TYPE" "${ACTIVATION_BITS:-16}" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -45,6 +45,7 @@ config["steerdistill_quantization"] = {
     "version": "int-asym-fp32-fp16scale-v1",
     "quant_type": sys.argv[4],
     "bits": int(sys.argv[2]),
+    "activation_bits": int(sys.argv[5]),
     "group_size": int(sys.argv[3]),
 }
 path.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n")

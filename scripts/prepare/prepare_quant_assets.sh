@@ -24,23 +24,24 @@ NORMALIZED_DATA="$RUN_ROOT/data/clip_calibration.jsonl"
 
 mkdir -p "$(dirname "$CLIP_OUTPUT")" "$LOG_ROOT"
 PROVENANCE_ARGS=(--model "$MODEL" --data "$NORMALIZED_DATA" --clip "$CLIP_OUTPUT"
+  --bits "$BITS" --group-size "$GROUP_SIZE"
   --samples "${CLIP_SAMPLES:-128}" --seqlen "${CLIP_SEQLEN:-1024}" --grid "${CLIP_GRID:-20}")
 if [[ -s "$CLIP_OUTPUT" ]]; then
   "$ENV_ROOT/bin/python" "$ROOT/src/steerdistill/quantization/clip_provenance.py" check "${PROVENANCE_ARGS[@]}"
-  "$ENV_ROOT/bin/python" "$ROOT/src/steerdistill/teacher/validate_clip.py" "$CLIP_OUTPUT" --bits 4 --group-size 64
+  "$ENV_ROOT/bin/python" "$ROOT/src/steerdistill/teacher/validate_clip.py" "$CLIP_OUTPUT" --bits "${BITS:-4}" --group-size "${GROUP_SIZE:-64}"
   echo "STEER_CLIP_SIGNAL status=cached benchmark=$BENCHMARK model=$MODEL output=$CLIP_OUTPUT"
   exit 0
 fi
 
 "$ENV_ROOT/bin/python" "$ROOT/src/steerdistill/quantization/autoclip.py" \
   --model_path "$MODEL" --calib_data_path "$NORMALIZED_DATA" \
-  --quant_type int --w_bit 4 --q_group_size 64 \
+  --quant_type int --w_bit "$BITS" --q_group_size "$GROUP_SIZE" \
   --n_samples "${CLIP_SAMPLES:-128}" --seqlen "${CLIP_SEQLEN:-1024}" \
   --calib_batch_size "${CLIP_BATCH_SIZE:-1}" --clip_n_grid "${CLIP_GRID:-20}" \
   --clip_num_gpus "${CLIP_NUM_GPUS:-1}" \
   --run_clip --dump_clip "$CLIP_OUTPUT" \
   2>&1 | tee "$LOG_ROOT/clip.log"
 "$ENV_ROOT/bin/python" "$ROOT/src/steerdistill/teacher/validate_clip.py" \
-  "$CLIP_OUTPUT" --bits 4 --group-size 64
+  "$CLIP_OUTPUT" --bits "${BITS:-4}" --group-size "${GROUP_SIZE:-64}"
 "$ENV_ROOT/bin/python" "$ROOT/src/steerdistill/quantization/clip_provenance.py" record "${PROVENANCE_ARGS[@]}"
 echo "STEER_CLIP_SIGNAL status=ready benchmark=$BENCHMARK model_group=$MODEL_GROUP output=$CLIP_OUTPUT"

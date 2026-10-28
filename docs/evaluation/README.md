@@ -1,5 +1,10 @@
 # Evaluation
 
+For a non-default quantization run, pass the same `--precision w2a16` or
+`--precision w4a8` used during training to `run_benchmark.sh eval`.
+See [precision configurations](../training/precision.md) for plugin setup
+and the reference backend's compute semantics.
+
 [Project overview](../../README.md)
 
 Run the commands below from the repository root.

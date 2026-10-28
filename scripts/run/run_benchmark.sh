@@ -8,10 +8,12 @@ usage() {
   echo "usage: run_benchmark.sh [prepare|quantize|train|eval|full] [--model MODEL] [--benchmark BENCHMARK]"
   echo "models: qwen3_8b, qwen3_5_4b, gemma4_12b"
   echo "benchmarks: bfcl_v4, tau2_bench, webshop, alfworld, search_qa"
+  echo "precision: --precision w4a16|w2a16|w4a8 (default: w4a16)"
 }
 MODE=full
 CLI_MODEL=
 CLI_BENCHMARK=
+CLI_PRECISION=
 if [[ $# -gt 0 && "$1" != -* ]]; then
   MODE=$1
   shift
@@ -22,6 +24,13 @@ case "$MODE" in
 esac
 while (( $# )); do
   case "$1" in
+    --precision)
+      [[ $# -ge 2 ]] || { echo "Missing precision" >&2; exit 2; }
+      case "$2" in w4a16|w2a16|w4a8) ;; *) echo "Unknown precision: $2" >&2; exit 2 ;; esac
+      export QUANT_PRECISION="$2"
+      CLI_PRECISION=$2
+      shift 2
+      ;;
     --model|--benchmark)
       [[ $# -ge 2 && -n "$2" && "$2" != -* ]] || { echo "Missing value for $1" >&2; exit 2; }
       if [[ "$1" == --model ]]; then
@@ -40,6 +49,9 @@ while (( $# )); do
   esac
 done
 source "$ROOT/scripts/lib/load_config.sh"
+if [[ -n "$CLI_PRECISION" && "$QUANT_PRECISION" != "$CLI_PRECISION" ]]; then
+  echo "Configuration overrides requested precision" >&2; exit 2
+fi
 if [[ -n "$CLI_MODEL" && "$MODEL_FAMILY" != "$CLI_MODEL" ]] ||
    [[ -n "$CLI_BENCHMARK" && "$BENCHMARK" != "$CLI_BENCHMARK" ]]; then
   echo "Configuration overrides the requested route; keep the template's default-value assignments for MODEL_FAMILY and BENCHMARK." >&2

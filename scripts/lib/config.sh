@@ -13,6 +13,7 @@ DEEPSPEED_BIN="${DEEPSPEED_BIN:-$ENV_ROOT/bin/deepspeed}"
 MODEL_PATH="${MODEL_PATH:?Set MODEL_PATH to the configured BF16 source model or current student checkpoint}"
 TOOL_ENV_SOURCE_PATH="${TOOL_ENV_SOURCE_PATH:-$STEER_ASSET_ROOT/common/data/tool_use_environment}"
 
+source "$REPO_ROOT/scripts/lib/precision.sh"
 BITS="${BITS:-4}"
 GROUP_SIZE="${GROUP_SIZE:-64}"
 QUANT_TYPE="${QUANT_TYPE:-int${BITS}-asym}"

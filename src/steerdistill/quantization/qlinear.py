@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor, device, dtype, nn
 from steerdistill.quantization.quantizer import *
+from steerdistill.quantization.precision import quantize_activation
 
 def convertModelToQuant(model,
                         modules_to_not_convert=["lm_head"],
@@ -10,7 +11,7 @@ def convertModelToQuant(model,
                         quant_type="clsq-n2f3",
                         q_group_size=64,
                         w_bit=None,
-                        quant_grid=None):
+                        quant_grid=None, activation_bits=16):
     for name, module in model.named_children():
         if name in {"visual", "vision_tower", "multi_modal_projector"}:
             continue
@@ -36,6 +37,7 @@ def convertModelToQuant(model,
                 q_group_size=q_group_size,
                 w_bit=w_bit,
                 fixed_grid=fixed_grid,
+                activation_bits=activation_bits,
             )
 
             model._modules[name].weight = weight
@@ -54,6 +56,7 @@ def convertModelToQuant(model,
                 q_group_size,
                 w_bit,
                 quant_grid,
+                activation_bits,
             )
         # Remove the last key for recursion
         current_key_name.pop(-1)
@@ -62,7 +65,7 @@ def convertModelToQuant(model,
 class QLinear(nn.Linear):
     def __init__(self, input_features, output_features, bias=True, compute_dtype=torch.bfloat16,
                  quant_type="ste-n2f3", q_group_size=64, w_bit=None, device=None,
-                 fixed_grid=None):
+                 fixed_grid=None, activation_bits=16):
         super().__init__(input_features, output_features, bias, device)
 
         if quant_type == "ste-n2f3":
@@ -89,6 +92,9 @@ class QLinear(nn.Linear):
             )
         # self.quant_type = quant_type
         self.compute_dtype = compute_dtype
+        if activation_bits not in (8, 16):
+            raise ValueError("Activation precision must be 8 or 16")
+        self.activation_bits = activation_bits
 
     def forward(self, x: torch.Tensor):
         if self.bias is not None and self.bias.dtype != x.dtype:
@@ -103,6 +109,7 @@ class QLinear(nn.Linear):
         out = None
 
         quantize_weight = self.weight_quantizer(self.weight.to(self.compute_dtype))
+        x = quantize_activation(x, self.activation_bits, ste=self.training)
         out = F.linear(x, quantize_weight, bias).to(inp_dtype)
 
         return out

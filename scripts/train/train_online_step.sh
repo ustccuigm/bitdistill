@@ -5,6 +5,7 @@ GPU_IDS=${2:?}
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$SCRIPT_DIR/../_bootstrap.sh"
 ROOT="$STEERDISTILL_ROOT"
+source "$ROOT/scripts/lib/precision.sh"
 ENV=${ENV_ROOT:?}
 TAG=$(printf 'step%06d' "$STEP")
 RUN=${STEER_ONLINE_ROOT:?}
@@ -14,7 +15,7 @@ PREVIOUS=${OPD_PREVIOUS_OPTIMIZER_STEP:?}
 STEPS=$((PREVIOUS + 1))
 LEARNER="$RUN/checkpoints/learner"
 HF="$RUN/checkpoints/student-$TAG-hf"
-RUNTIME="$RUN/checkpoints/student-$TAG-awq-runtime"
+RUNTIME="$RUN/checkpoints/student-$TAG-${RUNTIME_SUFFIX:-awq-runtime}"
 LOG="$RUN/steps/$TAG/train"
 IFS=, read -r -a GPUS <<< "$GPU_IDS"
 WORLD_SIZE=${#GPUS[@]}
@@ -63,7 +64,7 @@ TURN_BATCH_SIZE=${ONLINE_TURN_BATCH_SIZE:-1}
 # ONLINE_TURN_BATCH_SIZE rows are forwarded at a time and accumulated over
 # every turn before a single update.
 env CUDA_VISIBLE_DEVICES="$GPU_IDS" PYTHON_BIN="$ENV/bin/python" ACCELERATE_BIN="$ENV/bin/accelerate" \
-BITS=4 GROUP_SIZE=64 QUANT_TYPE=int4-asym "${CLIP_ARGS[@]}" \
+BITS="${BITS:-4}" ACTIVATION_BITS="${ACTIVATION_BITS:-16}" GROUP_SIZE="${GROUP_SIZE:-64}" QUANT_TYPE="int${BITS:-4}-asym" "${CLIP_ARGS[@]}" \
 MODEL_PATH="$STUDENT" SKILL_REFERENCE_MODEL_PATH="$STUDENT" TEACHER_MODEL_PATH="$TEACHER_MODEL" \
 SKILL_DATA_PATH="$DATA" OUTPUT_DIR_OVERRIDE="$LEARNER" LOG_DIR_OVERRIDE="$LOG" \
 NUM_GPUS="$WORLD_SIZE" DISTRIBUTED_BACKEND=fsdp2 TRAJECTORY_ONLINE=True \
@@ -80,11 +81,11 @@ CHECKPOINT="$LEARNER/checkpoint-$STEPS"
   --step "$STEPS" --output "$LOG/optimizer_signal.json"
 "$ENV/bin/python" "$ROOT/scripts/validate/check_training_signal.py" --state "$CHECKPOINT/trainer_state.json" \
   --steps "$STEPS" --previous-step "$PREVIOUS" --output "$LOG/training_signal.json"
-PYTHON_BIN="$ENV/bin/python" MODEL_PATH="$STUDENT" BITS=4 GROUP_SIZE=64 \
-QUANT_TYPE=int4-asym WRITE_QUANTIZER_METADATA=1 \
+PYTHON_BIN="$ENV/bin/python" MODEL_PATH="$STUDENT" BITS="${BITS:-4}" ACTIVATION_BITS="${ACTIVATION_BITS:-16}" GROUP_SIZE="${GROUP_SIZE:-64}" \
+QUANT_TYPE="int${BITS:-4}-asym" WRITE_QUANTIZER_METADATA=1 \
   bash "$ROOT/scripts/lib/merge_fsdp_checkpoint.sh" "$HF" "$CHECKPOINT"
 "$ENV/bin/python" "$ROOT/src/steerdistill/training/convert_hf_to_awq_runtime.py" \
-  --source "$HF" --output "$RUNTIME" --bits 4 --group-size 64
+  --source "$HF" --output "$RUNTIME" --bits "${BITS:-4}" --group-size "${GROUP_SIZE:-64}" --activation-bits "${ACTIVATION_BITS:-16}"
 "$ENV/bin/python" "$ROOT/scripts/validate/validate_awq_runtime.py" \
-  --source "$HF" --runtime "$RUNTIME" --bits 4 --group-size 64 --layers 0
+  --source "$HF" --runtime "$RUNTIME" --bits "${BITS:-4}" --group-size "${GROUP_SIZE:-64}" --activation-bits "${ACTIVATION_BITS:-16}" --layers 0
 echo "STEER_ONLINE_EXPORT_SIGNAL step=$STEP optimizer_step=$STEPS status=ready runtime=$RUNTIME"

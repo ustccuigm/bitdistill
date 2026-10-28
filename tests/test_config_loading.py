@@ -25,6 +25,7 @@ class ConfigLoadingTest(unittest.TestCase):
         for name in (
             "scripts/_bootstrap.sh", "scripts/lib/load_config.sh",
             "scripts/lib/select_benchmark.sh", "scripts/lib/run_paths.sh",
+            "scripts/lib/precision.sh",
             "configs/local.example.env", "configs/steerdistill.example.env",
             "configs/benchmark-paths.example.env",
         ) + ENTRY_POINTS:
@@ -55,6 +56,31 @@ class ConfigLoadingTest(unittest.TestCase):
             "qwen3_8b", "bfcl_v4", str(self.root / ".venv"),
             "0,1,2,3,4,5,6,7", "8e-6",
         ])
+
+    def test_precision_isolated_for_every_model_and_benchmark(self):
+        self.install_local_config()
+        for model in ("qwen3_8b", "qwen3_5_4b", "gemma4_12b"):
+            for benchmark in ("bfcl_v4", "tau2_bench", "webshop", "alfworld", "search_qa"):
+                for precision, bits, activation in (("w2a16", 2, 16), ("w4a8", 4, 8)):
+                    with self.subTest(model=model, benchmark=benchmark, precision=precision):
+                        result = self.run_shell(
+                            'printf "%s\\n" "$BITS" "$ACTIVATION_BITS" "$RUN_ROOT" "$TRAINING_RUN_ROOT" "$CLIP_PATH"',
+                            STEER_ASSET_ROOT="/assets", MODEL_FAMILY=model,
+                            BENCHMARK=benchmark, QUANT_PRECISION=precision,
+                        )
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        b, a, run, training, clip = result.stdout.splitlines()
+                        self.assertEqual((b, a), (str(bits), str(activation)))
+                        self.assertEqual(run, f"/assets/runs/{model}/{benchmark}/{precision}")
+                        training_benchmark = "bfcl_v4" if benchmark == "tau2_bench" else benchmark
+                        self.assertEqual(training, f"/assets/runs/{model}/{training_benchmark}/{precision}")
+                        self.assertEqual(clip, f"{training}/checkpoints/clip-int{bits}-g64.pt")
+
+    def test_conflicting_precision_fails_before_running(self):
+        self.install_local_config()
+        result = self.run_shell('echo unexpected', QUANT_PRECISION="w2a16", BITS="4")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('conflict', result.stderr)
 
     def test_explicit_config_takes_precedence_and_survives_directory_change(self):
         self.install_local_config()

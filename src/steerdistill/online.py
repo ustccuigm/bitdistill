@@ -83,6 +83,9 @@ def _run_scheduler(root, run, args):
         "max_steps": int(os.getenv("OPD_MAX_STEPS", "0")),
         "seed": int(os.getenv("OPD_SEED", "42")), "drop_last": False,
         "generations_per_prompt": 1,
+        "bits": int(os.getenv("BITS", "4")),
+        "activation_bits": int(os.getenv("ACTIVATION_BITS", "16")),
+        "group_size": int(os.getenv("GROUP_SIZE", "64")),
         "teacher": os.environ["TEACHER_MODEL"], "initial_master": os.environ["INITIAL_W4_MASTER"],
         "initial_runtime": os.environ["INITIAL_RUNTIME_W4"], "clip": os.environ["CLIP_PATH"],
         "gpu_ids": args.gpu_ids, "train_gpu_ids": os.getenv("TRAIN_GPU_IDS", args.gpu_ids),
@@ -106,8 +109,14 @@ def _run_scheduler(root, run, args):
                            ("teacher", "initial_master", "initial_runtime")}
     cfg["input_hashes"]["clip"] = sha256(Path(cfg["clip"]))
     config_path = run / "run_config.json"
-    if config_path.exists() and json.loads(config_path.read_text()) != cfg:
-        raise ValueError("Online run inputs changed; select a new STEER_ONLINE_ROOT")
+    if config_path.exists():
+        recorded = json.loads(config_path.read_text())
+        # Older public runs had a fixed W4A16/g64 route and omitted these keys.
+        # Defaults preserve their resume behavior without accepting a precision change.
+        for key, default in (("bits", 4), ("activation_bits", 16), ("group_size", 64)):
+            recorded.setdefault(key, default)
+        if recorded != cfg:
+            raise ValueError("Online run inputs changed; select a new STEER_ONLINE_ROOT")
     atomic_json(config_path, cfg)
     master, runtime, previous = cfg["initial_master"], cfg["initial_runtime"], 0
     latest = None
@@ -161,7 +170,7 @@ def _run_scheduler(root, run, args):
             if training["global_step"] != previous + 1 or training["previous_step"] != previous:
                 raise ValueError("Online step must advance the optimizer exactly once")
             master = str(run / "checkpoints" / f"student-step{step:06d}-hf")
-            runtime = str(run / "checkpoints" / f"student-step{step:06d}-awq-runtime")
+            runtime = str(run / "checkpoints" / f"student-step{step:06d}-{os.getenv('RUNTIME_SUFFIX', 'awq-runtime')}")
             previous = training["global_step"]
             latest = dict(manifest, output_master=master, output_runtime=runtime,
                           optimizer_step=previous, training_signal=training,

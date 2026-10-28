@@ -38,10 +38,12 @@ def main():
     parser.add_argument("--samples", required=True, type=int)
     parser.add_argument("--seqlen", required=True, type=int)
     parser.add_argument("--grid", required=True, type=int)
+    parser.add_argument("--bits", default=4, type=int)
+    parser.add_argument("--group-size", default=64, type=int)
     args = parser.parse_args()
     inputs = {"schema": 1, "model": model_identity(args.model),
               "data_sha256": sha256(args.data), "samples": args.samples,
-              "seqlen": args.seqlen, "grid": args.grid, "bits": 4, "group_size": 64}
+              "seqlen": args.seqlen, "grid": args.grid, "bits": args.bits, "group_size": args.group_size}
     manifest = args.clip.with_suffix(args.clip.suffix + ".manifest.json")
     if args.mode == "check":
         if not manifest.is_file():

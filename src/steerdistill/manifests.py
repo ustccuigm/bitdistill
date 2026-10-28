@@ -97,6 +97,7 @@ def main() -> None:
                 "PYTHONHASHSEED", "SEED", "MODEL_FAMILY", "MAX_TOKENS",
                 "OPD_GLOBAL_BATCH_SIZE", "OPD_MICRO_BATCH_SIZE", "OPD_EPOCHS",
                 "OPD_MAX_STEPS", "OPD_SEED", "OPD_PREVIOUS_OPTIMIZER_STEP",
+                "QUANT_PRECISION", "BITS", "ACTIVATION_BITS", "GROUP_SIZE",
             )
             if os.environ.get(key) is not None
         },

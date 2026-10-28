@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate AWQ runtime tensors against SteerDistill's W4 fake quantizer."""
+"""Validate packed runtime tensors against the learner's quantizer."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from safetensors import safe_open
 
 from steerdistill.quantization.quantizer import asymmetric_quantize_tensor
 from steerdistill.quantization.clip_state import load_bounds, clipped_weight
+from steerdistill.quantization.precision import unpack_codes, validate_precision
 
 AWQ_ORDER = (0, 2, 4, 6, 1, 3, 5, 7)
 
@@ -43,10 +44,12 @@ def main() -> None:
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--runtime", type=Path, required=True)
     parser.add_argument("--bits", type=int, default=4)
+    parser.add_argument("--activation-bits", type=int, default=16)
     parser.add_argument("--group-size", type=int, default=64)
     parser.add_argument("--layers", type=int, default=0, help="0 validates every packed linear")
     parser.add_argument("--clip", type=Path)
     args = parser.parse_args()
+    validate_precision(args.bits, args.activation_bits)
     for name in ("preprocessor_config.json", "video_preprocessor_config.json",
                  "processor_config.json", "generation_config.json"):
         source_metadata = args.source / name
@@ -54,12 +57,15 @@ def main() -> None:
             runtime_metadata = args.runtime / name
             if not runtime_metadata.is_file() or behavioral_metadata(runtime_metadata) != behavioral_metadata(source_metadata):
                 raise ValueError(f"Runtime is missing or has changed model processor metadata: {name}")
-    bounds = load_bounds(args.clip) if args.clip else {}
+    bounds = load_bounds(args.clip, args.bits, args.group_size) if args.clip else {}
     config = json.loads((args.runtime / "quant_config.json").read_text())
     expected_config = {
-        "quant_method": "awq", "zero_point": True,
+        "quant_method": "awq" if (args.bits, args.activation_bits) == (4, 16) else "steerdistill", "zero_point": True,
         "q_group_size": args.group_size, "w_bit": args.bits, "version": "gemm",
     }
+    if args.activation_bits != config.get("activation_bits", 16):
+        raise ValueError("Runtime activation precision mismatch")
+    unpack = unpack_awq if expected_config["quant_method"] == "awq" else unpack_codes
     for key, expected in expected_config.items():
         if config.get(key) != expected:
             raise ValueError(f"AWQ runtime config mismatch {key}={config.get(key)!r}, expected {expected!r}")
@@ -92,8 +98,8 @@ def main() -> None:
                 get_scale_zp=True,
                 get_codes=True,
             )
-            codes = unpack_awq(runtime.get_tensor(f"{prefix}.qweight"), args.bits).t()
-            zeros = unpack_awq(runtime.get_tensor(f"{prefix}.qzeros"), args.bits).t()
+            codes = unpack(runtime.get_tensor(f"{prefix}.qweight"), args.bits).t()
+            zeros = unpack(runtime.get_tensor(f"{prefix}.qzeros"), args.bits).t()
             scales = runtime.get_tensor(f"{prefix}.scales").float().t()
             if not torch.equal(codes, expected_codes.long()):
                 raise ValueError(f"{prefix}: AWQ qweight codes differ from SteerDistill")
@@ -107,8 +113,8 @@ def main() -> None:
             error = (restored.float() - expected_dequant.float()).abs().max().item()
             max_error = max(max_error, error)
         print(
-            f"STEERDISTILL_AWQ_VALIDATE_SIGNAL status=passed layers={len(prefixes)} "
-            f"bits={args.bits} group_size={args.group_size} max_error={max_error:.9g}",
+            f"STEERDISTILL_RUNTIME_VALIDATE_SIGNAL status=passed layers={len(prefixes)} "
+            f"bits={args.bits} activation_bits={args.activation_bits} group_size={args.group_size} max_error={max_error:.9g}",
             flush=True,
         )
 
