@@ -529,6 +529,109 @@
       ],
       "conclusion": "新版本已有 Kimchi Fries，但还缺少属于新版本的 Nachos 未发布记录。 完整验收和局部动作效果分别记录。",
       "source": "data/cases/training_case/b2b_saas_7/SUMMARY.md"
+    },
+    {
+      "title": "文件在 workspace，当前目录却不是",
+      "id": "multi_turn_base_22 · directory navigation",
+      "task": "There's a file I cooked up earlier named 'project_analysis.txt' in workspace folder, and I've just realized it desperately needs some extensive updating. Could you roll the content out for me to have a look-see?\n\n展示首轮文件读取任务；初始目录 /alex，目标目录 /alex/workspace。",
+      "lede": "cat 不接受路径，不等于无法访问子目录。关键是先改变当前目录，再读取文件。",
+      "stages": [
+        {
+          "label": "错误决策",
+          "groups": [
+            {
+              "options": [
+                {
+                  "name": "无指导学生",
+                  "status": "失败",
+                  "summary": "假定 workspace 可能就是当前目录，直接 cat 报错后放弃；没有执行 cd，也未读到文件内容。",
+                  "code": "cwd = /alex\ncat(file_name=\"project_analysis.txt\")\n→ No such file or directory\n最终答复：请用户确认文件位置。",
+                  "quote": "Or perhaps the workspace is the current directory.\n…\nAssuming that the file is in the current directory, I can use mcp_tool_cat with the filename 'project_analysis.txt'.",
+                  "source": "data/cases/training_case/directory_navigation/multi_turn_base_22/before/trajectory.json",
+                  "tone": "bad",
+                  "quoteHighlights": [
+                    "Assuming that the file is in the current directory"
+                  ]
+                }
+              ]
+            },
+            {
+              "options": [
+                {
+                  "name": "Steered student",
+                  "status": "成功",
+                  "summary": "先确认当前目录，再用 cd(\"workspace\") 切换到目标目录，随后 cat 读出真实内容；没有修改文件。",
+                  "code": "pwd() → /alex\ncd(folder=\"workspace\") → /alex/workspace\ncat(file_name=\"project_analysis.txt\")\n→ Initial analysis content.",
+                  "quote": "First, I need to confirm the current directory.\n…\nBut if not, we need to cd to the right folder first.",
+                  "source": "data/cases/training_case/directory_navigation/multi_turn_base_22/after/trajectory.json",
+                  "tone": "good",
+                  "quoteHighlights": [
+                    "need to confirm the current directory",
+                    "need to cd to the right folder first"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Teacher steering",
+          "groups": [
+            {
+              "options": [
+                {
+                  "name": "BF16 teacher",
+                  "status": "结构化指导",
+                  "summary": "指出文件不在当前目录；先进入 workspace，再验证目录已经切换，最后读取目标文件。",
+                  "code": "{\n\n\"precondition\": \"File 'project_analysis.txt' not found in current directory('/alex').\",\n\"decision_rule\": \"Navigate to the 'workspace' directory (identified via 'ls' and 'pwd') before attempting to access the file.\",\n\"expected_transition\": \"Current working directory changes to '/alex/workspace', making 'project_analysis.txt' accessible.\",\n\"recovery_check\": \"Call 'mcp_tool_cat' with 'project_analysis.txt' after confirming the directory transition.\"\n}",
+                  "quote": "",
+                  "source": "data/cases/training_case/directory_navigation/multi_turn_base_22/steering/response.json",
+                  "tone": "neutral",
+                  "codeHighlights": [
+                    "Navigate to the 'workspace' directory",
+                    "before attempting to access the file",
+                    "Current working directory changes to '/alex/workspace'"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "状态验收",
+          "groups": [
+            {
+              "options": [
+                {
+                  "name": "无指导分支",
+                  "status": "未读到内容",
+                  "summary": "执行 cat 后，当前目录仍为 /alex；目标文件内容没有返回。",
+                  "code": "cwd: /alex → /alex\nread_expected_content = false",
+                  "quote": "",
+                  "source": "data/cases/training_case/directory_navigation/multi_turn_base_22/before/score.json",
+                  "tone": "bad"
+                }
+              ]
+            },
+            {
+              "options": [
+                {
+                  "name": "指导后分支",
+                  "status": "读取成功",
+                  "summary": "当前目录变为 /alex/workspace，工具返回与目标文件完全一致，最终答复也包含该内容。",
+                  "code": "cwd: /alex → /alex/workspace\nfile_content = \"Initial analysis content.\"\nfiles_unchanged = true",
+                  "quote": "",
+                  "source": "data/cases/training_case/directory_navigation/multi_turn_base_22/after/score.json",
+                  "tone": "good"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "conclusion": "分歧从“假定文件就在当前目录”开始。Steering 把缺少的前置步骤补回来：确认位置 → cd(workspace) → cat。",
+      "source": "data/cases/training_case/directory_navigation/multi_turn_base_22/SUMMARY.md",
+      "download": "data/cases/training_case/directory_navigation/multi_turn_base_22/case_data.zip"
     }
   ],
   "ablation": [
