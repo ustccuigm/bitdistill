@@ -1,0 +1,1642 @@
+{
+  "model": "case-model",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool.\n\nProcedural guidance. Independently choose and execute actions:\n{\n  \"precondition\": \"Dr. Anita Rao is confirmed as provider_id 1; specialty and appointment-type IDs are not yet resolved.\",\n  \"decision_rule\": \"Next make one call to list specialties for Cardiology. Then resolve the in-person Standard consultation type and confirm its 30-minute duration. Search the actual next-7-day window with provider_id 1, specialty_id, appointment_type_id, visit_mode \\\"in_person\\\", and only_with_capacity true, omitting clinic_location_id to include every clinic. Select the earliest qualifying slot and create the appointment with the exact reason and both reminder flags true.\",\n  \"expected_transition\": \"The next observation should identify the Cardiology specialty ID; subsequent observations should identify the 30-minute appointment type and return chronologically ordered available slots, after which the earliest slot is booked.\",\n  \"recovery_check\": \"If the search is empty, do not repeat the same request or alter the required seven-day window. Recheck the runtime date boundaries and resolved IDs/filters once; if no qualifying slot exists, report that no appointment is available rather than booking outside the window. After creation, verify status is booked, duration is 30 minutes, reason text matches exactly, and email/SMS reminders are both enabled.\"\n}"
+    },
+    {
+      "role": "user",
+      "content": "Search for the earliest available in-person cardiology appointment at any clinic location within the next 7 days for provider 'Dr. Anita Rao' using a standard consultation appointment_type, and book a 30-minute slot including the reason_for_visit 'Intermittent chest pain for 2 weeks' with both email and SMS reminders enabled."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-8434fcd3214a4d79",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_search_providers",
+            "arguments": "{\"full_name\": \"Dr. Anita Rao\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-8434fcd3214a4d79",
+      "content": "{\"providers\": [{\"id\": 1, \"full_name\": \"Dr. Anita Rao\", \"npi_number\": \"1111111111\", \"created_at\": \"2025-11-01T14:54:45\", \"updated_at\": \"2026-10-27T14:54:45\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-9b4599e2680be4cf",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_specialties",
+            "arguments": "{\"name\": \"Cardiology\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9b4599e2680be4cf",
+      "content": "{\"specialties\": [{\"id\": 1, \"name\": \"Cardiology\", \"created_at\": \"2025-09-27T14:54:45\", \"updated_at\": \"2026-10-22T14:54:45\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-a80c95243cb7c65b",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_appointment_types",
+            "arguments": "{\"name\": \"Standard\", \"visit_mode\": \"in_person\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-a80c95243cb7c65b",
+      "content": "{\"appointment_types\": [{\"id\": 1, \"name\": \"Standard consultation\", \"default_duration_minutes\": 30, \"visit_mode\": \"in_person\", \"created_at\": \"2025-11-01T14:54:45\", \"updated_at\": \"2026-10-27T14:54:45\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-b45eb71bfef2a42c",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_search_time_slots",
+            "arguments": "{\"appointment_type_id\": 1, \"only_with_capacity\": true, \"provider_id\": 1, \"specialty_id\": 1, \"start_datetime_from\": \"2025-11-01T00:00:00Z\", \"start_datetime_to\": \"2025-11-08T00:00:00Z\", \"visit_mode\": \"in_person\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-b45eb71bfef2a42c",
+      "content": "{\"time_slots\": []}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_current_patient_profile",
+        "description": "Get current user's patient profile\n\nRetrieve the patient record associated with the authenticated user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"patient\": {\n    \"id\": 1,\n    \"user_id\": 1,\n    \"full_name\": \"Full Name\",\n    \"is_active\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "title": "get_current_patient_profileArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_current_patient_profile",
+        "description": "Update current patient's demographic info\n\nUpdate fields like address, phone and demographics for the current patient.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"patient\": {\n    \"id\": 1,\n    \"user_id\": 1,\n    \"full_name\": \"Full Name\",\n    \"is_active\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "full_name",
+              "description": "Updated full name for the patient",
+              "example": "Jane A. Doe",
+              "type": "string"
+            },
+            "date_of_birth": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "date_of_birth",
+              "description": "Updated date of birth in ISO format",
+              "example": "1985-04-12",
+              "type": "string"
+            },
+            "sex": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "sex",
+              "description": "Updated sex value",
+              "example": "F",
+              "type": "string"
+            },
+            "primary_phone": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "primary_phone",
+              "description": "Updated primary phone number",
+              "example": "+1-555-777-8888",
+              "type": "string"
+            },
+            "home_address_line1": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "home_address_line1",
+              "description": "Updated home address line 1",
+              "example": "456 Oak Avenue",
+              "type": "string"
+            },
+            "home_address_line2": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "home_address_line2",
+              "description": "Updated home address line 2",
+              "example": "Unit 12",
+              "type": "string"
+            },
+            "home_city": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "home_city",
+              "description": "Updated home city",
+              "example": "Centerville",
+              "type": "string"
+            },
+            "home_state": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "home_state",
+              "description": "Updated home state",
+              "example": "CA",
+              "type": "string"
+            },
+            "home_postal_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "home_postal_code",
+              "description": "Updated home postal code",
+              "example": "90001",
+              "type": "string"
+            },
+            "home_country": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "home_country",
+              "description": "Updated home country",
+              "example": "USA",
+              "type": "string"
+            }
+          },
+          "title": "update_current_patient_profileArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_patient_dependents",
+        "description": "List dependents for current patient\n\nRetrieve all active dependents linked to the current patient's profile.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"dependents\": [\n    {\n      \"id\": 1,\n      \"patient_id\": 1,\n      \"dependent_name\": \"Dependent Name\",\n      \"is_active\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "title": "list_patient_dependentsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_patient_contacts",
+        "description": "List contact channels for current patient\n\nRetrieve all contact records for the current patient's profile.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"contacts\": [\n    {\n      \"id\": 1,\n      \"patient_id\": 1,\n      \"contact_type\": \"Contact Type\",\n      \"value\": \"Value\",\n      \"is_primary\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "include_inactive": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, include non-primary contacts as well",
+              "title": "include_inactive",
+              "type": "boolean"
+            }
+          },
+          "title": "list_patient_contactsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_patient_contact",
+        "description": "Create a new contact for current patient\n\nAdd a new contact record for the authenticated patient's profile.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"contact\": {\n    \"id\": 1,\n    \"patient_id\": 1,\n    \"contact_type\": \"Contact Type\",\n    \"value\": \"Value\",\n    \"is_primary\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "contact_type": {
+              "type": "string",
+              "title": "contact_type",
+              "description": "Contact type",
+              "example": "email"
+            },
+            "value": {
+              "type": "string",
+              "title": "value",
+              "description": "Contact detail such as an email or phone number",
+              "example": "jane.doe@example.com"
+            },
+            "is_primary": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_primary",
+              "description": "If true, mark this contact as primary for its type",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_patient_contactArguments",
+          "required": [
+            "contact_type",
+            "value"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_search_insurance_providers",
+        "description": "Search insurance providers by name\n\nLookup insurance_providers records by optional name filter.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"insurance_providers\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name_contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive substring match on provider name",
+              "title": "name_contains",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of providers to return",
+              "title": "limit",
+              "type": "integer"
+            }
+          },
+          "title": "search_insurance_providersArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_patient_insurances",
+        "description": "List all insurances for current patient\n\nRetrieve all patient_insurances linked to the current patient.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"patient_insurances\": [\n    {\n      \"id\": 1,\n      \"patient_id\": 1,\n      \"insurance_provider_id\": 1,\n      \"member_id\": \"Member Id\",\n      \"is_default\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "title": "list_patient_insurancesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_patient_insurance",
+        "description": "Create a new insurance for current patient\n\nCreate a patient_insurances record and optionally mark it as default.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"patient_insurance\": {\n    \"id\": 1,\n    \"patient_id\": 1,\n    \"insurance_provider_id\": 1,\n    \"member_id\": \"Member Id\",\n    \"is_default\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "insurance_provider_name": {
+              "type": "string",
+              "title": "insurance_provider_name",
+              "description": "Name of insurance provider",
+              "example": "HealthPlus Gold"
+            },
+            "member_id": {
+              "type": "string",
+              "title": "member_id",
+              "description": "Member or policy ID",
+              "example": "HPG1234567"
+            },
+            "effective_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "effective_date",
+              "description": "Coverage start date in ISO format",
+              "example": "2025-01-01",
+              "type": "string"
+            },
+            "expiration_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "expiration_date",
+              "description": "Coverage end date in ISO format",
+              "example": "2025-12-31",
+              "type": "string"
+            },
+            "set_as_default": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "set_as_default",
+              "description": "If true, make this the default insurance",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_patient_insuranceArguments",
+          "required": [
+            "insurance_provider_name",
+            "member_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_specialties",
+        "description": "List specialties with optional name filter\n\nRetrieve specialties by optional name filter.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"specialties\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial specialty name to match",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "title": "list_specialtiesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_departments",
+        "description": "List departments with optional filters\n\nRetrieve departments filtered by name or specialty.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"departments\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial department name",
+              "title": "name",
+              "type": "string"
+            },
+            "specialty_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by specialties.id",
+              "title": "specialty_id",
+              "type": "integer"
+            }
+          },
+          "title": "list_departmentsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_clinic_locations",
+        "description": "List clinic locations with optional name filter\n\nRetrieve clinic_locations, optionally filtering by name or city.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"clinic_locations\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial clinic name to search",
+              "title": "name",
+              "type": "string"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter clinics by city",
+              "title": "city",
+              "type": "string"
+            }
+          },
+          "title": "list_clinic_locationsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_search_providers",
+        "description": "Search providers by name or specialty\n\nRetrieve providers, optionally filtered by full_name and specialty.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"providers\": [\n    {\n      \"id\": 1,\n      \"full_name\": \"Full Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial provider full_name to match",
+              "title": "full_name",
+              "type": "string"
+            },
+            "specialty_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter providers by specialties.id via provider_specialties",
+              "title": "specialty_id",
+              "type": "integer"
+            }
+          },
+          "title": "search_providersArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_appointment_types",
+        "description": "List appointment types with filters\n\nRetrieve appointment_types filtered by name or visit_mode.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"appointment_types\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"default_duration_minutes\": 1,\n      \"visit_mode\": \"Visit Mode\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial appointment type name",
+              "title": "name",
+              "type": "string"
+            },
+            "visit_mode": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Visit mode type, such as in_person or telehealth",
+              "title": "visit_mode",
+              "type": "string"
+            }
+          },
+          "title": "list_appointment_typesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_search_time_slots",
+        "description": "Search available time slots\n\nSearch time_slots by filters and date range, returning slots.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"time_slots\": [\n    {\n      \"id\": 1,\n      \"clinic_location_id\": 1,\n      \"appointment_type_id\": 1,\n      \"visit_mode\": \"Visit Mode\",\n      \"start_datetime\": \"Start Datetime\",\n      \"end_datetime\": \"End Datetime\",\n      \"capacity_total\": 1,\n      \"capacity_booked\": 1,\n      \"is_active\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter slots by specific provider_id",
+              "title": "provider_id",
+              "type": "integer"
+            },
+            "specialty_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by specialties.id",
+              "title": "specialty_id",
+              "type": "integer"
+            },
+            "clinic_location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by clinic_locations.id",
+              "title": "clinic_location_id",
+              "type": "integer"
+            },
+            "appointment_type_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by appointment_types.id",
+              "title": "appointment_type_id",
+              "type": "integer"
+            },
+            "visit_mode": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Visit mode string such as in_person or telehealth",
+              "title": "visit_mode",
+              "type": "string"
+            },
+            "start_datetime_from": {
+              "type": "string",
+              "description": "Earliest slot start time (ISO datetime)",
+              "title": "start_datetime_from"
+            },
+            "start_datetime_to": {
+              "type": "string",
+              "description": "Latest slot start time (ISO datetime)",
+              "title": "start_datetime_to"
+            },
+            "only_with_capacity": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, only return slots where capacity_booked < capacity_total",
+              "title": "only_with_capacity",
+              "type": "boolean"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of slots to return ordered by start_datetime",
+              "title": "limit",
+              "type": "integer"
+            }
+          },
+          "title": "search_time_slotsArguments",
+          "required": [
+            "start_datetime_from",
+            "start_datetime_to"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_patient_appointments",
+        "description": "List current patient's appointments\n\nRetrieve appointments for the authenticated patient with filters.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"appointments\": [\n    {\n      \"id\": \"Id\",\n      \"patient_id\": 1,\n      \"clinic_location_id\": 1,\n      \"appointment_type_id\": 1,\n      \"start_datetime\": \"Start Datetime\",\n      \"end_datetime\": \"End Datetime\",\n      \"visit_mode\": \"Visit Mode\",\n      \"status\": \"Status\",\n      \"is_imaging\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter appointments by status",
+              "title": "status",
+              "type": "string"
+            },
+            "start_datetime_from": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start of appointment date range (ISO datetime)",
+              "title": "start_datetime_from",
+              "type": "string"
+            },
+            "start_datetime_to": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End of appointment date range (ISO datetime)",
+              "title": "start_datetime_to",
+              "type": "string"
+            },
+            "is_imaging": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If set, filter on imaging flag",
+              "title": "is_imaging",
+              "type": "boolean"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of appointments ordered by start_datetime",
+              "title": "limit",
+              "type": "integer"
+            }
+          },
+          "title": "list_patient_appointmentsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_appointment",
+        "description": "Create a new appointment for current patient\n\nCreate an appointment using a time_slot and optional extras.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"appointment\": {\n    \"id\": \"Id\",\n    \"patient_id\": 1,\n    \"clinic_location_id\": 1,\n    \"appointment_type_id\": 1,\n    \"start_datetime\": \"Start Datetime\",\n    \"end_datetime\": \"End Datetime\",\n    \"visit_mode\": \"Visit Mode\",\n    \"status\": \"Status\",\n    \"is_imaging\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "time_slot_id": {
+              "type": "integer",
+              "title": "time_slot_id",
+              "description": "time_slots.id to book",
+              "example": 1001
+            },
+            "dependent_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "dependent_id",
+              "description": "patient_dependents.id if booking for a dependent child",
+              "example": 3,
+              "type": "integer"
+            },
+            "reason_for_visit": {
+              "type": "string",
+              "title": "reason_for_visit",
+              "description": "Free-text reason for visit",
+              "example": "Intermittent chest pain for 2 weeks"
+            },
+            "insurance_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "insurance_id",
+              "description": "patient_insurances.id to link or null to use default",
+              "example": 8,
+              "type": "integer"
+            },
+            "referral_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "referral_id",
+              "description": "referrals.id for this visit if applicable",
+              "example": 15,
+              "type": "integer"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Initial status for the appointment",
+              "example": "booked",
+              "type": "string"
+            },
+            "send_email": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "send_email",
+              "description": "If true, create appointment_reminder_settings with email",
+              "example": true,
+              "type": "boolean"
+            },
+            "send_sms": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "send_sms",
+              "description": "If true, create appointment_reminder_settings with sms",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_appointmentArguments",
+          "required": [
+            "time_slot_id",
+            "reason_for_visit"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_waitlist_entry",
+        "description": "Create a new waitlist entry\n\nAdd the current patient or dependent to waitlist_entries.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"waitlist_entry\": {\n    \"id\": 1,\n    \"patient_id\": 1,\n    \"appointment_type_id\": 1,\n    \"visit_mode\": \"Visit Mode\",\n    \"weekdays_only\": true,\n    \"min_notice_minutes\": 1,\n    \"auto_accept\": true,\n    \"status\": \"Status\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "dependent_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "dependent_id",
+              "description": "patient_dependents.id if waitlist is for a dependent",
+              "type": "integer"
+            },
+            "specialty_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "specialty_id",
+              "description": "Specialty to waitlist for",
+              "example": 4,
+              "type": "integer"
+            },
+            "provider_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "provider_id",
+              "description": "Specific provider_id if requested",
+              "type": "integer"
+            },
+            "clinic_location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "clinic_location_id",
+              "description": "Specific clinic_locations.id to restrict",
+              "example": 3,
+              "type": "integer"
+            },
+            "appointment_type_id": {
+              "type": "integer",
+              "title": "appointment_type_id",
+              "description": "Target appointment_types.id",
+              "example": 10
+            },
+            "visit_mode": {
+              "type": "string",
+              "title": "visit_mode",
+              "description": "Visit mode",
+              "example": "in_person"
+            },
+            "preferred_after_time": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "preferred_after_time",
+              "description": "Daily time-of-day HH:MM after which slots are acceptable",
+              "example": "17:00",
+              "type": "string"
+            },
+            "preferred_before_time": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "preferred_before_time",
+              "description": "Daily time-of-day HH:MM before which slots are acceptable",
+              "type": "string"
+            },
+            "weekdays_only": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "weekdays_only",
+              "description": "If true, limit to weekdays only",
+              "example": true,
+              "type": "boolean"
+            },
+            "min_notice_minutes": {
+              "type": "integer",
+              "title": "min_notice_minutes",
+              "description": "Minimum lead time in minutes",
+              "example": 120
+            },
+            "auto_accept": {
+              "type": "boolean",
+              "title": "auto_accept",
+              "description": "If true, automatically accept matching slots",
+              "example": true
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Initial waitlist status",
+              "example": "active",
+              "type": "string"
+            }
+          },
+          "title": "create_waitlist_entryArguments",
+          "required": [
+            "appointment_type_id",
+            "visit_mode",
+            "min_notice_minutes",
+            "auto_accept"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_search_diagnosis_codes",
+        "description": "Search diagnosis codes by code or description\n\nLookup diagnosis_codes entries using code or text.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"diagnosis_codes\": [\n    {\n      \"id\": 1,\n      \"code\": \"Code\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Diagnosis code exact or prefix match",
+              "title": "code",
+              "type": "string"
+            },
+            "description_contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Wildcard search on description",
+              "title": "description_contains",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max records to return",
+              "title": "limit",
+              "type": "integer"
+            }
+          },
+          "title": "search_diagnosis_codesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_referral",
+        "description": "Create a new referral for current patient\n\nCreate a referrals record for the current patient.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"referral\": {\n    \"id\": 1,\n    \"patient_id\": 1,\n    \"referring_provider_name\": \"Referring Provider Name\",\n    \"referral_expiration_date\": \"Referral Expiration Date\",\n    \"status\": \"Status\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "department_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "department_id",
+              "description": "departments.id for the referred department",
+              "example": 5,
+              "type": "integer"
+            },
+            "specialty_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "specialty_id",
+              "description": "specialties.id for the specialty if department_id not used",
+              "example": 2,
+              "type": "integer"
+            },
+            "referring_provider_name": {
+              "type": "string",
+              "title": "referring_provider_name",
+              "description": "Name of the provider who created the referral",
+              "example": "Dr. Michael Green"
+            },
+            "diagnosis_code": {
+              "type": "string",
+              "title": "diagnosis_code",
+              "description": "Diagnosis code string",
+              "example": "I10"
+            },
+            "referral_expiration_date": {
+              "type": "string",
+              "title": "referral_expiration_date",
+              "description": "Referral expiration date in ISO date format",
+              "example": "2025-05-31"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Initial referral status",
+              "example": "active",
+              "type": "string"
+            }
+          },
+          "title": "create_referralArguments",
+          "required": [
+            "referring_provider_name",
+            "diagnosis_code",
+            "referral_expiration_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_link_referral_to_appointment",
+        "description": "Link a referral to an appointment\n\nCreate an appointment_referrals record linking an appointment to a referral.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"appointment_referral\": {\n    \"id\": 1,\n    \"appointment_id\": \"Appointment Id\",\n    \"referral_id\": 1\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "type": "string",
+              "title": "appointment_id",
+              "description": "appointments.id to link",
+              "example": "APT-50001"
+            },
+            "referral_id": {
+              "type": "integer",
+              "title": "referral_id",
+              "description": "referrals.id to associate with this appointment",
+              "example": 15
+            }
+          },
+          "title": "link_referral_to_appointmentArguments",
+          "required": [
+            "appointment_id",
+            "referral_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_appointment_checkin",
+        "description": "Record a new check-in event\n\nInsert a new appointment_checkins row for an appointment.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"checkin\": {\n    \"id\": 1,\n    \"appointment_id\": \"Appointment Id\",\n    \"check_in_time\": \"Check In Time\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "type": "string",
+              "title": "appointment_id",
+              "description": "appointments.id being checked in",
+              "example": "APT-41200"
+            },
+            "check_in_time": {
+              "type": "string",
+              "title": "check_in_time",
+              "description": "Check-in timestamp (ISO datetime)",
+              "example": "2025-02-25T14:05:00Z"
+            },
+            "exam_room": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "exam_room",
+              "description": "Assigned exam room label",
+              "example": "Room 5B",
+              "type": "string"
+            }
+          },
+          "title": "create_appointment_checkinArguments",
+          "required": [
+            "appointment_id",
+            "check_in_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_satisfaction_surveys",
+        "description": "List satisfaction surveys for current patient\n\nRetrieve satisfaction_surveys entries for the current patient's appointments.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"satisfaction_surveys\": [\n    {\n      \"id\": 1,\n      \"appointment_id\": \"Appointment Id\",\n      \"patient_id\": 1,\n      \"rating\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter surveys by specific appointment id",
+              "title": "appointment_id",
+              "type": "string"
+            },
+            "has_rating": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, only return surveys where rating is not null",
+              "title": "has_rating",
+              "type": "boolean"
+            }
+          },
+          "title": "list_satisfaction_surveysArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_satisfaction_survey",
+        "description": "Create a satisfaction survey for an appointment\n\nInsert a new satisfaction_surveys record for a completed appointment.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"satisfaction_survey\": {\n    \"id\": 1,\n    \"appointment_id\": \"Appointment Id\",\n    \"patient_id\": 1,\n    \"rating\": 1\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "type": "string",
+              "title": "appointment_id",
+              "description": "appointments.id that this survey is for",
+              "example": "APT-20451"
+            },
+            "rating": {
+              "type": "integer",
+              "title": "rating",
+              "description": "Numeric rating value (e.g., 1-5)",
+              "example": 5
+            },
+            "wait_time_minutes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "wait_time_minutes",
+              "description": "Patient-reported wait time in minutes",
+              "example": 10,
+              "type": "integer"
+            },
+            "comments": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "comments",
+              "description": "Additional comments about the visit",
+              "example": "Quick check-in and thorough explanation.",
+              "type": "string"
+            }
+          },
+          "title": "create_satisfaction_surveyArguments",
+          "required": [
+            "appointment_id",
+            "rating"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_set_default_patient_insurance",
+        "description": "Set a patient insurance as default\n\nMark a specific patient_insurances record as default for current patient.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"patient_insurance\": {\n    \"id\": 1,\n    \"patient_id\": 1,\n    \"insurance_provider_id\": 1,\n    \"member_id\": \"Member Id\",\n    \"is_default\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "insurance_id": {
+              "type": "integer",
+              "description": "patient_insurances.id to set as default for current patient",
+              "title": "insurance_id"
+            }
+          },
+          "title": "set_default_patient_insuranceArguments",
+          "required": [
+            "insurance_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_reschedule_appointment_to_slot",
+        "description": "Reschedule an appointment to a new time slot\n\nMove an existing appointment to a new time_slot.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"appointment\": {\n    \"id\": \"Id\",\n    \"patient_id\": 1,\n    \"clinic_location_id\": 1,\n    \"appointment_type_id\": 1,\n    \"start_datetime\": \"Start Datetime\",\n    \"end_datetime\": \"End Datetime\",\n    \"visit_mode\": \"Visit Mode\",\n    \"status\": \"Status\",\n    \"is_imaging\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "type": "string",
+              "description": "Existing appointments.id to reschedule",
+              "title": "appointment_id"
+            },
+            "new_time_slot_id": {
+              "type": "integer",
+              "title": "new_time_slot_id",
+              "description": "time_slots.id representing the new desired slot",
+              "example": 1050
+            }
+          },
+          "title": "reschedule_appointment_to_slotArguments",
+          "required": [
+            "appointment_id",
+            "new_time_slot_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_change_appointment_status",
+        "description": "Change appointment status and record history\n\nUpdate an appointment's status field and create history.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"appointment\": {\n    \"id\": \"Id\",\n    \"status\": \"Status\"\n  },\n  \"status_history\": {\n    \"id\": 1,\n    \"appointment_id\": \"Appointment Id\",\n    \"new_status\": \"New Status\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "type": "string",
+              "description": "appointments.id whose status will be updated",
+              "title": "appointment_id"
+            },
+            "new_status": {
+              "type": "string",
+              "title": "new_status",
+              "description": "New status value for the appointment",
+              "example": "checked_in"
+            },
+            "note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "note",
+              "description": "Optional note describing reason for status change",
+              "example": "Patient arrived at front desk",
+              "type": "string"
+            }
+          },
+          "title": "change_appointment_statusArguments",
+          "required": [
+            "appointment_id",
+            "new_status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_appointment_by_id",
+        "description": "Get details for a specific appointment\n\nRetrieve a single appointment by id belonging to the current patient.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"appointment\": {\n    \"id\": \"Id\",\n    \"patient_id\": 1,\n    \"clinic_location_id\": 1,\n    \"appointment_type_id\": 1,\n    \"start_datetime\": \"Start Datetime\",\n    \"end_datetime\": \"End Datetime\",\n    \"visit_mode\": \"Visit Mode\",\n    \"status\": \"Status\",\n    \"is_imaging\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "type": "string",
+              "description": "appointments.id to retrieve",
+              "title": "appointment_id"
+            }
+          },
+          "title": "get_appointment_by_idArguments",
+          "required": [
+            "appointment_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_appointment",
+        "description": "Update basic fields on an appointment\n\nPartially update fields like reason_for_visit, insurance_id, or status.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"appointment\": {\n    \"id\": \"Id\",\n    \"patient_id\": 1,\n    \"clinic_location_id\": 1,\n    \"appointment_type_id\": 1,\n    \"start_datetime\": \"Start Datetime\",\n    \"end_datetime\": \"End Datetime\",\n    \"visit_mode\": \"Visit Mode\",\n    \"status\": \"Status\",\n    \"is_imaging\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "type": "string",
+              "description": "appointments.id to update",
+              "title": "appointment_id"
+            },
+            "reason_for_visit": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reason_for_visit",
+              "description": "New reason for visit text",
+              "example": "Follow-up MRI for left shoulder tear",
+              "type": "string"
+            },
+            "insurance_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "insurance_id",
+              "description": "Updated patient_insurances.id to link",
+              "example": 8,
+              "type": "integer"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New appointment status value",
+              "example": "confirmed",
+              "type": "string"
+            }
+          },
+          "title": "patch_appointmentArguments",
+          "required": [
+            "appointment_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_appointment_reminder_settings",
+        "description": "Get reminder settings for an appointment\n\nRetrieve appointment_reminder_settings for a specific appointment id.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "type": "string",
+              "description": "appointments.id whose reminders should be fetched",
+              "title": "appointment_id"
+            }
+          },
+          "title": "get_appointment_reminder_settingsArguments",
+          "required": [
+            "appointment_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_put_appointment_reminder_settings",
+        "description": "Create or replace reminder settings\n\nCreate or fully replace appointment_reminder_settings for the appointment.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"reminder_settings\": {\n    \"id\": 1,\n    \"appointment_id\": \"Appointment Id\",\n    \"send_email\": true,\n    \"send_sms\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_id": {
+              "type": "string",
+              "description": "appointments.id to update reminder settings for",
+              "title": "appointment_id"
+            },
+            "send_email": {
+              "type": "boolean",
+              "title": "send_email",
+              "description": "Whether to send email reminders",
+              "example": true
+            },
+            "send_sms": {
+              "type": "boolean",
+              "title": "send_sms",
+              "description": "Whether to send SMS reminders",
+              "example": false
+            }
+          },
+          "title": "put_appointment_reminder_settingsArguments",
+          "required": [
+            "appointment_id",
+            "send_email",
+            "send_sms"
+          ]
+        }
+      }
+    }
+  ],
+  "temperature": 0,
+  "seed": 42,
+  "max_tokens": 8192,
+  "stop_token_ids": [
+    1,
+    50,
+    106
+  ],
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  }
+}
