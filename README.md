@@ -46,3 +46,7 @@ recorded independent run for each task.
 ## Independent inference comparisons
 
 The homepage now includes six recorded videos for BestBuy tasks 47 and 52, comparing BF16, a specialist SteerDistill checkpoint, and a 3-update local on-policy QAD baseline. The section explains checkpoint scope, unequal budgets, post-hoc selection, repeat outcomes, and cumulative versus matched-input inference timing. Verified data, complete evidence, and a server inference-code bundle are downloadable under `demos/comparison/`. These demonstrations are separate from the benchmark results.
+
+## November benchmark video refresh
+
+The homepage now shows one WhatsApp poll task with three slowed portrait recordings: the original step-7 student success, a new BF16 success, and a new prior-QAD failure. Click markers use executed pixel coordinates; every step receives a 2/2/3-second before/action/after presentation. Execution-time labels are independent of video playback duration. Student timing is an artifact-timestamp reconstruction and is explicitly marked approximate. Full repeat outcomes, starting-checkpoint differences, screenshot differences, and timing limitations are in demos/benchmark-20261103/audit.json. Previous demonstration files and standalone URLs are preserved.
