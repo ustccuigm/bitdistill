@@ -37,8 +37,8 @@
         if(p.quote){
           const q=el('blockquote','appendix-quote');q.textContent=p.quote;
           card.append(el('h5','appendix-evidence-label',key==='ablation'?'实际指导 prompt':'推理节选'));
-          if(p.quote.length>1000){
-            let focus='';try{focus=JSON.parse(p.quote.replace(/^```json\s*|\s*```$/g,'')).decision_rule||'';}catch{}
+          if(p.quoteFocus||p.quote.length>1000){
+            let focus=p.quoteFocus||'';try{if(!focus)focus=JSON.parse(p.quote.replace(/^```json\s*|\s*```$/g,'')).decision_rule||'';}catch{}
             if(!focus)focus=p.quote.split(/(?<=[.!?])\s+/).find(t=>t.length>40&&t.length<450)||'';
             if(focus){const f=el('blockquote','appendix-quote appendix-focus');f.append(EvidenceHighlight.terms(focus,[focus]));card.append(f);}
             const d=el('details','reasoning-context');d.append(el('summary','','展开推理 / 指导上下文'),q);card.append(d);
@@ -64,5 +64,5 @@
     });
     navigate(0);
   }
-  fetch('data/appendix-showcase.json?v=ablation-20261103').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>nodes.forEach(root=>init(root,data[root.dataset.appendixDeck]))).catch(()=>nodes.forEach(root=>{root.replaceChildren(el('p','','案例暂时无法加载。'));const b=button('重新加载','重新加载案例',()=>location.reload());root.append(b);}));
+  fetch('data/appendix-showcase.json?v=eebf870a849f').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>nodes.forEach(root=>init(root,data[root.dataset.appendixDeck]))).catch(()=>nodes.forEach(root=>{root.replaceChildren(el('p','','案例暂时无法加载。'));const b=button('重新加载','重新加载案例',()=>location.reload());root.append(b);}));
 })();
