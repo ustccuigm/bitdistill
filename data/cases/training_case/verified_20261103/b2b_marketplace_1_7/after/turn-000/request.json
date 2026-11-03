@@ -1,0 +1,1459 @@
+{
+  "model": "case-model",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool.\n\nProcedural guidance. Independently choose and execute actions:\n```json\n{\n  \"precondition\": \"The order 'PO-2025-000981' exists in the system and is currently in 'draft' status.\",\n  \"decision_rule\": \"First, validate the order using 'mcp_server_validate_order_before_submission' to check if the total amount is within the $15,000 budget and if all lines have negotiated prices. If valid, proceed to update the status to 'submitted' using 'mcp_server_update_order_status_and_budget'.\",\n  \"expected_transition\": \"The order status will change from 'draft' to 'submitted' after successful validation and update.\",\n  \"recovery_check\": \"If validation fails (is_valid: false), identify the violations (e.g., budget exceeded or null prices) and report them to the user instead of updating the status.\"\n}\n```\n\nTo complete the task, I will first validate the order against the budget and price requirements, then update its status.\n\n**Step 1: Validate the order.**\nI will call `mcp_server_validate_order_before_submission` with the order ID and the budget limit.\n\n**Step 2: Update the order status.**\nIf the validation is successful, I will use the `total_amount` from the validation result to update the order status to `submitted` using `mcp_server_update_order_status_and_budget`."
+    },
+    {
+      "role": "user",
+      "content": "As a buyer requiring multi-level order approval, submit the draft order with id 'PO-2025-000981' for internal approval by changing its status from 'draft' to 'submitted', ensuring that all order_lines have a non-null negotiated_price and that the total does not exceed an internal budget_limit of $15,000."
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_my_organizations",
+        "description": "List organizations for current user\n\nReturn organizations for authenticated user with default flags\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"organizations\": [\n    {\n      \"organization_id\": 1,\n      \"name\": \"Name\",\n      \"org_type\": \"Org Type\",\n      \"role\": \"Role\",\n      \"is_default\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "title": "get_my_organizationsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_default_ship_to_location",
+        "description": "Get default ship-to\n\nGet default ship-to location for a buyer organization\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"buyer_org_id\": 1,\n  \"label\": \"Label\",\n  \"address_line\": \"Address Line\",\n  \"is_default\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "buyer_org_id": {
+              "type": "integer",
+              "description": "Buyer organization ID",
+              "title": "buyer_org_id"
+            }
+          },
+          "title": "get_default_ship_to_locationArguments",
+          "required": [
+            "buyer_org_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_or_create_active_cart",
+        "description": "Get or create active cart\n\nGet or create active cart for a buyer organization\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"buyer_org_id\": 1,\n  \"status\": \"Status\",\n  \"currency\": \"Currency\",\n  \"created_at\": \"Created At\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "buyer_org_id": {
+              "type": "integer",
+              "description": "Buyer organization owning the cart",
+              "title": "buyer_org_id"
+            },
+            "ship_to_location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Ship-to location to set when creating a new active cart",
+              "title": "ship_to_location_id",
+              "type": "integer"
+            },
+            "auto_create": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, create a new active cart when none exists",
+              "title": "auto_create",
+              "type": "boolean"
+            }
+          },
+          "title": "get_or_create_active_cartArguments",
+          "required": [
+            "buyer_org_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_inventory_sync_part_listings",
+        "description": "Inventory sync listings\n\nRetrieve part listings for approved suppliers and categories\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"part_listings\": [\n    {\n      \"part_listing_id\": 1,\n      \"supplier_org_id\": 1,\n      \"supplier_org_name\": \"Supplier Org Name\",\n      \"internal_sku\": \"Internal Sku\",\n      \"category_id\": 1,\n      \"category_name\": \"Category Name\",\n      \"available_quantity\": 1,\n      \"lead_time_days\": 1,\n      \"tiered_prices\": [\n        {\n          \"min_quantity\": 1,\n          \"price_per_unit\": 1.0,\n          \"currency\": \"Currency\"\n        }\n      ]\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "buyer_org_id": {
+              "type": "integer",
+              "description": "Buyer organization performing the inventory sync",
+              "title": "buyer_org_id"
+            },
+            "category_names": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Category names to limit part listings",
+              "title": "category_names"
+            }
+          },
+          "title": "inventory_sync_part_listingsArguments",
+          "required": [
+            "buyer_org_id",
+            "category_names"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_compute_reorder_suggestions",
+        "description": "Compute reorder suggestions\n\nCompute reorder suggestions based on inventory snapshot\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"reorder_suggestions\": [\n    {\n      \"part_listing_id\": 1,\n      \"category_id\": 1,\n      \"available_quantity\": 1,\n      \"reorder_point\": 1,\n      \"recommended_reorder_quantity\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "reorder_point": {
+              "type": "integer",
+              "title": "reorder_point",
+              "description": "Fallback reorder point if policy is not defined",
+              "example": 20
+            },
+            "items": {
+              "items": {
+                "properties": {
+                  "part_listing_id": {
+                    "type": "integer",
+                    "title": "Part Listing Id",
+                    "description": "Part listing ID",
+                    "example": 101
+                  },
+                  "category_id": {
+                    "type": "integer",
+                    "title": "Category Id",
+                    "description": "Category ID of the part listing",
+                    "example": 1
+                  },
+                  "available_quantity": {
+                    "type": "integer",
+                    "title": "Available Quantity",
+                    "description": "Current available_quantity read from system",
+                    "example": 18
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "part_listing_id",
+                  "category_id",
+                  "available_quantity"
+                ],
+                "title": "ReorderSuggestionInputItem"
+              },
+              "type": "array",
+              "title": "items",
+              "description": "Inventory snapshot of part_listings for evaluation",
+              "example": []
+            }
+          },
+          "title": "compute_reorder_suggestionsArguments",
+          "required": [
+            "reorder_point",
+            "items"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_part_listing",
+        "description": "Create part listing\n\nCreate a part listing for the supplier organization\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"supplier_org_id\": 1,\n  \"internal_sku\": \"Internal Sku\",\n  \"category_id\": 1,\n  \"unit_of_measure\": \"Unit Of Measure\",\n  \"lead_time_days\": 1,\n  \"min_order_quantity\": 1,\n  \"available_quantity\": 1,\n  \"created_at\": \"Created At\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "supplier_org_id": {
+              "type": "integer",
+              "title": "supplier_org_id",
+              "description": "Supplier organization ID owned by current user",
+              "example": 10
+            },
+            "internal_sku": {
+              "type": "string",
+              "title": "internal_sku",
+              "description": "Internal SKU unique per supplier_org_id",
+              "example": "BRK-PAD-TOY-001"
+            },
+            "oem_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "oem_number",
+              "description": "OEM reference number",
+              "example": "04465-0E010",
+              "type": "string"
+            },
+            "category_id": {
+              "type": "integer",
+              "title": "category_id",
+              "description": "Category ID referencing categories.id",
+              "example": 2
+            },
+            "short_specs": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "short_specs",
+              "description": "Short spec description for listing",
+              "example": "Front axle ceramic brake pad set for Toyota Camry",
+              "type": "string"
+            },
+            "unit_of_measure": {
+              "type": "string",
+              "title": "unit_of_measure",
+              "description": "Sales unit of measure",
+              "example": "set"
+            },
+            "lead_time_days": {
+              "type": "integer",
+              "title": "lead_time_days",
+              "description": "Lead time in days before shipment",
+              "example": 3
+            },
+            "min_order_quantity": {
+              "type": "integer",
+              "title": "min_order_quantity",
+              "description": "Minimum orderable quantity",
+              "example": 4
+            },
+            "available_quantity": {
+              "type": "integer",
+              "title": "available_quantity",
+              "description": "Current available inventory quantity",
+              "example": 250
+            }
+          },
+          "title": "create_part_listingArguments",
+          "required": [
+            "supplier_org_id",
+            "internal_sku",
+            "category_id",
+            "unit_of_measure",
+            "lead_time_days",
+            "min_order_quantity",
+            "available_quantity"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_search_part_listings",
+        "description": "Search part listings\n\nSearch part listings by compatibility, category, and pricing\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"results\": [\n    {\n      \"part_listing_id\": 1,\n      \"supplier_org_id\": 1,\n      \"supplier_org_name\": \"Supplier Org Name\",\n      \"internal_sku\": \"Internal Sku\",\n      \"category_id\": 1,\n      \"category_name\": \"Category Name\",\n      \"unit_of_measure\": \"Unit Of Measure\",\n      \"lead_time_days\": 1,\n      \"min_order_quantity\": 1,\n      \"available_quantity\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "buyer_org_id": {
+              "type": "integer",
+              "description": "Buyer organization for context and approvals",
+              "title": "buyer_org_id"
+            },
+            "make": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Vehicle make for compatibility filter",
+              "title": "make",
+              "type": "string"
+            },
+            "model": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Vehicle model for compatibility filter",
+              "title": "model",
+              "type": "string"
+            },
+            "year": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Model year filter",
+              "title": "year",
+              "type": "integer"
+            },
+            "engine": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Engine descriptor for compatibility filter",
+              "title": "engine",
+              "type": "string"
+            },
+            "category_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Category name to restrict results",
+              "title": "category_name",
+              "type": "string"
+            },
+            "buyer_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Buyer type to choose applicable tiered price",
+              "title": "buyer_type",
+              "type": "string"
+            },
+            "quantity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Desired quantity to calculate negotiated_price",
+              "title": "quantity",
+              "type": "integer"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum results to return",
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "title": "offset",
+              "type": "integer"
+            },
+            "sort_by_price": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, sort by negotiated_price ascending",
+              "title": "sort_by_price",
+              "type": "boolean"
+            }
+          },
+          "title": "search_part_listingsArguments",
+          "required": [
+            "buyer_org_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_ship_to_location",
+        "description": "Create ship-to location\n\nCreate a ship-to location for a buyer organization\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"buyer_org_id\": 1,\n  \"label\": \"Label\",\n  \"address_line\": \"Address Line\",\n  \"is_default\": true,\n  \"created_at\": \"Created At\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "buyer_org_id": {
+              "type": "integer",
+              "title": "buyer_org_id",
+              "description": "Buyer organization ID for which to create the ship-to",
+              "example": 5
+            },
+            "label": {
+              "type": "string",
+              "title": "label",
+              "description": "Short label for this ship-to location",
+              "example": "Downtown Service Bay"
+            },
+            "address_line": {
+              "type": "string",
+              "title": "address_line",
+              "description": "Full address line including street and suite",
+              "example": "1250 Industrial Ave, Suite B"
+            },
+            "city": {
+              "type": "string",
+              "title": "city",
+              "description": "City name",
+              "example": "Chicago"
+            },
+            "state": {
+              "type": "string",
+              "title": "state",
+              "description": "State or region",
+              "example": "IL"
+            },
+            "postal_code": {
+              "type": "string",
+              "title": "postal_code",
+              "description": "Postal or ZIP code",
+              "example": "60608"
+            },
+            "country": {
+              "type": "string",
+              "title": "country",
+              "description": "Country name or ISO code",
+              "example": "US"
+            },
+            "contact_name": {
+              "type": "string",
+              "title": "contact_name",
+              "description": "Contact person for this location",
+              "example": "Alex Johnson"
+            },
+            "phone": {
+              "type": "string",
+              "title": "phone",
+              "description": "Phone number for contact",
+              "example": "+1-312-555-7812"
+            },
+            "is_default": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_default",
+              "description": "If true, set this as default ship-to (will unset others)",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_ship_to_locationArguments",
+          "required": [
+            "buyer_org_id",
+            "label",
+            "address_line",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+            "contact_name",
+            "phone"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_quote_request",
+        "description": "Create quote request\n\nCreate a quote request and associated lines\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"quote\": {\n    \"id\": \"Id\",\n    \"buyer_org_id\": 1,\n    \"supplier_org_id\": 1,\n    \"currency\": \"Currency\",\n    \"response_status\": \"Response Status\",\n    \"created_at\": \"Created At\",\n    \"updated_at\": \"Updated At\"\n  },\n  \"lines\": [\n    {\n      \"id\": 1,\n      \"quote_id\": \"Quote Id\",\n      \"part_listing_id\": 1,\n      \"quantity\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "quote_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "quote_id",
+              "description": "Optional custom quote ID; generated if omitted",
+              "example": "Q-2025-001347",
+              "type": "string"
+            },
+            "buyer_org_id": {
+              "type": "integer",
+              "title": "buyer_org_id",
+              "description": "Buyer organization requesting the quote",
+              "example": 5
+            },
+            "supplier_org_id": {
+              "type": "integer",
+              "title": "supplier_org_id",
+              "description": "Supplier organization being requested",
+              "example": 12
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "currency",
+              "description": "Currency for the quote, defaults to USD",
+              "example": "USD",
+              "type": "string"
+            },
+            "requested_delivery_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "requested_delivery_date",
+              "description": "Requested delivery date in YYYY-MM-DD format",
+              "example": "2026-02-15",
+              "type": "string"
+            },
+            "target_price_per_unit": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "target_price_per_unit",
+              "description": "Target price per unit at header level, optional",
+              "example": 7.25,
+              "type": "number"
+            },
+            "buyer_note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "buyer_note",
+              "description": "Note from buyer explaining request context",
+              "example": "Quote needed for quarterly fleet maintenance budget approval",
+              "type": "string"
+            },
+            "lines": {
+              "items": {
+                "properties": {
+                  "part_listing_id": {
+                    "type": "integer",
+                    "title": "Part Listing Id",
+                    "description": "Part listing ID being quoted",
+                    "example": 450
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "title": "Quantity",
+                    "description": "Quantity requested for this part",
+                    "example": 80
+                  },
+                  "target_price_per_unit": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Target Price Per Unit",
+                    "description": "Target unit price for this part",
+                    "example": 7.25
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "part_listing_id",
+                  "quantity"
+                ],
+                "title": "QuoteLineCreateItem"
+              },
+              "type": "array",
+              "title": "lines",
+              "description": "Array of quote line details",
+              "example": []
+            }
+          },
+          "title": "create_quote_requestArguments",
+          "required": [
+            "buyer_org_id",
+            "supplier_org_id",
+            "lines"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_supplier_orders_with_filters",
+        "description": "List supplier orders\n\nList orders for a supplier filtered by status, date and currency\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"orders\": [\n    {\n      \"id\": \"Id\",\n      \"buyer_org_id\": 1,\n      \"supplier_org_id\": 1,\n      \"ship_to_location_id\": 1,\n      \"status\": \"Status\",\n      \"order_date\": \"Order Date\",\n      \"currency\": \"Currency\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "supplier_org_id": {
+              "type": "integer",
+              "description": "Supplier organization whose orders to fetch",
+              "title": "supplier_org_id"
+            },
+            "status": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Statuses to include",
+              "title": "status"
+            },
+            "start_date": {
+              "type": "string",
+              "description": "Start of order_date range inclusive (YYYY-MM-DD)",
+              "title": "start_date"
+            },
+            "end_date": {
+              "type": "string",
+              "description": "End of order_date range inclusive (YYYY-MM-DD)",
+              "title": "end_date"
+            },
+            "currency": {
+              "type": "string",
+              "description": "Currency filter for orders",
+              "title": "currency"
+            }
+          },
+          "title": "list_supplier_orders_with_filtersArguments",
+          "required": [
+            "supplier_org_id",
+            "status",
+            "start_date",
+            "end_date",
+            "currency"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_shipment_for_order",
+        "description": "Create shipment\n\nCreate a shipment record linked to an order\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"order_id\": \"Order Id\",\n  \"carrier\": \"Carrier\",\n  \"shipping_status\": \"Shipping Status\",\n  \"created_at\": \"Created At\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string",
+              "title": "order_id",
+              "description": "Order ID that this shipment belongs to",
+              "example": "PO-2025-000500"
+            },
+            "carrier": {
+              "type": "string",
+              "title": "carrier",
+              "description": "Carrier name used for shipping",
+              "example": "UPS"
+            },
+            "tracking_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "tracking_number",
+              "description": "Tracking number assigned by carrier",
+              "example": "TBD-ASSIGNED-LATER",
+              "type": "string"
+            },
+            "estimated_delivery_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "estimated_delivery_date",
+              "description": "Estimated delivery date YYYY-MM-DD",
+              "example": "2025-01-20",
+              "type": "string"
+            },
+            "shipping_status": {
+              "type": "string",
+              "title": "shipping_status",
+              "description": "Shipment status (label_created, in_transit, etc.)",
+              "example": "label_created"
+            }
+          },
+          "title": "create_shipment_for_orderArguments",
+          "required": [
+            "order_id",
+            "carrier",
+            "shipping_status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_approved_suppliers_for_buyer",
+        "description": "List approved suppliers\n\nList approved suppliers for a buyer organization\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"suppliers\": [\n    {\n      \"supplier_org_id\": 1,\n      \"supplier_org_name\": \"Supplier Org Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "buyer_org_id": {
+              "type": "integer",
+              "description": "Buyer organization ID",
+              "title": "buyer_org_id"
+            }
+          },
+          "title": "list_approved_suppliers_for_buyerArguments",
+          "required": [
+            "buyer_org_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_buyer_reorder_policies",
+        "description": "List reorder policies\n\nList buyer reorder policies optionally filtered by category\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"policies\": [\n    {\n      \"id\": 1,\n      \"buyer_org_id\": 1,\n      \"default_reorder_point\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "buyer_org_id": {
+              "type": "integer",
+              "description": "Buyer organization ID",
+              "title": "buyer_org_id"
+            },
+            "category_ids": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional filter by category IDs",
+              "title": "category_ids",
+              "type": "array"
+            }
+          },
+          "title": "list_buyer_reorder_policiesArguments",
+          "required": [
+            "buyer_org_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_categories",
+        "description": "List categories\n\nRetrieve all categories or filter by name with pagination\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"categories\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"created_at\": \"Created At\",\n      \"updated_at\": \"Updated At\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional filter by category name",
+              "title": "name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of categories to return",
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_categoriesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_category",
+        "description": "Create category\n\nCreate a new category if it does not already exist\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"created_at\": \"Created At\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "New category name",
+              "example": "Oil Filter"
+            }
+          },
+          "title": "create_categoryArguments",
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_vehicle_compatibility",
+        "description": "Create vehicle compatibility\n\nCreate a vehicle compatibility mapping for a part listing\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"part_listing_id\": 1,\n  \"make\": \"Make\",\n  \"model\": \"Model\",\n  \"created_at\": \"Created At\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "part_listing_id": {
+              "type": "integer",
+              "title": "part_listing_id",
+              "description": "Part listing ID to link compatibility to",
+              "example": 101
+            },
+            "make": {
+              "type": "string",
+              "title": "make",
+              "description": "Vehicle make",
+              "example": "Toyota"
+            },
+            "model": {
+              "type": "string",
+              "title": "model",
+              "description": "Vehicle model",
+              "example": "Camry"
+            },
+            "year_from": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "year_from",
+              "description": "First model year supported",
+              "example": 2015,
+              "type": "integer"
+            },
+            "year_to": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "year_to",
+              "description": "Last model year supported",
+              "example": 2022,
+              "type": "integer"
+            },
+            "engine": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "engine",
+              "description": "Engine descriptor",
+              "example": "2.5L",
+              "type": "string"
+            }
+          },
+          "title": "create_vehicle_compatibilityArguments",
+          "required": [
+            "part_listing_id",
+            "make",
+            "model"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_part_listing_by_sku_for_supplier",
+        "description": "Get part listing by SKU\n\nRetrieve a supplier part listing by internal SKU and org\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"supplier_org_id\": 1,\n  \"internal_sku\": \"Internal Sku\",\n  \"category_id\": 1,\n  \"unit_of_measure\": \"Unit Of Measure\",\n  \"lead_time_days\": 1,\n  \"min_order_quantity\": 1,\n  \"available_quantity\": 1,\n  \"created_at\": \"Created At\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "internal_sku": {
+              "type": "string",
+              "description": "Internal SKU for this listing within supplier org",
+              "title": "internal_sku"
+            },
+            "supplier_org_id": {
+              "type": "integer",
+              "description": "Supplier organization ID for which to fetch the listing",
+              "title": "supplier_org_id"
+            }
+          },
+          "title": "get_part_listing_by_sku_for_supplierArguments",
+          "required": [
+            "internal_sku",
+            "supplier_org_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_set_default_ship_to_location",
+        "description": "Set default ship-to\n\nSet a ship-to location as default for a buyer organization\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"buyer_org_id\": 1,\n  \"is_default\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ship_to_id": {
+              "type": "integer",
+              "description": "Ship-to location ID to set as default",
+              "title": "ship_to_id"
+            },
+            "buyer_org_id": {
+              "type": "integer",
+              "title": "buyer_org_id",
+              "description": "Buyer organization ID owning this location",
+              "example": 5
+            }
+          },
+          "title": "set_default_ship_to_locationArguments",
+          "required": [
+            "ship_to_id",
+            "buyer_org_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_or_update_cart_item",
+        "description": "Add or update cart item\n\nAdd or update a cart item for the given cart\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"cart_id\": 1,\n  \"part_listing_id\": 1,\n  \"quantity\": 1,\n  \"created_at\": \"Created At\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "cart_id": {
+              "type": "integer",
+              "description": "Cart ID where item will be added",
+              "title": "cart_id"
+            },
+            "part_listing_id": {
+              "type": "integer",
+              "title": "part_listing_id",
+              "description": "Part listing ID to add to cart",
+              "example": 310
+            },
+            "quantity": {
+              "type": "integer",
+              "title": "quantity",
+              "description": "Quantity to set for this cart item",
+              "example": 12
+            },
+            "unit_price": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "unit_price",
+              "description": "List price per unit, if known",
+              "example": 7.5,
+              "type": "number"
+            },
+            "negotiated_price": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "negotiated_price",
+              "description": "Negotiated price per unit for this cart item",
+              "example": 6.85,
+              "type": "number"
+            }
+          },
+          "title": "add_or_update_cart_itemArguments",
+          "required": [
+            "cart_id",
+            "part_listing_id",
+            "quantity"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_cart_items_with_totals",
+        "description": "List cart items\n\nList items in a cart including computed totals\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"cart\": {\n    \"id\": 1,\n    \"buyer_org_id\": 1,\n    \"status\": \"Status\",\n    \"currency\": \"Currency\",\n    \"total_items\": 1,\n    \"total_quantity\": 1,\n    \"subtotal\": 1.0\n  },\n  \"items\": [\n    {\n      \"id\": 1,\n      \"part_listing_id\": 1,\n      \"internal_sku\": \"Internal Sku\",\n      \"quantity\": 1,\n      \"line_total\": 1.0\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "cart_id": {
+              "type": "integer",
+              "description": "Cart ID to retrieve items for",
+              "title": "cart_id"
+            }
+          },
+          "title": "list_cart_items_with_totalsArguments",
+          "required": [
+            "cart_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_validate_order_before_submission",
+        "description": "Validate order for submission\n\nValidate order lines and total amount against budget\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"order_id\": \"Order Id\",\n  \"is_valid\": true,\n  \"total_amount\": 1.0,\n  \"violations\": [\n    {}\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string",
+              "description": "Order ID to validate",
+              "title": "order_id"
+            },
+            "max_budget": {
+              "type": "number",
+              "description": "Budget limit that should not be exceeded",
+              "title": "max_budget"
+            }
+          },
+          "title": "validate_order_before_submissionArguments",
+          "required": [
+            "order_id",
+            "max_budget"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_patch_part_listing",
+        "description": "Update part listing fields\n\nPartially update fields of a part listing\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"supplier_org_id\": 1,\n  \"internal_sku\": \"Internal Sku\",\n  \"lead_time_days\": 1,\n  \"available_quantity\": 1,\n  \"min_order_quantity\": 1,\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "part_listing_id": {
+              "type": "integer",
+              "description": "ID of the part listing to update",
+              "title": "part_listing_id"
+            },
+            "lead_time_days": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "lead_time_days",
+              "description": "New lead time in days",
+              "example": 5,
+              "type": "integer"
+            },
+            "available_quantity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "available_quantity",
+              "description": "New available inventory quantity",
+              "example": 120,
+              "type": "integer"
+            },
+            "min_order_quantity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "min_order_quantity",
+              "description": "Updated minimum order quantity",
+              "example": 2,
+              "type": "integer"
+            }
+          },
+          "title": "patch_part_listingArguments",
+          "required": [
+            "part_listing_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_tiered_price",
+        "description": "Create tiered price\n\nCreate a tiered price entry for a part listing\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"part_listing_id\": 1,\n  \"min_quantity\": 1,\n  \"price_per_unit\": 1.0,\n  \"currency\": \"Currency\",\n  \"created_at\": \"Created At\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "part_listing_id": {
+              "type": "integer",
+              "description": "Part listing ID to attach this tiered price to",
+              "title": "part_listing_id"
+            },
+            "buyer_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "buyer_type",
+              "description": "Buyer segment for this tier",
+              "example": "retail",
+              "type": "string"
+            },
+            "min_quantity": {
+              "type": "integer",
+              "title": "min_quantity",
+              "description": "Minimum quantity at which this price applies",
+              "example": 1
+            },
+            "price_per_unit": {
+              "type": "number",
+              "title": "price_per_unit",
+              "description": "Unit price for this tier in given currency",
+              "example": 32.0
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "currency",
+              "description": "Currency code, defaults to USD",
+              "example": "USD",
+              "type": "string"
+            }
+          },
+          "title": "create_tiered_priceArguments",
+          "required": [
+            "part_listing_id",
+            "min_quantity",
+            "price_per_unit"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_tiered_prices_for_part",
+        "description": "List tiered prices\n\nList tiered prices for a part listing ordered by quantity\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"tiered_prices\": [\n    {\n      \"id\": 1,\n      \"min_quantity\": 1,\n      \"price_per_unit\": 1.0,\n      \"currency\": \"Currency\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "part_listing_id": {
+              "type": "integer",
+              "description": "Part listing ID whose tiered prices to fetch",
+              "title": "part_listing_id"
+            }
+          },
+          "title": "list_tiered_prices_for_partArguments",
+          "required": [
+            "part_listing_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_respond_to_quote",
+        "description": "Respond to quote\n\nSupplier responds to quote updating status and pricing\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": \"Id\",\n  \"response_status\": \"Response Status\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "quote_id": {
+              "type": "string",
+              "description": "Quote ID to respond to",
+              "title": "quote_id"
+            },
+            "response_status": {
+              "type": "string",
+              "title": "response_status",
+              "description": "New response status (approved, rejected, expired)",
+              "example": "approved"
+            },
+            "negotiated_price_per_unit": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "negotiated_price_per_unit",
+              "description": "Negotiated unit price if response is approved",
+              "example": 7.1,
+              "type": "number"
+            },
+            "validity_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "validity_date",
+              "description": "Date until which this quote response is valid",
+              "example": "2026-03-01",
+              "type": "string"
+            },
+            "supplier_comment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "supplier_comment",
+              "description": "Comment from supplier about conditions",
+              "example": "Pricing valid for single shipment only; standard lead time 5 business days",
+              "type": "string"
+            }
+          },
+          "title": "respond_to_quoteArguments",
+          "required": [
+            "quote_id",
+            "response_status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_quote_with_lines_for_buyer",
+        "description": "Get quote with lines\n\nGet a quote and its lines for buyer review\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"quote\": {\n    \"id\": \"Id\",\n    \"buyer_org_id\": 1,\n    \"supplier_org_id\": 1,\n    \"currency\": \"Currency\",\n    \"response_status\": \"Response Status\",\n    \"created_at\": \"Created At\",\n    \"updated_at\": \"Updated At\"\n  },\n  \"lines\": [\n    {\n      \"id\": 1,\n      \"quote_id\": \"Quote Id\",\n      \"part_listing_id\": 1,\n      \"quantity\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "quote_id": {
+              "type": "string",
+              "description": "Quote ID to retrieve",
+              "title": "quote_id"
+            }
+          },
+          "title": "get_quote_with_lines_for_buyerArguments",
+          "required": [
+            "quote_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_order_status_and_budget",
+        "description": "Update order\n\nUpdate order status and budget fields\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": \"Id\",\n  \"buyer_org_id\": 1,\n  \"supplier_org_id\": 1,\n  \"ship_to_location_id\": 1,\n  \"status\": \"Status\",\n  \"order_date\": \"Order Date\",\n  \"currency\": \"Currency\",\n  \"updated_at\": \"Updated At\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string",
+              "description": "Order ID to update",
+              "title": "order_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New order status (draft, submitted, confirmed, etc.)",
+              "example": "submitted",
+              "type": "string"
+            },
+            "budget_limit": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "budget_limit",
+              "description": "Internal budget limit for this order",
+              "example": 15000.0,
+              "type": "number"
+            },
+            "total_amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "total_amount",
+              "description": "Total order amount to persist",
+              "example": 12000.5,
+              "type": "number"
+            }
+          },
+          "title": "update_order_status_and_budgetArguments",
+          "required": [
+            "order_id"
+          ]
+        }
+      }
+    }
+  ],
+  "temperature": 0,
+  "seed": 42,
+  "max_tokens": 8192,
+  "stop_token_ids": [
+    1,
+    50,
+    106
+  ],
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  }
+}

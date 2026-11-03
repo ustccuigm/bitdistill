@@ -1,0 +1,2367 @@
+{
+  "model": "case-model",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool.\n\nProcedural guidance. Independently choose and execute actions:\n```json\n{\n  \"precondition\": \"The agent has attempted to retrieve the floor view for the 'Bar' dining area but received an empty snapshot list, indicating no active shift or snapshot is currently available in the system.\",\n  \"decision_rule\": \"When the primary tool for real-time status (mcp_server_get_current_shift_floor_view) returns no snapshots, the agent should fall back to listing all tables in the specified area that meet the physical criteria (capacity >= 2 and mergeable_flag = true) to provide the most helpful information possible.\",\n  \"expected_transition\": \"The agent will call 'mcp_server_list_tables' with 'dining_area_id' (retrieved via 'mcp_server_list_dining_areas'), 'min_capacity': 2, and 'mergeable_flag': true, then present these as the available options since real-time 'vacant' status cannot be verified.\",\n  \"recovery_check\": \"If 'mcp_server_list_tables' also returns an empty list, the agent should inform the user that no tables matching those specific physical criteria exist in the 'Bar' area.\"\n}\n```"
+    },
+    {
+      "role": "user",
+      "content": "For the current active shift, retrieve the floor_view snapshot and return a list of all tables with status 'vacant' in the 'Bar' dining_area that have capacity >= 2 and mergeable_flag = true."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-940ab0f0b737aeec",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_get_current_shift_floor_view",
+            "arguments": "{\"dining_area_name\": \"Bar\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-940ab0f0b737aeec",
+      "content": "{\"shift\": null, \"snapshots\": []}"
+    },
+    {
+      "role": "assistant",
+      "content": "The user wants to find vacant tables in the 'Bar' dining area with capacity >= 2 and mergeable_flag = true.\nThe first step was to get the floor view for the 'Bar' area, which returned an empty snapshot list.\nAccording to the procedural guidance provided in the prompt:\n\"When the primary tool for real-time status (mcp_server_get_current_shift_floor_view) returns no snapshots, the agent should fall back to listing all tables in the specified area that meet the physical criteria (capacity >= 2 and mergeable_flag = true) to provide the most helpful information possible.\"\n\nI need to:\n1. Find the `dining_area_id` for 'Bar'.\n2. List tables in that area with `min_capacity: 2` and `mergeable_flag: true`.\n\nLet's start by listing the dining areas to find the ID for 'Bar'.",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-a24dcc4bf17c3e8f",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_dining_areas",
+            "arguments": "{\"name\": \"Bar\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-a24dcc4bf17c3e8f",
+      "content": "{\"dining_areas\": [{\"id\": 2, \"name\": \"Bar\", \"created_by_user_id\": 1, \"created_at\": \"2026-10-04T04:16:13\", \"updated_at\": null}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-9e568c01d370754b",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_dining_areas",
+            "arguments": "{\"name\": \"Bar\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9e568c01d370754b",
+      "content": "{\"dining_areas\": [{\"id\": 2, \"name\": \"Bar\", \"created_by_user_id\": 1, \"created_at\": \"2026-10-04T04:16:13\", \"updated_at\": null}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-8b998879798949e1",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_tables",
+            "arguments": "{\"dining_area_id\": 2, \"mergeable_flag\": true, \"min_capacity\": 2}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-8b998879798949e1",
+      "content": "{\"tables\": [{\"id\": 6, \"dining_area_id\": 2, \"table_code\": \"B-01\", \"capacity\": 2, \"mergeable_flag\": true, \"created_at\": \"2026-10-14T04:16:13\", \"updated_at\": null}, {\"id\": 7, \"dining_area_id\": 2, \"table_code\": \"B-02\", \"capacity\": 2, \"mergeable_flag\": true, \"created_at\": \"2026-10-14T04:16:13\", \"updated_at\": null}]}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_vacant_tables_current_shift",
+        "description": "List vacant tables in area for current shift\n\nReturn vacant tables in a dining area for current shift using latest snapshot\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"tables\": [\n    {\n      \"table_id\": 1,\n      \"table_code\": \"Table Code\",\n      \"capacity\": 1,\n      \"mergeable_flag\": true,\n      \"status\": \"Status\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "dining_area_name": {
+              "type": "string",
+              "description": "Dining area name to filter tables",
+              "title": "dining_area_name"
+            },
+            "min_capacity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Minimum required table capacity",
+              "title": "min_capacity",
+              "type": "integer"
+            },
+            "mergeable_flag": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Require tables to be mergeable if true",
+              "title": "mergeable_flag",
+              "type": "boolean"
+            },
+            "business_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Business date for resolving current shift; defaults to today",
+              "title": "business_date",
+              "type": "string"
+            }
+          },
+          "title": "list_vacant_tables_current_shiftArguments",
+          "required": [
+            "dining_area_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_upsert_guest_by_contact",
+        "description": "Create or update guest by contact\n\nUpsert a guest row based on email or phone\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"guest\": {\n    \"id\": 1,\n    \"full_name\": \"Full Name\"\n  },\n  \"created\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full_name": {
+              "type": "string",
+              "title": "full_name",
+              "description": "Guest name to store or update",
+              "example": "Maria Lopez"
+            },
+            "primary_contact": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "primary_contact",
+              "description": "Primary contact string, typically email or phone",
+              "example": "maria.lopez@example.com",
+              "type": "string"
+            },
+            "email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "email",
+              "description": "Email used as unique key when available",
+              "example": "maria.lopez@example.com",
+              "type": "string"
+            },
+            "phone": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "phone",
+              "description": "Phone used as secondary key if email missing",
+              "example": "+1-555-987-6543",
+              "type": "string"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "notes",
+              "description": "Notes to overwrite existing notes if guest found",
+              "example": "no shellfish, prefers window seat",
+              "type": "string"
+            }
+          },
+          "title": "upsert_guest_by_contactArguments",
+          "required": [
+            "full_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_bulk_append_reservation_special_requests",
+        "description": "Bulk append to reservation special_requests\n\nAppend suffix to special_requests for matching reservations\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"updated_count\": 1,\n  \"updated_reservations\": [\n    {\n      \"id\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "from_time": {
+              "type": "string",
+              "title": "from_time",
+              "description": "Lower bound ISO datetime for requested_time inclusive",
+              "example": "2025-01-03T00:00:00"
+            },
+            "to_time": {
+              "type": "string",
+              "title": "to_time",
+              "description": "Upper bound ISO datetime for requested_time inclusive",
+              "example": "2025-01-03T23:59:59"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Status filter to apply before update",
+              "example": "booked",
+              "type": "string"
+            },
+            "min_party_size": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "min_party_size",
+              "description": "Only update reservations with party_size >= value",
+              "example": 6,
+              "type": "integer"
+            },
+            "append_text": {
+              "type": "string",
+              "title": "append_text",
+              "description": "Text to append to existing special_requests separated by ' | '",
+              "example": "Pre-set menu recommended"
+            }
+          },
+          "title": "bulk_append_reservation_special_requestsArguments",
+          "required": [
+            "from_time",
+            "to_time",
+            "append_text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_compute_optimal_table_suggestion",
+        "description": "Compute optimal table suggestion for a party\n\nCompute and persist an optimal table suggestion for given criteria\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"table_suggestion\": {\n    \"id\": 1,\n    \"party_size\": 1,\n    \"requested_time\": \"2023-01-01T00:00:00Z\"\n  },\n  \"tables\": [\n    {\n      \"table_id\": 1,\n      \"table_code\": \"Table Code\",\n      \"capacity\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "party_size": {
+              "type": "integer",
+              "title": "party_size",
+              "description": "Party size that must be accommodated",
+              "example": 8
+            },
+            "requested_time": {
+              "type": "string",
+              "title": "requested_time",
+              "description": "Desired seating time used for availability checks",
+              "example": "2025-01-01T20:00:00"
+            },
+            "dining_area_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "dining_area_name",
+              "description": "Preferred dining area name to search within",
+              "example": "Main Dining Room",
+              "type": "string"
+            },
+            "reservation_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reservation_id",
+              "description": "Optional reservation to attach to suggestion",
+              "example": 120,
+              "type": "integer"
+            }
+          },
+          "title": "compute_optimal_table_suggestionArguments",
+          "required": [
+            "party_size",
+            "requested_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_current_shift_floor_view",
+        "description": "Get floor view for current active shift\n\nReturn latest table status snapshots and items for active shift\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"snapshots\": [\n    {\n      \"snapshot_id\": 1,\n      \"dining_area_id\": 1,\n      \"snapshot_time\": \"2023-01-01T00:00:00Z\",\n      \"items\": [\n        {\n          \"table_id\": 1,\n          \"status\": \"Status\"\n        }\n      ]\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "business_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Business date to resolve current shift, defaults to today",
+              "title": "business_date",
+              "type": "string"
+            },
+            "dining_area_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional dining area name to filter snapshots",
+              "title": "dining_area_name",
+              "type": "string"
+            }
+          },
+          "title": "get_current_shift_floor_viewArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_generate_shift_performance_report",
+        "description": "Generate shift and server performance report\n\nCompute aggregated metrics for shifts and servers on a date\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"business_date\": \"Business Date\",\n  \"shifts\": [\n    {\n      \"shift_id\": 1,\n      \"shift_name\": \"Shift Name\",\n      \"total_covers\": 1,\n      \"average_turn_time_minutes\": 1.0,\n      \"servers\": [\n        {\n          \"server_id\": 1,\n          \"server_name\": \"Server Name\",\n          \"tables_served\": 1,\n          \"total_covers\": 1,\n          \"average_check_total\": 1.0\n        }\n      ]\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "business_date": {
+              "type": "string",
+              "description": "Business date to report on (YYYY-MM-DD)",
+              "title": "business_date"
+            },
+            "shift_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter report to a specific shift name",
+              "title": "shift_name",
+              "type": "string"
+            },
+            "dining_area_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter metrics to a specific dining area name",
+              "title": "dining_area_name",
+              "type": "string"
+            }
+          },
+          "title": "generate_shift_performance_reportArguments",
+          "required": [
+            "business_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_dining_area",
+        "description": "Create a new dining area\n\nCreate a dining area associated with current user 1\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Unique display name of the dining area",
+              "example": "Rooftop Patio"
+            }
+          },
+          "title": "create_dining_areaArguments",
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_dining_areas",
+        "description": "List dining areas with optional name filter\n\nRetrieve dining areas optionally filtered by name or substring\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"dining_areas\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact dining area name",
+              "title": "name",
+              "type": "string"
+            },
+            "name_contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by substring in dining area name",
+              "title": "name_contains",
+              "type": "string"
+            }
+          },
+          "title": "list_dining_areasArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_table",
+        "description": "Create a table in a dining area\n\nInsert a table row for a dining area\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"dining_area_id\": 1,\n  \"table_code\": \"Table Code\",\n  \"capacity\": 1,\n  \"mergeable_flag\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "dining_area_id": {
+              "type": "integer",
+              "title": "dining_area_id",
+              "description": "Dining area that owns the table",
+              "example": 5
+            },
+            "table_code": {
+              "type": "string",
+              "title": "table_code",
+              "description": "Human-readable table code unique per dining area",
+              "example": "RP-1"
+            },
+            "capacity": {
+              "type": "integer",
+              "title": "capacity",
+              "description": "Maximum number of guests the table seats",
+              "example": 4
+            },
+            "mergeable_flag": {
+              "type": "boolean",
+              "title": "mergeable_flag",
+              "description": "Whether the table can be merged with others",
+              "example": true
+            }
+          },
+          "title": "create_tableArguments",
+          "required": [
+            "dining_area_id",
+            "table_code",
+            "capacity",
+            "mergeable_flag"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_tables",
+        "description": "List tables with filters\n\nRetrieve tables filtered by area, capacity, mergeable, and code\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"tables\": [\n    {\n      \"id\": 1,\n      \"dining_area_id\": 1,\n      \"table_code\": \"Table Code\",\n      \"capacity\": 1,\n      \"mergeable_flag\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "dining_area_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter tables by dining_area_id",
+              "title": "dining_area_id",
+              "type": "integer"
+            },
+            "min_capacity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter to tables with capacity >= value",
+              "title": "min_capacity",
+              "type": "integer"
+            },
+            "mergeable_flag": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by whether tables are mergeable",
+              "title": "mergeable_flag",
+              "type": "boolean"
+            },
+            "table_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact table code",
+              "title": "table_code",
+              "type": "string"
+            }
+          },
+          "title": "list_tablesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_server",
+        "description": "Create a server record\n\nInsert a server row for a new staff member\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"full_name\": \"Full Name\",\n  \"active_flag\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full_name": {
+              "type": "string",
+              "title": "full_name",
+              "description": "Full name of the server",
+              "example": "Alice M"
+            },
+            "short_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "short_name",
+              "description": "Short display name or initials",
+              "example": "Alice",
+              "type": "string"
+            },
+            "active_flag": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active_flag",
+              "description": "Whether the server is active and can be assigned",
+              "default": true,
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_serverArguments",
+          "required": [
+            "full_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_servers",
+        "description": "List servers with filters\n\nRetrieve servers filtered by name and active_flag\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"servers\": [\n    {\n      \"id\": 1,\n      \"full_name\": \"Full Name\",\n      \"active_flag\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact full name",
+              "title": "full_name",
+              "type": "string"
+            },
+            "name_contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by partial name match",
+              "title": "name_contains",
+              "type": "string"
+            },
+            "active_flag": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "active_flag",
+              "type": "boolean"
+            }
+          },
+          "title": "list_serversArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_shift",
+        "description": "Create a shift for a business date\n\nInsert a shift row for a business date\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"business_date\": \"2023-01-01\",\n  \"start_time\": \"2023-01-01T00:00:00Z\",\n  \"end_time\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Shift name unique per business date",
+              "example": "Dinner Shift A"
+            },
+            "business_date": {
+              "type": "string",
+              "title": "business_date",
+              "description": "Shift business date (YYYY-MM-DD, local restaurant date)",
+              "example": "2025-01-01"
+            },
+            "start_time": {
+              "type": "string",
+              "title": "start_time",
+              "description": "Shift start datetime in ISO 8601",
+              "example": "2025-01-01T17:00:00"
+            },
+            "end_time": {
+              "type": "string",
+              "title": "end_time",
+              "description": "Shift end datetime in ISO 8601",
+              "example": "2025-01-01T22:00:00"
+            }
+          },
+          "title": "create_shiftArguments",
+          "required": [
+            "name",
+            "business_date",
+            "start_time",
+            "end_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_shifts",
+        "description": "List shifts with filters\n\nRetrieve shifts filtered by business_date, name, and time\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"shifts\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"business_date\": \"2023-01-01\",\n      \"start_time\": \"2023-01-01T00:00:00Z\",\n      \"end_time\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "business_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter shifts by business_date (YYYY-MM-DD)",
+              "title": "business_date",
+              "type": "string"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact shift name",
+              "title": "name",
+              "type": "string"
+            },
+            "time_contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO datetime that must fall between start_time and end_time",
+              "title": "time_contains",
+              "type": "string"
+            }
+          },
+          "title": "list_shiftsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_guest",
+        "description": "Create a guest profile\n\nInsert a guest row to store guest contact and notes\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"full_name\": \"Full Name\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full_name": {
+              "type": "string",
+              "title": "full_name",
+              "description": "Guest full name",
+              "example": "Maria Lopez"
+            },
+            "primary_contact": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "primary_contact",
+              "description": "Primary contact info string for the guest",
+              "example": "maria.lopez@example.com",
+              "type": "string"
+            },
+            "email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "email",
+              "description": "Email address of the guest",
+              "example": "maria.lopez@example.com",
+              "type": "string"
+            },
+            "phone": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "phone",
+              "description": "Phone number of the guest",
+              "example": "+1-555-987-6543",
+              "type": "string"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "notes",
+              "description": "Internal notes about the guest",
+              "example": "VIP, likes quiet tables",
+              "type": "string"
+            }
+          },
+          "title": "create_guestArguments",
+          "required": [
+            "full_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_guests",
+        "description": "Search guests\n\nRetrieve guests filtered by name, email, or phone\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"guests\": [\n    {\n      \"id\": 1,\n      \"full_name\": \"Full Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact full_name",
+              "title": "full_name",
+              "type": "string"
+            },
+            "name_contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by partial name match",
+              "title": "name_contains",
+              "type": "string"
+            },
+            "email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact email",
+              "title": "email",
+              "type": "string"
+            },
+            "phone": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact phone",
+              "title": "phone",
+              "type": "string"
+            }
+          },
+          "title": "list_guestsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_reservation",
+        "description": "Create a reservation\n\nInsert a reservation row with guest and details\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"guest_name\": \"Guest Name\",\n  \"party_size\": 1,\n  \"requested_time\": \"2023-01-01T00:00:00Z\",\n  \"status\": \"Status\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "guest_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "guest_id",
+              "description": "Optional guests.id to link reservation to a guest profile",
+              "example": 20,
+              "type": "integer"
+            },
+            "guest_name": {
+              "type": "string",
+              "title": "guest_name",
+              "description": "Name to display for the reservation",
+              "example": "John Doe"
+            },
+            "contact_info": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "contact_info",
+              "description": "Free-form contact info for the reservation",
+              "example": "+1-555-123-4567",
+              "type": "string"
+            },
+            "party_size": {
+              "type": "integer",
+              "title": "party_size",
+              "description": "Number of guests in the party",
+              "example": 6
+            },
+            "requested_time": {
+              "type": "string",
+              "title": "requested_time",
+              "description": "Requested reservation datetime in ISO 8601",
+              "example": "2025-01-01T19:30:00"
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Initial reservation status",
+              "example": "booked"
+            },
+            "special_requests": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "special_requests",
+              "description": "Guest special requests for this reservation",
+              "example": "Anniversary, quiet table",
+              "type": "string"
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "source",
+              "description": "Reservation source channel",
+              "example": "phone",
+              "type": "string"
+            }
+          },
+          "title": "create_reservationArguments",
+          "required": [
+            "guest_name",
+            "party_size",
+            "requested_time",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_reservations",
+        "description": "List reservations with filters\n\nRetrieve reservations filtered by date, status, and party size\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"reservations\": [\n    {\n      \"id\": 1,\n      \"guest_name\": \"Guest Name\",\n      \"party_size\": 1,\n      \"requested_time\": \"2023-01-01T00:00:00Z\",\n      \"status\": \"Status\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "from_time": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter reservations with requested_time >= this ISO datetime",
+              "title": "from_time",
+              "type": "string"
+            },
+            "to_time": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter reservations with requested_time <= this ISO datetime",
+              "title": "to_time",
+              "type": "string"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by reservation status",
+              "title": "status",
+              "type": "string"
+            },
+            "min_party_size": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by party_size >= value",
+              "title": "min_party_size",
+              "type": "integer"
+            },
+            "guest_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact guest_name",
+              "title": "guest_name",
+              "type": "string"
+            }
+          },
+          "title": "list_reservationsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_walk_in",
+        "description": "Create a walk-in entry\n\nInsert a walk-in row for an arriving party\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"guest_name\": \"Guest Name\",\n  \"party_size\": 1,\n  \"arrival_time\": \"2023-01-01T00:00:00Z\",\n  \"priority_level\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "guest_name": {
+              "type": "string",
+              "title": "guest_name",
+              "description": "Name for the walk-in party",
+              "example": "Walkin Smith"
+            },
+            "contact_info": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "contact_info",
+              "description": "Contact info for updates",
+              "example": "smith@example.com",
+              "type": "string"
+            },
+            "party_size": {
+              "type": "integer",
+              "title": "party_size",
+              "description": "Number of guests in the walk-in party",
+              "example": 3
+            },
+            "estimated_wait_minutes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "estimated_wait_minutes",
+              "description": "Initial estimated wait time in minutes",
+              "example": 25,
+              "type": "integer"
+            },
+            "priority_level": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "priority_level",
+              "description": "Higher numbers indicate higher priority on waitlist",
+              "example": 10,
+              "type": "integer"
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "source",
+              "description": "Origin channel of the walk-in record",
+              "example": "front_desk",
+              "type": "string"
+            }
+          },
+          "title": "create_walk_inArguments",
+          "required": [
+            "guest_name",
+            "party_size"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_waitlist_entry",
+        "description": "Create a waitlist entry\n\nInsert a waitlist entry for a waiting party\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"guest_name\": \"Guest Name\",\n  \"party_size\": 1,\n  \"priority_level\": 1,\n  \"status\": \"Status\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "guest_name": {
+              "type": "string",
+              "title": "guest_name",
+              "description": "Name for the waiting party",
+              "example": "Walkin Smith"
+            },
+            "contact_info": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "contact_info",
+              "description": "Contact information for waitlist communication",
+              "example": "smith@example.com",
+              "type": "string"
+            },
+            "party_size": {
+              "type": "integer",
+              "title": "party_size",
+              "description": "Number of guests waiting",
+              "example": 3
+            },
+            "location_preference_tag": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "location_preference_tag",
+              "description": "Preferred location tag (e.g., patio, bar)",
+              "example": "patio",
+              "type": "string"
+            },
+            "priority_level": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "priority_level",
+              "description": "Priority value where higher is served first",
+              "example": 10,
+              "type": "integer"
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Current waitlist status for the party",
+              "example": "waiting"
+            },
+            "walk_in_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "walk_in_id",
+              "description": "Optional linked walk_ins.id for this party",
+              "example": 50,
+              "type": "integer"
+            }
+          },
+          "title": "create_waitlist_entryArguments",
+          "required": [
+            "guest_name",
+            "party_size",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_waitlist_entries",
+        "description": "List waitlist entries with filters\n\nRetrieve waitlist entries filtered by status, priority, and location\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"waitlist_entries\": [\n    {\n      \"id\": 1,\n      \"guest_name\": \"Guest Name\",\n      \"party_size\": 1,\n      \"priority_level\": 1,\n      \"status\": \"Status\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter entries by status",
+              "title": "status",
+              "type": "string"
+            },
+            "location_preference_tag": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by preferred location tag",
+              "title": "location_preference_tag",
+              "type": "string"
+            },
+            "min_priority_level": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter entries with priority_level >= value",
+              "title": "min_priority_level",
+              "type": "integer"
+            }
+          },
+          "title": "list_waitlist_entriesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_table_suggestion",
+        "description": "Create a table suggestion record\n\nInsert a table suggestion row for a party\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"party_size\": 1,\n  \"requested_time\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "party_size": {
+              "type": "integer",
+              "title": "party_size",
+              "description": "Party size that the suggestion should accommodate",
+              "example": 8
+            },
+            "requested_time": {
+              "type": "string",
+              "title": "requested_time",
+              "description": "Requested seating time for the suggestion",
+              "example": "2025-01-01T20:00:00"
+            },
+            "dining_area_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "dining_area_id",
+              "description": "Preferred dining_area_id for the suggestion",
+              "example": 1,
+              "type": "integer"
+            },
+            "reservation_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reservation_id",
+              "description": "Optional reservation_id linked to this suggestion",
+              "example": 120,
+              "type": "integer"
+            }
+          },
+          "title": "create_table_suggestionArguments",
+          "required": [
+            "party_size",
+            "requested_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_seating_assignment",
+        "description": "Create a seating assignment\n\nInsert a seating_assignments row to seat a party\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"shift_id\": 1,\n  \"seat_time\": \"2023-01-01T00:00:00Z\",\n  \"party_size\": 1,\n  \"status\": \"Status\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "shift_id": {
+              "type": "integer",
+              "title": "shift_id",
+              "description": "Shift during which seating occurs",
+              "example": 7
+            },
+            "reservation_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reservation_id",
+              "description": "Reservation being seated, if applicable",
+              "example": 100,
+              "type": "integer"
+            },
+            "waitlist_entry_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "waitlist_entry_id",
+              "description": "Waitlist entry being seated, if no reservation",
+              "example": 75,
+              "type": "integer"
+            },
+            "table_suggestion_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "table_suggestion_id",
+              "description": "Table suggestion used for this seating",
+              "example": 30,
+              "type": "integer"
+            },
+            "server_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "server_id",
+              "description": "Server assigned to the table",
+              "example": 3,
+              "type": "integer"
+            },
+            "seat_time": {
+              "type": "string",
+              "title": "seat_time",
+              "description": "Datetime when guests are seated",
+              "example": "2025-01-01T20:05:00"
+            },
+            "end_time": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "end_time",
+              "description": "Datetime when the seating ended",
+              "type": "string"
+            },
+            "party_size": {
+              "type": "integer",
+              "title": "party_size",
+              "description": "Number of guests actually seated",
+              "example": 8
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Status of seating assignment (e.g., seated, completed)",
+              "example": "seated"
+            }
+          },
+          "title": "create_seating_assignmentArguments",
+          "required": [
+            "shift_id",
+            "seat_time",
+            "party_size",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_seating_assignments",
+        "description": "List seating assignments\n\nRetrieve seating_assignments filtered by shift, server, reservation, or status\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"seating_assignments\": [\n    {\n      \"id\": 1,\n      \"shift_id\": 1,\n      \"seat_time\": \"2023-01-01T00:00:00Z\",\n      \"party_size\": 1,\n      \"status\": \"Status\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "shift_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by shift ID",
+              "title": "shift_id",
+              "type": "integer"
+            },
+            "server_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by server ID",
+              "title": "server_id",
+              "type": "integer"
+            },
+            "reservation_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by reservation ID",
+              "title": "reservation_id",
+              "type": "integer"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by seating status",
+              "title": "status",
+              "type": "string"
+            }
+          },
+          "title": "list_seating_assignmentsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_table_status_snapshot",
+        "description": "Create a table status snapshot\n\nInsert a table_status_snapshots row for a shift and area\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"shift_id\": 1,\n  \"dining_area_id\": 1,\n  \"snapshot_time\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "shift_id": {
+              "type": "integer",
+              "title": "shift_id",
+              "description": "Shift ID this snapshot belongs to",
+              "example": 7
+            },
+            "dining_area_id": {
+              "type": "integer",
+              "title": "dining_area_id",
+              "description": "Dining area ID whose tables are captured",
+              "example": 2
+            },
+            "snapshot_time": {
+              "type": "string",
+              "title": "snapshot_time",
+              "description": "Timestamp of the snapshot capture",
+              "example": "2025-01-01T19:00:00"
+            }
+          },
+          "title": "create_table_status_snapshotArguments",
+          "required": [
+            "shift_id",
+            "dining_area_id",
+            "snapshot_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_table_status_snapshot_item",
+        "description": "Create a table status snapshot item\n\nInsert a table_status_snapshot_items row for a table at snapshot\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"snapshot_id\": 1,\n  \"table_id\": 1,\n  \"status\": \"Status\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "snapshot_id": {
+              "type": "integer",
+              "title": "snapshot_id",
+              "description": "Parent table_status_snapshots.id",
+              "example": 40
+            },
+            "table_id": {
+              "type": "integer",
+              "title": "table_id",
+              "description": "Table ID being described",
+              "example": 11
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Status of table at this snapshot (vacant, occupied, etc.)",
+              "example": "vacant"
+            },
+            "current_seating_assignment_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "current_seating_assignment_id",
+              "description": "Current seating assignment ID if occupied",
+              "type": "integer"
+            }
+          },
+          "title": "create_table_status_snapshot_itemArguments",
+          "required": [
+            "snapshot_id",
+            "table_id",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_guest_visit_history",
+        "description": "Create a guest visit history record\n\nInsert a guest_visit_history row describing a guest visit\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"guest_id\": 1,\n  \"visit_date\": \"2023-01-01\",\n  \"party_size\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "guest_id": {
+              "type": "integer",
+              "title": "guest_id",
+              "description": "Guest ID this visit belongs to",
+              "example": 20
+            },
+            "reservation_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reservation_id",
+              "description": "Reservation ID linked to the visit",
+              "example": 100,
+              "type": "integer"
+            },
+            "seating_assignment_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "seating_assignment_id",
+              "description": "Seating assignment used for this visit",
+              "example": 200,
+              "type": "integer"
+            },
+            "visit_date": {
+              "type": "string",
+              "title": "visit_date",
+              "description": "Date of visit (YYYY-MM-DD)",
+              "example": "2025-01-01"
+            },
+            "party_size": {
+              "type": "integer",
+              "title": "party_size",
+              "description": "Number of guests for this visit",
+              "example": 4
+            },
+            "dining_area_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "dining_area_id",
+              "description": "Dining area used during this visit",
+              "example": 1,
+              "type": "integer"
+            },
+            "table_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "table_code",
+              "description": "Table code used during the visit",
+              "example": "M-12",
+              "type": "string"
+            },
+            "preferences_notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "preferences_notes",
+              "description": "Notes about guest preferences observed this visit",
+              "example": "no shellfish, prefers window seat",
+              "type": "string"
+            }
+          },
+          "title": "create_guest_visit_historyArguments",
+          "required": [
+            "guest_id",
+            "visit_date",
+            "party_size"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_guest_visit_history",
+        "description": "List guest visit history\n\nRetrieve guest_visit_history filtered by guest or date range\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"visits\": [\n    {\n      \"id\": 1,\n      \"guest_id\": 1,\n      \"visit_date\": \"2023-01-01\",\n      \"party_size\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "guest_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by guest ID",
+              "title": "guest_id",
+              "type": "integer"
+            },
+            "from_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter visits with visit_date >= this date",
+              "title": "from_date",
+              "type": "string"
+            },
+            "to_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter visits with visit_date <= this date",
+              "title": "to_date",
+              "type": "string"
+            }
+          },
+          "title": "list_guest_visit_historyArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_check",
+        "description": "Create a check for a seating assignment\n\nInsert a checks row to track financial totals\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"seating_assignment_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "seating_assignment_id": {
+              "type": "integer",
+              "title": "seating_assignment_id",
+              "description": "Seating assignment this check belongs to",
+              "example": 200
+            },
+            "server_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "server_id",
+              "description": "Server responsible for the check",
+              "example": 3,
+              "type": "integer"
+            },
+            "subtotal_amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "subtotal_amount",
+              "description": "Subtotal before tax",
+              "example": 120.5,
+              "type": "number"
+            },
+            "tax_amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "tax_amount",
+              "description": "Tax amount for the check",
+              "example": 10.24,
+              "type": "number"
+            },
+            "total_amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "total_amount",
+              "description": "Total amount including tax",
+              "example": 130.74,
+              "type": "number"
+            },
+            "opened_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "opened_at",
+              "description": "Datetime when the check was opened",
+              "example": "2025-01-01T20:10:00",
+              "type": "string"
+            },
+            "closed_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "closed_at",
+              "description": "Datetime when the check was closed",
+              "type": "string"
+            }
+          },
+          "title": "create_checkArguments",
+          "required": [
+            "seating_assignment_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_checks",
+        "description": "List checks with filters\n\nRetrieve checks filtered by server, closed_at date range, or shift\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"checks\": [\n    {\n      \"id\": 1,\n      \"seating_assignment_id\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "server_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter checks by server ID",
+              "title": "server_id",
+              "type": "integer"
+            },
+            "from_closed_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter checks with closed_at >= this datetime",
+              "title": "from_closed_at",
+              "type": "string"
+            },
+            "to_closed_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter checks with closed_at <= this datetime",
+              "title": "to_closed_at",
+              "type": "string"
+            },
+            "shift_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by shift via seating_assignments.shift_id",
+              "title": "shift_id",
+              "type": "integer"
+            }
+          },
+          "title": "list_checksArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_dining_area_location_tag",
+        "description": "Add a location tag to a dining area\n\nCreate a dining area location tag for a dining area\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"dining_area_id\": 1,\n  \"tag\": \"Tag\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "dining_area_id": {
+              "type": "integer",
+              "description": "Target dining_area ID",
+              "title": "dining_area_id"
+            },
+            "tag": {
+              "type": "string",
+              "title": "tag",
+              "description": "Location tag label to associate with the dining area",
+              "example": "patio"
+            }
+          },
+          "title": "add_dining_area_location_tagArguments",
+          "required": [
+            "dining_area_id",
+            "tag"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_assign_server_to_shift",
+        "description": "Assign a server to a shift\n\nCreate a shift_servers row that links a server to a shift\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"shift_id\": 1,\n  \"server_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "shift_id": {
+              "type": "integer",
+              "description": "Shift ID that server will be assigned to",
+              "title": "shift_id"
+            },
+            "server_id": {
+              "type": "integer",
+              "title": "server_id",
+              "description": "Server ID to assign",
+              "example": 3
+            },
+            "assigned_role": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "assigned_role",
+              "description": "Optional role description for this shift",
+              "example": "Section A",
+              "type": "string"
+            }
+          },
+          "title": "assign_server_to_shiftArguments",
+          "required": [
+            "shift_id",
+            "server_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_shift_servers",
+        "description": "List servers assigned to a shift\n\nRetrieve shift_servers rows for a shift including server details\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"shift_id\": 1,\n  \"servers\": [\n    {\n      \"shift_server_id\": 1,\n      \"server_id\": 1,\n      \"full_name\": \"Full Name\",\n      \"created_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "shift_id": {
+              "type": "integer",
+              "description": "Shift ID to fetch server assignments for",
+              "title": "shift_id"
+            }
+          },
+          "title": "list_shift_serversArguments",
+          "required": [
+            "shift_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_table_to_table_suggestion",
+        "description": "Link a table to a table suggestion\n\nInsert a link between table and table suggestion\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"table_suggestion_id\": 1,\n  \"table_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "table_suggestion_id": {
+              "type": "integer",
+              "description": "Existing table_suggestions.id to add a table to",
+              "title": "table_suggestion_id"
+            },
+            "table_id": {
+              "type": "integer",
+              "title": "table_id",
+              "description": "tables.id that is part of this suggestion",
+              "example": 11
+            }
+          },
+          "title": "add_table_to_table_suggestionArguments",
+          "required": [
+            "table_suggestion_id",
+            "table_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_table_to_seating_assignment",
+        "description": "Link a table to a seating assignment\n\nInsert a seating_assignment_tables row to associate table\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"seating_assignment_id\": 1,\n  \"table_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "seating_assignment_id": {
+              "type": "integer",
+              "description": "Seating assignment ID to add table to",
+              "title": "seating_assignment_id"
+            },
+            "table_id": {
+              "type": "integer",
+              "title": "table_id",
+              "description": "Table ID being used for this seating assignment",
+              "example": 11
+            }
+          },
+          "title": "add_table_to_seating_assignmentArguments",
+          "required": [
+            "seating_assignment_id",
+            "table_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_reservation",
+        "description": "Update reservation fields\n\nPartially update reservation fields such as status\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"guest_name\": \"Guest Name\",\n  \"party_size\": 1,\n  \"requested_time\": \"2023-01-01T00:00:00Z\",\n  \"status\": \"Status\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "reservation_id": {
+              "type": "integer",
+              "description": "Reservation ID to update",
+              "title": "reservation_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New reservation status to set",
+              "example": "confirmed",
+              "type": "string"
+            },
+            "special_requests": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "special_requests",
+              "description": "New special_requests value to overwrite",
+              "example": "Anniversary, quiet table (window seat if possible)",
+              "type": "string"
+            },
+            "contact_info": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "contact_info",
+              "description": "Updated reservation contact info",
+              "example": "+1-555-000-1111",
+              "type": "string"
+            }
+          },
+          "title": "update_reservationArguments",
+          "required": [
+            "reservation_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_waitlist_entry",
+        "description": "Update a waitlist entry\n\nPartially update waitlist entry fields such as status\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"guest_name\": \"Guest Name\",\n  \"party_size\": 1,\n  \"priority_level\": 1,\n  \"status\": \"Status\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "waitlist_entry_id": {
+              "type": "integer",
+              "description": "Waitlist entry ID to update",
+              "title": "waitlist_entry_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New status to set for the entry",
+              "example": "seated",
+              "type": "string"
+            },
+            "priority_level": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "priority_level",
+              "description": "Updated priority level",
+              "example": 8,
+              "type": "integer"
+            },
+            "location_preference_tag": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "location_preference_tag",
+              "description": "Updated location preference tag",
+              "example": "patio",
+              "type": "string"
+            }
+          },
+          "title": "update_waitlist_entryArguments",
+          "required": [
+            "waitlist_entry_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_table_suggestion",
+        "description": "Get table suggestion with tables\n\nFetch a table suggestion and its associated tables\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"party_size\": 1,\n  \"requested_time\": \"2023-01-01T00:00:00Z\",\n  \"tables\": [\n    {\n      \"table_id\": 1,\n      \"table_code\": \"Table Code\",\n      \"dining_area_id\": 1,\n      \"capacity\": 1,\n      \"mergeable_flag\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "table_suggestion_id": {
+              "type": "integer",
+              "description": "Table suggestion ID to fetch",
+              "title": "table_suggestion_id"
+            }
+          },
+          "title": "get_table_suggestionArguments",
+          "required": [
+            "table_suggestion_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_seating_assignment",
+        "description": "Update seating assignment status or times\n\nPartially update seating_assignments fields such as status\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"shift_id\": 1,\n  \"seat_time\": \"2023-01-01T00:00:00Z\",\n  \"party_size\": 1,\n  \"status\": \"Status\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "seating_assignment_id": {
+              "type": "integer",
+              "description": "Seating assignment ID to update",
+              "title": "seating_assignment_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New seating assignment status",
+              "example": "completed",
+              "type": "string"
+            },
+            "end_time": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "end_time",
+              "description": "End time of seating in ISO format",
+              "example": "2025-01-01T21:30:00",
+              "type": "string"
+            },
+            "server_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "server_id",
+              "description": "Updated server responsible for the table",
+              "example": 4,
+              "type": "integer"
+            }
+          },
+          "title": "update_seating_assignmentArguments",
+          "required": [
+            "seating_assignment_id"
+          ]
+        }
+      }
+    }
+  ],
+  "temperature": 0,
+  "seed": 42,
+  "max_tokens": 8192,
+  "stop_token_ids": [
+    1,
+    50,
+    106
+  ],
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  }
+}

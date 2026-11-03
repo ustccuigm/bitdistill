@@ -1,0 +1,1628 @@
+{
+  "model": "case-model",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool.\n\nProcedural guidance. Independently choose and execute actions:\n```json\n{\n  \"precondition\": \"The 'Company Pool Car' resource type and its associated booking policy (ID: 3) must exist, and the 'field_sales' permission (ID: 3) must be available in the system.\",\n  \"decision_rule\": \"Identify the booking policy associated with the 'Company Pool Car' resource type. Update that policy's 'max_duration_minutes' to 480 (8 hours) and 'cancellation_window_minutes' to 120 (2 hours). Clear any existing permissions on that policy and add the 'field_sales' permission (ID: 3) to ensure only authorized users can book it.\",\n  \"expected_transition\": \"The booking policy for 'Company Pool Car' will reflect a 480-minute maximum duration, a 120-minute cancellation window, and a permission requirement for 'field_sales'.\",\n  \"recovery_check\": \"Verify the update by listing the booking policy details to ensure the ID, max_duration_minutes, cancellation_window_minutes, and permission links match the requested specifications.\"\n}\n```"
+    },
+    {
+      "role": "user",
+      "content": "Update the booking_policy for the 'Company Pool Car' resource_type so that only users with the 'field_sales' permission can book it, set the max_duration to 8 hours per booking, and enforce a cancellation_window of 2 hours before the booking start_time."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-92e6fb1bf4e45bbc",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_resource_types",
+            "arguments": "{\"name\": \"Company Pool Car\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-92e6fb1bf4e45bbc",
+      "content": "{\"resource_types\": [{\"id\": 3, \"name\": \"Company Pool Car\", \"description\": \"Shared company vehicles for travel\", \"capacity\": 4, \"lead_time_hours\": 4, \"created_at\": \"2025-11-03T04:16:12\", \"updated_at\": \"2026-11-02T04:16:12\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-8b9605621c8ce962",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_booking_policies",
+            "arguments": "{\"applies_to\": \"resource_type\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-8b9605621c8ce962",
+      "content": "{\"booking_policies\": [{\"id\": 1, \"name\": \"Meeting Room Standard Policy\", \"description\": \"Allows full-time employees to book meeting rooms up to 4 hours per day\", \"applies_to\": \"resource_type\", \"max_duration_minutes\": 240, \"max_hours_per_day\": 4, \"cancellation_window_minutes\": 60, \"created_at\": \"2025-11-03T04:16:12\", \"updated_at\": \"2026-11-02T04:16:12\"}, {\"id\": 2, \"name\": \"Hot Desk Flexible Policy\", \"description\": \"Hot desks can be booked for up to 8 hours per day with 30 minute cancellation window\", \"applies_to\": \"resource_type\", \"max_duration_minutes\": 480, \"max_hours_per_day\": 8, \"cancellation_window_minutes\": 30, \"created_at\": \"2025-11-03T04:16:12\", \"updated_at\": \"2026-11-02T04:16:12\"}, {\"id\": 3, \"name\": \"Pool Car Field Sales Policy\", \"description\": \"Only field_sales can book pool cars for up to 8 hours with 2 hour cancellation window\", \"applies_to\": \"resource_type\", \"max_duration_minutes\": 480, \"max_hours_per_day\": 8, \"cancellation_window_minutes\": 120, \"created_at\": \"2026-10-04T04:16:12\", \"updated_at\": \"2026-11-02T04:16:12\"}, {\"id\": 4, \"name\": \"Lab Equipment Strict Policy\", \"description\": \"Limits lab equipment bookings to 3 hours and 1 booking per day\", \"applies_to\": \"resource_type\", \"max_duration_minutes\": 180, \"max_hours_per_day\": 3, \"cancellation_window_minutes\": 120, \"created_at\": \"2025-11-03T04:16:12\", \"updated_at\": \"2026-11-02T04:16:12\"}, {\"id\": 5, \"name\": \"Executive Room Policy\", \"description\": \"Executive meeting rooms require exec_team and allow up to 3 hours per day\", \"applies_to\": \"resource_type\", \"max_duration_minutes\": 180, \"max_hours_per_day\": 3, \"cancellation_window_minutes\": 240, \"created_at\": \"2026-10-24T04:16:12\", \"updated_at\": \"2026-11-02T04:16:12\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-984384e96041f84f",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_permissions",
+            "arguments": "{\"code\": \"field_sales\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-984384e96041f84f",
+      "content": "{\"permissions\": [{\"id\": 3, \"code\": \"field_sales\", \"description\": \"Field sales staff who can book pool cars\", \"created_at\": \"2026-04-17T04:16:12\", \"updated_at\": \"2026-10-24T04:16:12\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-b13202cac26ebdbb",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_update_booking_policy",
+            "arguments": "{\"booking_policy_id\": 3, \"cancellation_window_minutes\": 120, \"max_duration_minutes\": 480}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-b13202cac26ebdbb",
+      "content": "{\"booking_policy\": {\"id\": 3, \"name\": \"Pool Car Field Sales Policy\", \"description\": \"Only field_sales can book pool cars for up to 8 hours with 2 hour cancellation window\", \"applies_to\": \"resource_type\", \"max_duration_minutes\": 480, \"max_hours_per_day\": 8, \"cancellation_window_minutes\": 120, \"created_at\": \"2026-10-04T04:16:12\", \"updated_at\": \"2026-11-03T04:16:12.950755\"}}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-9975885db097593f",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_clear_booking_policy_permissions",
+            "arguments": "{\"booking_policy_id\": 3}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9975885db097593f",
+      "content": "{\"deleted_count\": 1}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_auto_checkin_and_cancel_today_for_current_user",
+        "description": "Auto check-in or cancel today\n\nAuto check_in or cancel current user bookings today.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"confirmed_bookings\": [\n    {\n      \"booking_id\": 1\n    }\n  ],\n  \"auto_cancelled_bookings\": [\n    {\n      \"booking_id\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "today_date": {
+              "type": "string",
+              "title": "today_date",
+              "description": "Date (YYYY-MM-DD) considered as today in user's timezone",
+              "example": "2025-01-11"
+            },
+            "grace_period_minutes": {
+              "type": "integer",
+              "title": "grace_period_minutes",
+              "description": "Minutes after start_time allowed for check_in before auto-cancel",
+              "example": 15
+            },
+            "current_time": {
+              "type": "string",
+              "title": "current_time",
+              "description": "Current time in ISO format used for evaluating grace windows",
+              "example": "2025-01-11T12:05:00Z"
+            }
+          },
+          "title": "auto_checkin_and_cancel_today_for_current_userArguments",
+          "required": [
+            "today_date",
+            "grace_period_minutes",
+            "current_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_generate_location_usage_report",
+        "description": "Location usage report\n\nGenerate usage report for a location.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"location_id\": 1,\n  \"start_date\": \"Start Date\",\n  \"end_date\": \"End Date\",\n  \"utilization_by_resource\": [\n    {\n      \"resource_id\": 1,\n      \"resource_name\": \"Resource Name\",\n      \"resource_type_id\": 1,\n      \"date\": \"Date\",\n      \"booked_minutes\": 1,\n      \"total_bookings\": 1,\n      \"no_show_count\": 1\n    }\n  ],\n  \"peak_hours_meeting_rooms\": [\n    {\n      \"hour_local\": \"Hour Local\",\n      \"avg_utilization_percent\": 1.0\n    }\n  ],\n  \"no_show_rates_by_resource_type\": [\n    {\n      \"resource_type_id\": 1,\n      \"resource_type_name\": \"Resource Type Name\",\n      \"total_bookings\": 1,\n      \"no_show_count\": 1,\n      \"no_show_rate_percent\": 1.0\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "type": "integer",
+              "description": "Location ID to report on",
+              "title": "location_id"
+            },
+            "start_date": {
+              "type": "string",
+              "description": "Start date (YYYY-MM-DD) of reporting period",
+              "title": "start_date"
+            },
+            "end_date": {
+              "type": "string",
+              "description": "End date (YYYY-MM-DD) of reporting period",
+              "title": "end_date"
+            },
+            "meeting_hours_start": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Local day start time for peak_hours analysis, format HH:MM",
+              "title": "meeting_hours_start",
+              "type": "string"
+            },
+            "meeting_hours_end": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Local day end time for peak_hours analysis, format HH:MM",
+              "title": "meeting_hours_end",
+              "type": "string"
+            }
+          },
+          "title": "generate_location_usage_reportArguments",
+          "required": [
+            "location_id",
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_permissions",
+        "description": "List permissions\n\nRetrieve all permissions or filter by code.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"permissions\": [\n    {\n      \"id\": 1,\n      \"code\": \"Code\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact permission code to filter by",
+              "title": "code",
+              "type": "string"
+            }
+          },
+          "title": "list_permissionsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_locations",
+        "description": "List locations\n\nGet all office locations or filter by name.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"locations\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact location name to filter by",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "title": "list_locationsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_capabilities",
+        "description": "List capabilities\n\nFetch all capabilities or filter by code.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"capabilities\": [\n    {\n      \"id\": 1,\n      \"code\": \"Code\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact capability code to filter by",
+              "title": "code",
+              "type": "string"
+            }
+          },
+          "title": "list_capabilitiesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_resource_type",
+        "description": "Create resource type\n\nCreate a new resource type.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"resource_type\": {\n    \"id\": 1,\n    \"name\": \"Name\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Unique resource type name",
+              "example": "Executive Meeting Room"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "Description of the resource type",
+              "example": "High-end meeting rooms reserved for executives",
+              "type": "string"
+            },
+            "capacity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "capacity",
+              "description": "Default capacity for this resource type",
+              "example": 12,
+              "type": "integer"
+            },
+            "lead_time_hours": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "lead_time_hours",
+              "description": "Minimum hours in advance bookings must be made",
+              "example": 24,
+              "type": "integer"
+            }
+          },
+          "title": "create_resource_typeArguments",
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_resource_types",
+        "description": "List resource types\n\nRetrieve all resource types or filter by name.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"resource_types\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact resource type name to filter by",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "title": "list_resource_typesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_booking_policies",
+        "description": "List booking policies\n\nRetrieve booking policies with optional filters.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking_policies\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"applies_to\": \"Applies To\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter policies by exact name",
+              "title": "name",
+              "type": "string"
+            },
+            "applies_to": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by scope: 'resource' or 'resource_type'",
+              "title": "applies_to",
+              "type": "string"
+            }
+          },
+          "title": "list_booking_policiesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_resource",
+        "description": "Create resource\n\nCreate a resource like a room, desk, or car.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"resource\": {\n    \"id\": 1,\n    \"resource_type_id\": 1,\n    \"location_id\": 1,\n    \"name\": \"Name\",\n    \"status\": \"Status\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_type_id": {
+              "type": "integer",
+              "title": "resource_type_id",
+              "description": "ID of the resource type",
+              "example": 1
+            },
+            "location_id": {
+              "type": "integer",
+              "title": "location_id",
+              "description": "ID of the location where the resource resides",
+              "example": 2
+            },
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Name of the resource, unique per location",
+              "example": "NYC-12A Conference Room"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Status of the resource: active, inactive, or under_maintenance",
+              "example": "active",
+              "type": "string"
+            },
+            "capacity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "capacity",
+              "description": "Capacity override for this specific resource",
+              "example": 12,
+              "type": "integer"
+            },
+            "booking_policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booking_policy_id",
+              "description": "Booking policy ID applied at the resource level",
+              "example": 4,
+              "type": "integer"
+            }
+          },
+          "title": "create_resourceArguments",
+          "required": [
+            "resource_type_id",
+            "location_id",
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_resources",
+        "description": "List resources\n\nList resources and filter by various attributes.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"resources\": [\n    {\n      \"id\": 1,\n      \"resource_type_id\": 1,\n      \"location_id\": 1,\n      \"name\": \"Name\",\n      \"status\": \"Status\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact resource name",
+              "title": "name",
+              "type": "string"
+            },
+            "resource_type_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by resource type ID",
+              "title": "resource_type_id",
+              "type": "integer"
+            },
+            "location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by location ID",
+              "title": "location_id",
+              "type": "integer"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status: active, inactive, under_maintenance",
+              "title": "status",
+              "type": "string"
+            }
+          },
+          "title": "list_resourcesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_calendar_event",
+        "description": "Create or get calendar event\n\nCreate a calendar_event record using an external ID.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"calendar_event\": {\n    \"id\": 1,\n    \"external_id\": \"External Id\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "external_id": {
+              "type": "string",
+              "title": "external_id",
+              "description": "External calendar event identifier",
+              "example": "cal_evt_78421"
+            },
+            "provider": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "provider",
+              "description": "External calendar provider name",
+              "example": "google_calendar",
+              "type": "string"
+            },
+            "data": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "data",
+              "description": "Optional JSON payload as string with additional event data",
+              "example": "{\"summary\":\"Client site visits in Boston\"}",
+              "type": "string"
+            }
+          },
+          "title": "create_calendar_eventArguments",
+          "required": [
+            "external_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_calendar_event_by_external_id",
+        "description": "Get calendar event by external ID\n\nFetch calendar_event records using an external_id filter.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"calendar_events\": [\n    {\n      \"id\": 1,\n      \"external_id\": \"External Id\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "external_id": {
+              "type": "string",
+              "description": "External calendar event identifier",
+              "title": "external_id"
+            }
+          },
+          "title": "get_calendar_event_by_external_idArguments",
+          "required": [
+            "external_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_access_control_integrations",
+        "description": "List access control integrations\n\nRetrieve available access control integrations.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"access_control_integrations\": [\n    {\n      \"id\": 1,\n      \"code\": \"Code\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by integration code",
+              "title": "code",
+              "type": "string"
+            }
+          },
+          "title": "list_access_control_integrationsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_booking",
+        "description": "Create booking\n\nCreate a one-time booking for current user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking\": {\n    \"id\": 1,\n    \"resource_id\": 1,\n    \"user_id\": 1,\n    \"start_time\": \"2023-01-01T00:00:00Z\",\n    \"end_time\": \"2023-01-01T00:00:00Z\",\n    \"status\": \"Status\",\n    \"cancellation_policy_violation\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_id": {
+              "type": "integer",
+              "title": "resource_id",
+              "description": "Resource to book",
+              "example": 10
+            },
+            "start_time": {
+              "type": "string",
+              "title": "start_time",
+              "description": "Booking start time in ISO format (UTC)",
+              "example": "2025-01-11T14:00:00Z"
+            },
+            "end_time": {
+              "type": "string",
+              "title": "end_time",
+              "description": "Booking end time in ISO format (UTC)",
+              "example": "2025-01-11T15:30:00Z"
+            },
+            "purpose": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "purpose",
+              "description": "Purpose or title of the booking",
+              "example": "Client pitch rehearsal",
+              "type": "string"
+            },
+            "participant_count": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "participant_count",
+              "description": "Number of expected participants",
+              "example": 6,
+              "type": "integer"
+            },
+            "booking_policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booking_policy_id",
+              "description": "Policy applied; if omitted, backend may infer from resource",
+              "example": 4,
+              "type": "integer"
+            },
+            "calendar_event_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "calendar_event_id",
+              "description": "Calendar event ID to link, if already created",
+              "example": 12,
+              "type": "integer"
+            }
+          },
+          "title": "create_bookingArguments",
+          "required": [
+            "resource_id",
+            "start_time",
+            "end_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_bookings",
+        "description": "List bookings\n\nList bookings filtered by resource, date range, status, or current user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"bookings\": [\n    {\n      \"id\": 1,\n      \"resource_id\": 1,\n      \"user_id\": 1,\n      \"start_time\": \"2023-01-01T00:00:00Z\",\n      \"end_time\": \"2023-01-01T00:00:00Z\",\n      \"status\": \"Status\",\n      \"cancellation_policy_violation\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by resource ID",
+              "title": "resource_id",
+              "type": "integer"
+            },
+            "start_time_from": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter bookings starting on or after this ISO datetime",
+              "title": "start_time_from",
+              "type": "string"
+            },
+            "start_time_to": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter bookings starting on or before this ISO datetime",
+              "title": "start_time_to",
+              "type": "string"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by booking status",
+              "title": "status",
+              "type": "string"
+            },
+            "only_current_user": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, only bookings for user_id=1 are returned",
+              "default": false,
+              "title": "only_current_user",
+              "type": "boolean"
+            }
+          },
+          "title": "list_bookingsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_recurring_series",
+        "description": "Create weekly recurring series\n\nCreate a booking_recurring_series for current user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking_recurring_series\": {\n    \"id\": 1,\n    \"resource_id\": 1,\n    \"user_id\": 1,\n    \"start_date\": \"2023-01-01T00:00:00Z\",\n    \"end_date\": \"2023-01-01T00:00:00Z\",\n    \"start_time_local\": \"Start Time Local\",\n    \"end_time_local\": \"End Time Local\",\n    \"recurrence_pattern\": \"Recurrence Pattern\",\n    \"byweekday_mask\": 1\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_id": {
+              "type": "integer",
+              "title": "resource_id",
+              "description": "Resource ID to reserve repeatedly",
+              "example": 30
+            },
+            "start_date": {
+              "type": "string",
+              "title": "start_date",
+              "description": "Start date (YYYY-MM-DD) of recurrence",
+              "example": "2025-01-13"
+            },
+            "end_date": {
+              "type": "string",
+              "title": "end_date",
+              "description": "End date (YYYY-MM-DD) of recurrence",
+              "example": "2025-02-07"
+            },
+            "start_time_local": {
+              "type": "string",
+              "title": "start_time_local",
+              "description": "Local start time (HH:MM) for each occurrence",
+              "example": "09:00"
+            },
+            "end_time_local": {
+              "type": "string",
+              "title": "end_time_local",
+              "description": "Local end time (HH:MM) for each occurrence",
+              "example": "13:00"
+            },
+            "timezone": {
+              "type": "string",
+              "title": "timezone",
+              "description": "IANA timezone matching resource location",
+              "example": "America/Los_Angeles"
+            },
+            "recurrence_pattern": {
+              "type": "string",
+              "title": "recurrence_pattern",
+              "description": "Recurrence pattern, currently only 'weekly' allowed",
+              "example": "weekly"
+            },
+            "byweekday_mask": {
+              "type": "integer",
+              "title": "byweekday_mask",
+              "description": "Bitmask for weekdays",
+              "example": 21
+            },
+            "purpose": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "purpose",
+              "description": "Purpose for the recurring series",
+              "example": "Onsite engineering work",
+              "type": "string"
+            },
+            "participant_count": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "participant_count",
+              "description": "Expected participant count per occurrence",
+              "example": 1,
+              "type": "integer"
+            },
+            "booking_policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booking_policy_id",
+              "description": "Booking policy ID to apply to series",
+              "example": 5,
+              "type": "integer"
+            }
+          },
+          "title": "create_recurring_seriesArguments",
+          "required": [
+            "resource_id",
+            "start_date",
+            "end_date",
+            "start_time_local",
+            "end_time_local",
+            "timezone",
+            "recurrence_pattern",
+            "byweekday_mask"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_booking_checkin",
+        "description": "Create booking check-in\n\nRecord a check-in for current user on a booking.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking_checkin\": {\n    \"id\": 1,\n    \"booking_id\": 1,\n    \"user_id\": 1,\n    \"check_in_time\": \"2023-01-01T00:00:00Z\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "integer",
+              "title": "booking_id",
+              "description": "Booking ID to check into",
+              "example": 200
+            },
+            "check_in_time": {
+              "type": "string",
+              "title": "check_in_time",
+              "description": "Check-in time in ISO format",
+              "example": "2025-01-11T14:02:00Z"
+            },
+            "check_in_method": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "check_in_method",
+              "description": "Method of check-in such as kiosk, mobile, or auto",
+              "example": "auto",
+              "type": "string"
+            }
+          },
+          "title": "create_booking_checkinArguments",
+          "required": [
+            "booking_id",
+            "check_in_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_auto_cancel_conflicting_bookings_for_resource",
+        "description": "Cancel conflicting bookings\n\nCancel bookings violating max_duration or overlapping.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"cancelled_bookings\": [\n    {\n      \"booking_id\": 1,\n      \"reason\": \"Reason\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_id": {
+              "type": "integer",
+              "description": "Resource ID to validate bookings for",
+              "title": "resource_id"
+            },
+            "start_time_from": {
+              "type": "string",
+              "title": "start_time_from",
+              "description": "Start of window for evaluating bookings",
+              "example": "2025-01-13T00:00:00Z"
+            },
+            "start_time_to": {
+              "type": "string",
+              "title": "start_time_to",
+              "description": "End of window for evaluating bookings",
+              "example": "2025-01-19T23:59:59Z"
+            }
+          },
+          "title": "auto_cancel_conflicting_bookings_for_resourceArguments",
+          "required": [
+            "resource_id",
+            "start_time_from",
+            "start_time_to"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_cancel_bookings_for_resource_in_window_with_reason",
+        "description": "Cancel bookings in window\n\nCancel resource bookings in a time window with reason.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"cancelled_booking_ids\": [\n    1\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_id": {
+              "type": "integer",
+              "description": "Resource ID whose bookings should be cancelled",
+              "title": "resource_id"
+            },
+            "start_time": {
+              "type": "string",
+              "title": "start_time",
+              "description": "Start of cancellation window",
+              "example": "2025-01-12T00:00:00Z"
+            },
+            "end_time": {
+              "type": "string",
+              "title": "end_time",
+              "description": "End of cancellation window",
+              "example": "2025-01-15T00:00:00Z"
+            },
+            "cancellation_reason": {
+              "type": "string",
+              "title": "cancellation_reason",
+              "description": "Reason applied to all cancelled bookings",
+              "example": "Room under maintenance"
+            },
+            "current_time": {
+              "type": "string",
+              "title": "current_time",
+              "description": "Timestamp used as cancelled_at value",
+              "example": "2025-01-11T09:00:00Z"
+            },
+            "mark_policy_violation": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "mark_policy_violation",
+              "description": "If true, set cancellation_policy_violation=true",
+              "default": false,
+              "example": false,
+              "type": "boolean"
+            }
+          },
+          "title": "cancel_bookings_for_resource_in_window_with_reasonArguments",
+          "required": [
+            "resource_id",
+            "start_time",
+            "end_time",
+            "cancellation_reason",
+            "current_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_resource_type_permission",
+        "description": "Attach permission to resource type\n\nAdd a permission requirement to a resource type.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"resource_type_permission\": {\n    \"id\": 1,\n    \"resource_type_id\": 1,\n    \"permission_id\": 1\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_type_id": {
+              "type": "integer",
+              "description": "Target resource type ID",
+              "title": "resource_type_id"
+            },
+            "permission_id": {
+              "type": "integer",
+              "title": "permission_id",
+              "description": "Permission ID to link to this resource type",
+              "example": 7
+            }
+          },
+          "title": "add_resource_type_permissionArguments",
+          "required": [
+            "resource_type_id",
+            "permission_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_resource_type_capability",
+        "description": "Attach capability to resource type\n\nEnable a capability by default for a resource type.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"resource_type_capability\": {\n    \"id\": 1,\n    \"resource_type_id\": 1,\n    \"capability_id\": 1,\n    \"enabled_by_default\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_type_id": {
+              "type": "integer",
+              "description": "Target resource type ID",
+              "title": "resource_type_id"
+            },
+            "capability_id": {
+              "type": "integer",
+              "title": "capability_id",
+              "description": "Capability ID to link",
+              "example": 1
+            },
+            "enabled_by_default": {
+              "type": "boolean",
+              "title": "enabled_by_default",
+              "description": "Whether capability is enabled by default for new resources",
+              "example": true
+            }
+          },
+          "title": "add_resource_type_capabilityArguments",
+          "required": [
+            "resource_type_id",
+            "capability_id",
+            "enabled_by_default"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_clear_booking_policy_permissions",
+        "description": "Clear booking policy permissions\n\nRemove all permission requirements from a booking policy.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"deleted_count\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_policy_id": {
+              "type": "integer",
+              "description": "Booking policy ID whose permissions will be cleared",
+              "title": "booking_policy_id"
+            }
+          },
+          "title": "clear_booking_policy_permissionsArguments",
+          "required": [
+            "booking_policy_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_booking_policy_permission",
+        "description": "Attach permission to booking policy\n\nAdd a permission requirement to a booking policy.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking_policy_permission\": {\n    \"id\": 1,\n    \"booking_policy_id\": 1,\n    \"permission_id\": 1\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_policy_id": {
+              "type": "integer",
+              "description": "Target booking policy ID",
+              "title": "booking_policy_id"
+            },
+            "permission_id": {
+              "type": "integer",
+              "title": "permission_id",
+              "description": "Permission ID to attach to this policy",
+              "example": 9
+            }
+          },
+          "title": "add_booking_policy_permissionArguments",
+          "required": [
+            "booking_policy_id",
+            "permission_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_resource_capability",
+        "description": "Attach capability to resource\n\nEnable a specific capability for a resource.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"resource_capability\": {\n    \"id\": 1,\n    \"resource_id\": 1,\n    \"capability_id\": 1,\n    \"enabled\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_id": {
+              "type": "integer",
+              "description": "Resource ID to attach the capability",
+              "title": "resource_id"
+            },
+            "capability_id": {
+              "type": "integer",
+              "title": "capability_id",
+              "description": "Capability ID to attach",
+              "example": 1
+            },
+            "enabled": {
+              "type": "boolean",
+              "title": "enabled",
+              "description": "Whether the capability is enabled for this resource",
+              "example": true
+            }
+          },
+          "title": "add_resource_capabilityArguments",
+          "required": [
+            "resource_id",
+            "capability_id",
+            "enabled"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_resource_status_override",
+        "description": "Create resource status override\n\nTemporarily change a resource status over a time window.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"resource_status_override\": {\n    \"id\": 1,\n    \"resource_id\": 1,\n    \"status\": \"Status\",\n    \"start_time\": \"2023-01-01T00:00:00Z\",\n    \"end_time\": \"2023-01-01T00:00:00Z\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_id": {
+              "type": "integer",
+              "description": "Resource to override status for",
+              "title": "resource_id"
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Override status: active, inactive, or under_maintenance",
+              "example": "under_maintenance"
+            },
+            "start_time": {
+              "type": "string",
+              "title": "start_time",
+              "description": "ISO datetime when override starts",
+              "example": "2025-01-12T00:00:00Z"
+            },
+            "end_time": {
+              "type": "string",
+              "title": "end_time",
+              "description": "ISO datetime when override ends",
+              "example": "2025-01-15T00:00:00Z"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reason",
+              "description": "Reason for status override",
+              "example": "Room under maintenance",
+              "type": "string"
+            }
+          },
+          "title": "create_resource_status_overrideArguments",
+          "required": [
+            "resource_id",
+            "status",
+            "start_time",
+            "end_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_booking_access_control",
+        "description": "Attach access control to booking\n\nCreate a booking_access_controls record for a booking.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking_access_control\": {\n    \"id\": 1,\n    \"booking_id\": 1,\n    \"access_integration_id\": 1\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "integer",
+              "description": "Booking ID to attach access control",
+              "title": "booking_id"
+            },
+            "access_integration_id": {
+              "type": "integer",
+              "title": "access_integration_id",
+              "description": "Access control integration ID",
+              "example": 3
+            },
+            "access_scope": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "access_scope",
+              "description": "Scope of access granted by this integration",
+              "example": "parking_garage",
+              "type": "string"
+            },
+            "config_override": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "config_override",
+              "description": "JSON string with per-booking configuration override",
+              "example": "{\"access_start_offset\":-15,\"access_end_offset\":15}",
+              "type": "string"
+            }
+          },
+          "title": "add_booking_access_controlArguments",
+          "required": [
+            "booking_id",
+            "access_integration_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_recurrence_exception",
+        "description": "Create recurrence exception\n\nAdd an exception date to skip an occurrence in a recurring series.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking_recurrence_exception\": {\n    \"id\": 1,\n    \"series_id\": 1,\n    \"exception_date\": \"2023-01-01T00:00:00Z\",\n    \"action\": \"Action\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "series_id": {
+              "type": "integer",
+              "description": "Recurring series ID to add exception to",
+              "title": "series_id"
+            },
+            "exception_date": {
+              "type": "string",
+              "title": "exception_date",
+              "description": "Date (YYYY-MM-DD) of the occurrence to affect",
+              "example": "2025-01-22"
+            },
+            "action": {
+              "type": "string",
+              "title": "action",
+              "description": "Action for this date, currently only 'skip'",
+              "example": "skip"
+            }
+          },
+          "title": "create_recurrence_exceptionArguments",
+          "required": [
+            "series_id",
+            "exception_date",
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_booking_policy",
+        "description": "Update booking policy\n\nPartially update a booking policy.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking_policy\": {\n    \"id\": 1,\n    \"name\": \"Name\",\n    \"applies_to\": \"Applies To\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_policy_id": {
+              "type": "integer",
+              "description": "Booking policy ID to update",
+              "title": "booking_policy_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "New name for the policy",
+              "example": "Field sales car booking 8h",
+              "type": "string"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "Updated description",
+              "example": "Only field sales can book pool cars up to 8 hours",
+              "type": "string"
+            },
+            "max_duration_minutes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "max_duration_minutes",
+              "description": "Maximum booking length in minutes",
+              "example": 480,
+              "type": "integer"
+            },
+            "max_hours_per_day": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "max_hours_per_day",
+              "description": "Maximum hours per day per user",
+              "example": 8,
+              "type": "integer"
+            },
+            "cancellation_window_minutes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "cancellation_window_minutes",
+              "description": "Minutes before start time required to cancel",
+              "example": 120,
+              "type": "integer"
+            }
+          },
+          "title": "update_booking_policyArguments",
+          "required": [
+            "booking_policy_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_resource",
+        "description": "Update resource\n\nPartially update a resource.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"resource\": {\n    \"id\": 1,\n    \"resource_type_id\": 1,\n    \"location_id\": 1,\n    \"name\": \"Name\",\n    \"status\": \"Status\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "resource_id": {
+              "type": "integer",
+              "description": "Resource ID to update",
+              "title": "resource_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New resource status: active, inactive, or under_maintenance",
+              "example": "under_maintenance",
+              "type": "string"
+            },
+            "capacity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "capacity",
+              "description": "Updated capacity for this resource",
+              "example": 12,
+              "type": "integer"
+            },
+            "booking_policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booking_policy_id",
+              "description": "New booking policy ID",
+              "example": 4,
+              "type": "integer"
+            }
+          },
+          "title": "update_resourceArguments",
+          "required": [
+            "resource_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_booking",
+        "description": "Update booking\n\nPartially update a booking.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking\": {\n    \"id\": 1,\n    \"resource_id\": 1,\n    \"user_id\": 1,\n    \"start_time\": \"2023-01-01T00:00:00Z\",\n    \"end_time\": \"2023-01-01T00:00:00Z\",\n    \"status\": \"Status\",\n    \"cancellation_policy_violation\": true\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "integer",
+              "description": "Booking ID to update",
+              "title": "booking_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New status: pending, confirmed, cancelled, or no_show",
+              "example": "confirmed",
+              "type": "string"
+            },
+            "cancellation_reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "cancellation_reason",
+              "description": "Reason for cancellation, if status is cancelled",
+              "example": "Room under maintenance",
+              "type": "string"
+            },
+            "cancelled_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "cancelled_at",
+              "description": "Cancellation timestamp if cancelling",
+              "example": "2025-01-11T08:00:00Z",
+              "type": "string"
+            },
+            "cancellation_policy_violation": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "cancellation_policy_violation",
+              "description": "Set true if cancellation violates policy",
+              "example": true,
+              "type": "boolean"
+            },
+            "calendar_event_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "calendar_event_id",
+              "description": "Calendar event ID to link to this booking",
+              "example": 12,
+              "type": "integer"
+            }
+          },
+          "title": "update_bookingArguments",
+          "required": [
+            "booking_id"
+          ]
+        }
+      }
+    }
+  ],
+  "temperature": 0,
+  "seed": 42,
+  "max_tokens": 8192,
+  "stop_token_ids": [
+    1,
+    50,
+    106
+  ],
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  }
+}
