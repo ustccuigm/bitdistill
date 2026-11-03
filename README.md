@@ -50,3 +50,7 @@ The homepage now includes six recorded videos for BestBuy tasks 47 and 52, compa
 ## November benchmark video refresh
 
 The homepage now shows one WhatsApp poll task with three slowed portrait recordings: the original step-7 student success, a new BF16 success, and a new prior-QAD failure. Click markers use executed pixel coordinates; every step receives a 2/2/3-second before/action/after presentation. Execution-time labels are independent of video playback duration. Student timing is an artifact-timestamp reconstruction and is explicitly marked approximate. Full repeat outcomes, starting-checkpoint differences, screenshot differences, and timing limitations are in demos/benchmark-20261103/audit.json. Previous demonstration files and standalone URLs are preserved.
+
+## Four task measured demo refresh
+
+The homepage has WhatsApp, Google News, Slack, and WPS task tabs, each with BF16, SteerDistill, and prior QAD recordings. Displayed times are measured for the shown episodes, not averages. These are post-hoc selected examples from multiple runtime rounds; all tested outcomes and settings are retained in demos/benchmark-fast-20261103/audit.json and recorded-evidence.zip. No prompt edits or teacher guidance were used. The QAD model starts from a different base and training budget. Old assets remain available.
