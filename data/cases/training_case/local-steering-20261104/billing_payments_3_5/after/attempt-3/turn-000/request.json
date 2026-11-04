@@ -1,0 +1,3026 @@
+{
+  "model": "case-model",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool.\n\nLocal steering for this response only:\n{\n  \"precondition\": \"The product 'API Usage Add-on' has been identified with ID 2.\",\n  \"decision_rule\": \"When creating a metered pricing plan where the unit price is specified 'per X units', the 'billing_unit_quantity' parameter must be set to X to ensure the price is applied correctly to the correct volume of usage.\",\n  \"expected_transition\": \"The agent should call 'mcp_server_create_pricing_plan' with 'billing_unit_quantity' set to 1000, 'unit_price' set to 0.02, and 'usage_type' set to 'metered'.\",\n  \"recovery_check\": \"Verify that the created pricing plan has a 'billing_unit_quantity' of 1000 and a 'unit_price' of 0.02.\"\n}"
+    },
+    {
+      "role": "user",
+      "content": "Define a metered pricing_plan for product 'API Usage Add-on' with billing_interval 'month', unit_price 0.02 USD per 1,000 API calls, usage_type 'metered', and no trial_period_days, then create it via the API."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-bebda2487be4ca47",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_products",
+            "arguments": "{\"name\": \"API Usage Add-on\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-bebda2487be4ca47",
+      "content": "{\"items\": [{\"id\": 2, \"name\": \"API Usage Add-on\", \"category\": \"Add-on\", \"tax_code\": \"API_METERED\", \"revenue_code\": \"4010\", \"deferred_revenue_code\": \"2506\", \"active\": true, \"created_at\": \"2026-10-09T12:53:31\", \"updated_at\": \"2026-11-02T12:53:31\"}], \"total\": 1}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_preview_invoice_for_subscription",
+        "description": "Preview an upcoming invoice for a subscription\n\nCompute invoice totals for a subscription without persisting.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"subscription_id\": 1,\n  \"line_items\": [\n    {\n      \"description\": \"Description\",\n      \"quantity\": 1.0,\n      \"unit_price\": 1.0,\n      \"amount\": 1.0,\n      \"line_type\": \"Line Type\"\n    }\n  ],\n  \"subtotal\": 1.0,\n  \"discount_total\": 1.0,\n  \"tax_total\": 1.0,\n  \"total\": 1.0\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subscription_id": {
+              "type": "integer",
+              "title": "subscription_id",
+              "description": "Subscription ID to preview invoice for",
+              "example": 6
+            },
+            "period_start": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "period_start",
+              "description": "Billing period start date for preview",
+              "example": "2025-01-01",
+              "type": "string"
+            },
+            "period_end": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "period_end",
+              "description": "Billing period end date for preview",
+              "example": "2025-02-01",
+              "type": "string"
+            }
+          },
+          "title": "preview_invoice_for_subscriptionArguments",
+          "required": [
+            "subscription_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_product",
+        "description": "Create a new product\n\nCreate a product in a category with tax and accounting codes.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"category\": \"Category\",\n  \"active\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Product name, must be unique",
+              "example": "Pro Analytics Suite"
+            },
+            "category": {
+              "type": "string",
+              "title": "category",
+              "description": "Product category label",
+              "example": "SaaS"
+            },
+            "tax_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "tax_code",
+              "description": "External tax code identifier",
+              "example": "SaaS_DIGITAL_SERVICES",
+              "type": "string"
+            },
+            "revenue_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "revenue_code",
+              "description": "GL code for revenue recognition",
+              "example": "4001",
+              "type": "string"
+            },
+            "deferred_revenue_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "deferred_revenue_code",
+              "description": "GL code for deferred revenue",
+              "example": "2505",
+              "type": "string"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active",
+              "description": "Whether the product is active and sellable",
+              "default": true,
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_productArguments",
+          "required": [
+            "name",
+            "category"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_products",
+        "description": "List products with optional filters\n\nRetrieve products filtered by category, name, or active flag.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"category\": \"Category\",\n      \"active\": true\n    }\n  ],\n  \"total\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter products by category",
+              "title": "category",
+              "type": "string"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "active",
+              "type": "boolean"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive substring match on product name",
+              "title": "name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number of records to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_productsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_pricing_plan",
+        "description": "Create a new pricing plan\n\nCreate a pricing plan for a product with billing properties.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"product_id\": 1,\n  \"billing_interval\": \"Billing Interval\",\n  \"currency\": \"Currency\",\n  \"unit_price\": 1.0,\n  \"billing_unit_quantity\": 1,\n  \"setup_fee\": 1.0,\n  \"usage_type\": \"Usage Type\",\n  \"active\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "product_id": {
+              "type": "integer",
+              "title": "product_id",
+              "description": "Associated product ID from products table",
+              "example": 1
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "Human readable plan name",
+              "example": "Pro Analytics Suite Monthly",
+              "type": "string"
+            },
+            "billing_interval": {
+              "type": "string",
+              "title": "billing_interval",
+              "description": "Billing interval: day, week, month, or year",
+              "example": "month"
+            },
+            "currency": {
+              "type": "string",
+              "title": "currency",
+              "description": "ISO currency code for unit_price and setup_fee",
+              "example": "USD"
+            },
+            "unit_price": {
+              "type": "number",
+              "title": "unit_price",
+              "description": "Price per billing_unit_quantity",
+              "example": 79.0
+            },
+            "billing_unit_quantity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_unit_quantity",
+              "description": "Unit quantity for billing",
+              "default": 1,
+              "example": 1000,
+              "type": "integer"
+            },
+            "trial_period_days": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "trial_period_days",
+              "description": "Number of trial days before billing starts",
+              "example": 14,
+              "type": "integer"
+            },
+            "setup_fee": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "setup_fee",
+              "description": "One-time setup fee charged on first invoice",
+              "default": 0.0,
+              "example": 99.0,
+              "type": "number"
+            },
+            "usage_type": {
+              "type": "string",
+              "title": "usage_type",
+              "description": "flat for recurring fixed price, metered for usage-based",
+              "example": "flat"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active",
+              "description": "Whether this plan is active and subscribable",
+              "default": true,
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_pricing_planArguments",
+          "required": [
+            "product_id",
+            "billing_interval",
+            "currency",
+            "unit_price",
+            "usage_type"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_pricing_plans",
+        "description": "List pricing plans\n\nRetrieve pricing plans optionally filtered by product or status.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"product_id\": 1,\n      \"billing_interval\": \"Billing Interval\",\n      \"currency\": \"Currency\",\n      \"unit_price\": 1.0,\n      \"billing_unit_quantity\": 1,\n      \"setup_fee\": 1.0,\n      \"usage_type\": \"Usage Type\",\n      \"active\": true\n    }\n  ],\n  \"total\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "product_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter plans for a specific product",
+              "title": "product_id",
+              "type": "integer"
+            },
+            "usage_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by usage_type",
+              "title": "usage_type",
+              "type": "string"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "active",
+              "type": "boolean"
+            },
+            "billing_interval": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by billing interval",
+              "title": "billing_interval",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number of records to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_pricing_plansArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_customer",
+        "description": "Create a new customer\n\nCreate a customer for the implicit current user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"email\": \"Email\",\n  \"currency\": \"Currency\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "title": "email",
+              "description": "Unique email for the customer",
+              "example": "jane.startup@example.com"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "Customer full name",
+              "example": "Jane Startup",
+              "type": "string"
+            },
+            "currency": {
+              "type": "string",
+              "title": "currency",
+              "description": "Billing currency for the customer",
+              "example": "USD"
+            },
+            "locale": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "locale",
+              "description": "Customer locale for communications",
+              "example": "en-US",
+              "type": "string"
+            },
+            "billing_address_line1": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_address_line1",
+              "description": "Address line 1",
+              "example": "123 Startup Ave",
+              "type": "string"
+            },
+            "billing_address_line2": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_address_line2",
+              "description": "Address line 2",
+              "example": "Suite 500",
+              "type": "string"
+            },
+            "billing_city": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_city",
+              "description": "Billing city",
+              "example": "New York",
+              "type": "string"
+            },
+            "billing_state": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_state",
+              "description": "State or region",
+              "example": "NY",
+              "type": "string"
+            },
+            "billing_postal_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_postal_code",
+              "description": "Postal or ZIP code",
+              "example": "10001",
+              "type": "string"
+            },
+            "billing_country": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_country",
+              "description": "Billing country in ISO code",
+              "example": "US",
+              "type": "string"
+            }
+          },
+          "title": "create_customerArguments",
+          "required": [
+            "email",
+            "currency"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_customers",
+        "description": "List customers for current user\n\nRetrieve customers owned by the current user filtered by email or name.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"email\": \"Email\",\n      \"currency\": \"Currency\"\n    }\n  ],\n  \"total\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact email",
+              "title": "email",
+              "type": "string"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by case-insensitive substring on name",
+              "title": "name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number of records to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_customersArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_coupon",
+        "description": "Create a new coupon\n\nCreate a discount coupon with fixed or percentage type.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"code\": \"Code\",\n  \"name\": \"Name\",\n  \"discount_type\": \"Discount Type\",\n  \"duration\": \"Duration\",\n  \"active\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "title": "code",
+              "description": "Unique coupon code used on subscriptions or invoices",
+              "example": "Q1_NEW_CUSTOMER"
+            },
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Human readable name",
+              "example": "Q1 New Customer Promo"
+            },
+            "discount_type": {
+              "type": "string",
+              "title": "discount_type",
+              "description": "Type of discount: percentage or fixed",
+              "example": "fixed"
+            },
+            "percentage_off": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "percentage_off",
+              "description": "Percentage discount value when discount_type=percentage",
+              "example": 20.0,
+              "type": "number"
+            },
+            "amount_off": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "amount_off",
+              "description": "Fixed discount amount when discount_type=fixed",
+              "example": 50.0,
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "currency",
+              "description": "Currency for amount_off discounts",
+              "example": "USD",
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "title": "duration",
+              "description": "Duration of coupon: once, repeating, or forever",
+              "example": "once"
+            },
+            "duration_in_months": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "duration_in_months",
+              "description": "Number of months for repeating duration",
+              "example": 3,
+              "type": "integer"
+            },
+            "max_redemptions": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "max_redemptions",
+              "description": "Total number of allowed redemptions",
+              "example": 500,
+              "type": "integer"
+            },
+            "max_redemptions_per_customer": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "max_redemptions_per_customer",
+              "description": "Maximum times a single customer can redeem",
+              "example": 1,
+              "type": "integer"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active",
+              "description": "Whether the coupon is currently active",
+              "default": true,
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_couponArguments",
+          "required": [
+            "code",
+            "name",
+            "discount_type",
+            "duration"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_coupons",
+        "description": "List coupons\n\nRetrieve coupons filtered by code, active, or discount_type.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"code\": \"Code\",\n      \"name\": \"Name\",\n      \"discount_type\": \"Discount Type\",\n      \"duration\": \"Duration\",\n      \"active\": true\n    }\n  ],\n  \"total\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact coupon code",
+              "title": "code",
+              "type": "string"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "active",
+              "type": "boolean"
+            },
+            "discount_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by discount type",
+              "title": "discount_type",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_couponsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_attach_coupon_to_product",
+        "description": "Restrict coupon to specific products\n\nAttach a coupon to a product to limit applicability.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"coupon_id\": 1,\n  \"product_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "coupon_id": {
+              "type": "integer",
+              "title": "coupon_id",
+              "description": "Coupon ID to attach",
+              "example": 1
+            },
+            "product_id": {
+              "type": "integer",
+              "title": "product_id",
+              "description": "Product ID that coupon applies to",
+              "example": 1
+            }
+          },
+          "title": "attach_coupon_to_productArguments",
+          "required": [
+            "coupon_id",
+            "product_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_subscription",
+        "description": "Create a subscription\n\nCreate a subscription for a customer on a pricing plan.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"customer_id\": 1,\n  \"pricing_plan_id\": 1,\n  \"status\": \"Status\",\n  \"quantity\": 1,\n  \"start_date\": \"2023-01-01\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "integer",
+              "title": "customer_id",
+              "description": "Customer ID to subscribe",
+              "example": 1
+            },
+            "pricing_plan_id": {
+              "type": "integer",
+              "title": "pricing_plan_id",
+              "description": "Pricing plan ID for subscription",
+              "example": 1
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Initial status: trialing or active",
+              "example": "active"
+            },
+            "quantity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "quantity",
+              "description": "Number of units for subscription",
+              "default": 1,
+              "example": 10,
+              "type": "integer"
+            },
+            "start_date": {
+              "type": "string",
+              "format": "date",
+              "title": "start_date",
+              "description": "Subscription start date",
+              "example": "2025-01-01"
+            },
+            "current_period_start": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "current_period_start",
+              "description": "Current period start date",
+              "example": "2025-01-01",
+              "type": "string"
+            },
+            "current_period_end": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "current_period_end",
+              "description": "Current period end date",
+              "example": "2025-02-01",
+              "type": "string"
+            },
+            "cancel_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "cancel_at",
+              "description": "Date when subscription will be canceled automatically",
+              "type": "string"
+            },
+            "coupon_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "coupon_id",
+              "description": "Coupon ID to apply to subscription",
+              "example": 2,
+              "type": "integer"
+            }
+          },
+          "title": "create_subscriptionArguments",
+          "required": [
+            "customer_id",
+            "pricing_plan_id",
+            "status",
+            "start_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_subscriptions",
+        "description": "List subscriptions for current user's customers\n\nRetrieve subscriptions filtered by customer, plan, or status.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"customer_id\": 1,\n      \"pricing_plan_id\": 1,\n      \"status\": \"Status\",\n      \"quantity\": 1,\n      \"start_date\": \"2023-01-01\"\n    }\n  ],\n  \"total\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by customer ID",
+              "title": "customer_id",
+              "type": "integer"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by subscription status",
+              "title": "status",
+              "type": "string"
+            },
+            "pricing_plan_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by pricing plan",
+              "title": "pricing_plan_id",
+              "type": "integer"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_subscriptionsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_subscription_coupon",
+        "description": "Record coupon redemption on subscription\n\nInsert a record linking a subscription and coupon.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"subscription_id\": 1,\n  \"coupon_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subscription_id": {
+              "type": "integer",
+              "title": "subscription_id",
+              "description": "Subscription ID receiving coupon",
+              "example": 5
+            },
+            "coupon_id": {
+              "type": "integer",
+              "title": "coupon_id",
+              "description": "Coupon ID applied",
+              "example": 2
+            }
+          },
+          "title": "create_subscription_couponArguments",
+          "required": [
+            "subscription_id",
+            "coupon_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_coupon_redemption",
+        "description": "Create coupon redemption record\n\nLog a coupon redemption by customer on subscription or invoice.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"coupon_id\": 1,\n  \"customer_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "coupon_id": {
+              "type": "integer",
+              "title": "coupon_id",
+              "description": "Coupon ID being redeemed",
+              "example": 2
+            },
+            "customer_id": {
+              "type": "integer",
+              "title": "customer_id",
+              "description": "Customer ID redeeming the coupon",
+              "example": 1
+            },
+            "subscription_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "subscription_id",
+              "description": "Subscription ID if redemption is on a subscription",
+              "example": 5,
+              "type": "integer"
+            },
+            "invoice_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "invoice_id",
+              "description": "Invoice ID if redemption is on an invoice",
+              "type": "integer"
+            }
+          },
+          "title": "create_coupon_redemptionArguments",
+          "required": [
+            "coupon_id",
+            "customer_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_invoice",
+        "description": "Create an invoice\n\nCreate an invoice record for a customer.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"customer_id\": 1,\n  \"status\": \"Status\",\n  \"currency\": \"Currency\",\n  \"subtotal\": 1.0,\n  \"discount_total\": 1.0,\n  \"tax_total\": 1.0,\n  \"total\": 1.0\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "integer",
+              "title": "customer_id",
+              "description": "Customer ID being invoiced",
+              "example": 1
+            },
+            "subscription_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "subscription_id",
+              "description": "Subscription ID if invoice is for a subscription",
+              "example": 5,
+              "type": "integer"
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Invoice status",
+              "example": "draft"
+            },
+            "currency": {
+              "type": "string",
+              "title": "currency",
+              "description": "Invoice currency",
+              "example": "USD"
+            },
+            "due_date": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "due_date",
+              "description": "Due date for payment",
+              "example": "2025-02-05",
+              "type": "string"
+            },
+            "period_start": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "period_start",
+              "description": "Billing period start date for the invoice",
+              "example": "2025-01-01",
+              "type": "string"
+            },
+            "period_end": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "period_end",
+              "description": "Billing period end date for the invoice",
+              "example": "2025-02-01",
+              "type": "string"
+            }
+          },
+          "title": "create_invoiceArguments",
+          "required": [
+            "customer_id",
+            "status",
+            "currency"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_payment",
+        "description": "Create a payment attempt\n\nRecord a payment attempt for an invoice.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"invoice_id\": 1,\n  \"customer_id\": 1,\n  \"amount\": 1.0,\n  \"currency\": \"Currency\",\n  \"status\": \"Status\",\n  \"attempt_number\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "invoice_id": {
+              "type": "integer",
+              "title": "invoice_id",
+              "description": "Invoice ID for the payment",
+              "example": 100
+            },
+            "customer_id": {
+              "type": "integer",
+              "title": "customer_id",
+              "description": "Customer ID that is paying",
+              "example": 1
+            },
+            "payment_method_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "payment_method_id",
+              "description": "Payment method ID used if any",
+              "example": 10,
+              "type": "integer"
+            },
+            "amount": {
+              "type": "number",
+              "title": "amount",
+              "description": "Payment amount attempted",
+              "example": 855.2
+            },
+            "currency": {
+              "type": "string",
+              "title": "currency",
+              "description": "Currency of payment",
+              "example": "USD"
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Payment status: pending, succeeded, failed",
+              "example": "pending"
+            },
+            "attempt_number": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "attempt_number",
+              "description": "Sequential attempt number for this invoice",
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            },
+            "error_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "error_code",
+              "description": "Provider error code when failed",
+              "example": "card_declined",
+              "type": "string"
+            },
+            "error_message": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "error_message",
+              "description": "Human readable error from provider",
+              "example": "Your card was declined.",
+              "type": "string"
+            }
+          },
+          "title": "create_paymentArguments",
+          "required": [
+            "invoice_id",
+            "customer_id",
+            "amount",
+            "currency",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_dunning_policies",
+        "description": "List dunning policies\n\nRetrieve all configured dunning policies.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"applies_to\": \"Applies To\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "title": "list_dunning_policiesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_dunning_policy",
+        "description": "Create a dunning policy\n\nCreate a policy describing how to handle failed payments.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"applies_to\": \"Applies To\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Policy name",
+              "example": "Default All Merchants Policy"
+            },
+            "applies_to": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "applies_to",
+              "description": "Policy scope, e.g. 'all'",
+              "default": "all",
+              "example": "all",
+              "type": "string"
+            }
+          },
+          "title": "create_dunning_policyArguments",
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_webhook_endpoint",
+        "description": "Register a webhook endpoint\n\nCreate a webhook_endpoints record with URL and description.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"url\": \"Url\",\n  \"enabled\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "title": "url",
+              "description": "Public URL for webhook receiver",
+              "example": "https://billing-backend.example.com/webhooks/subflow"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "Human readable description of endpoint",
+              "example": "SubFlow Billing Manager events endpoint",
+              "type": "string"
+            },
+            "enabled": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "enabled",
+              "description": "Whether endpoint is active",
+              "default": true,
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_webhook_endpointArguments",
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_webhook_event",
+        "description": "Create a webhook event\n\nInsert a webhook_events record for a resource event.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"event_type\": \"Event Type\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "event_type": {
+              "type": "string",
+              "title": "event_type",
+              "description": "Event type such as invoice_paid or payment_failed",
+              "example": "invoice_paid"
+            },
+            "resource_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "resource_type",
+              "description": "Type of resource referenced by this event",
+              "example": "invoice",
+              "type": "string"
+            },
+            "resource_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "resource_id",
+              "description": "ID of the resource associated with event",
+              "example": 100,
+              "type": "integer"
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "payload",
+              "description": "Arbitrary JSON payload to send to endpoints",
+              "example": {
+                "invoice_id": 100,
+                "status": "paid"
+              },
+              "type": "object"
+            }
+          },
+          "title": "create_webhook_eventArguments",
+          "required": [
+            "event_type"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_webhook_event_delivery",
+        "description": "Create a webhook event delivery\n\nCreate a webhook_event_deliveries record tying event to endpoint.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"webhook_event_id\": 1,\n  \"endpoint_id\": 1,\n  \"status\": \"Status\",\n  \"attempt_number\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "webhook_event_id": {
+              "type": "integer",
+              "title": "webhook_event_id",
+              "description": "ID of webhook event to deliver",
+              "example": 10
+            },
+            "endpoint_id": {
+              "type": "integer",
+              "title": "endpoint_id",
+              "description": "ID of endpoint to deliver to",
+              "example": 1
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Delivery status: pending, delivered, failed",
+              "example": "pending"
+            },
+            "response_status_code": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "response_status_code",
+              "description": "HTTP response status code from endpoint",
+              "type": "integer"
+            },
+            "response_body": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "response_body",
+              "description": "Response text from endpoint",
+              "type": "string"
+            },
+            "attempt_number": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "attempt_number",
+              "description": "Attempt count for this delivery",
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "create_webhook_event_deliveryArguments",
+          "required": [
+            "webhook_event_id",
+            "endpoint_id",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_customer_by_email",
+        "description": "Get a customer by email\n\nFetch a single customer belonging to current user using email.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"email\": \"Email\",\n  \"currency\": \"Currency\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "description": "Customer email to lookup",
+              "title": "email"
+            }
+          },
+          "title": "get_customer_by_emailArguments",
+          "required": [
+            "email"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_customer_tax_id",
+        "description": "Add a tax ID to a customer\n\nAttach a tax ID to an existing customer for tax calculations.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"customer_id\": 1,\n  \"tax_type\": \"Tax Type\",\n  \"tax_id\": \"Tax Id\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "integer",
+              "description": "Customer ID to attach the tax ID to",
+              "title": "customer_id"
+            },
+            "tax_type": {
+              "type": "string",
+              "title": "tax_type",
+              "description": "Type of tax ID, for example 'eu_vat'",
+              "example": "eu_vat"
+            },
+            "tax_id": {
+              "type": "string",
+              "title": "tax_id",
+              "description": "Tax ID value",
+              "example": "EU123456789"
+            },
+            "country": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "country",
+              "description": "Country associated with the tax ID",
+              "example": "EU",
+              "type": "string"
+            }
+          },
+          "title": "add_customer_tax_idArguments",
+          "required": [
+            "customer_id",
+            "tax_type",
+            "tax_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_customer_tax_ids",
+        "description": "List tax IDs for a customer\n\nRetrieve all tax IDs attached to a given customer.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"customer_id\": 1,\n      \"tax_type\": \"Tax Type\",\n      \"tax_id\": \"Tax Id\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "integer",
+              "description": "Customer ID to list tax IDs for",
+              "title": "customer_id"
+            }
+          },
+          "title": "list_customer_tax_idsArguments",
+          "required": [
+            "customer_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_payment_method",
+        "description": "Add a payment method to a customer\n\nCreate and attach a payment method token to a customer.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"customer_id\": 1,\n  \"provider\": \"Provider\",\n  \"token\": \"Token\",\n  \"default_flag\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "integer",
+              "description": "Customer ID to attach the payment method to",
+              "title": "customer_id"
+            },
+            "provider": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "provider",
+              "description": "Payment method provider, default 'card'",
+              "default": "card",
+              "example": "card",
+              "type": "string"
+            },
+            "token": {
+              "type": "string",
+              "title": "token",
+              "description": "Opaque token from payment gateway",
+              "example": "pm_tok_123"
+            },
+            "card_brand": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "card_brand",
+              "description": "Card brand if provider is card",
+              "example": "visa",
+              "type": "string"
+            },
+            "card_last4": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "card_last4",
+              "description": "Last 4 digits of card number",
+              "example": "4242",
+              "type": "string"
+            },
+            "card_exp_month": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "card_exp_month",
+              "description": "Expiration month number",
+              "example": 12,
+              "type": "integer"
+            },
+            "card_exp_year": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "card_exp_year",
+              "description": "Expiration year number",
+              "example": 2028,
+              "type": "integer"
+            },
+            "default_flag": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "default_flag",
+              "description": "Set true to mark as default for the customer",
+              "default": false,
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_payment_methodArguments",
+          "required": [
+            "customer_id",
+            "token"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_payment_methods",
+        "description": "List payment methods for a customer\n\nRetrieve all payment methods belonging to a customer.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"customer_id\": 1,\n      \"provider\": \"Provider\",\n      \"token\": \"Token\",\n      \"default_flag\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "integer",
+              "description": "Customer ID to list payment methods for",
+              "title": "customer_id"
+            }
+          },
+          "title": "list_payment_methodsArguments",
+          "required": [
+            "customer_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_set_default_payment_method",
+        "description": "Set customer's default payment method\n\nUpdate customer's default payment method and flags.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"customer_id\": 1,\n  \"default_payment_method_id\": 1,\n  \"updated_payment_methods\": [\n    {\n      \"id\": 1,\n      \"default_flag\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "integer",
+              "description": "Customer ID whose default payment method is updated",
+              "title": "customer_id"
+            },
+            "payment_method_id": {
+              "type": "integer",
+              "title": "payment_method_id",
+              "description": "Payment method ID to set as default",
+              "example": 10
+            }
+          },
+          "title": "set_default_payment_methodArguments",
+          "required": [
+            "customer_id",
+            "payment_method_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_coupon_by_code",
+        "description": "Get coupon by code\n\nFetch a coupon by its unique code.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"code\": \"Code\",\n  \"name\": \"Name\",\n  \"discount_type\": \"Discount Type\",\n  \"duration\": \"Duration\",\n  \"active\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "Coupon code to lookup",
+              "title": "code"
+            }
+          },
+          "title": "get_coupon_by_codeArguments",
+          "required": [
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_subscription_usage_record",
+        "description": "Record usage for a subscription\n\nRecord metered usage quantity for a subscription.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"subscription_id\": 1,\n  \"quantity\": 1.0,\n  \"recorded_at\": \"2023-01-01T00:00:00Z\",\n  \"billing_period_start\": \"2023-01-01\",\n  \"billing_period_end\": \"2023-01-01\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subscription_id": {
+              "type": "integer",
+              "description": "Subscription ID for usage",
+              "title": "subscription_id"
+            },
+            "quantity": {
+              "type": "number",
+              "title": "quantity",
+              "description": "Usage quantity to record",
+              "example": 125000.0
+            },
+            "recorded_at": {
+              "type": "string",
+              "format": "date-time",
+              "title": "recorded_at",
+              "description": "Timestamp when usage occurred or was measured",
+              "example": "2025-01-15T10:00:00Z"
+            },
+            "billing_period_start": {
+              "type": "string",
+              "format": "date",
+              "title": "billing_period_start",
+              "description": "Start date of billing period",
+              "example": "2025-01-01"
+            },
+            "billing_period_end": {
+              "type": "string",
+              "format": "date",
+              "title": "billing_period_end",
+              "description": "End date of billing period",
+              "example": "2025-02-01"
+            }
+          },
+          "title": "create_subscription_usage_recordArguments",
+          "required": [
+            "subscription_id",
+            "quantity",
+            "recorded_at",
+            "billing_period_start",
+            "billing_period_end"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_subscription_usage_records",
+        "description": "List usage records for a subscription\n\nRetrieve usage records for a subscription and period range.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"subscription_id\": 1,\n      \"quantity\": 1.0,\n      \"recorded_at\": \"2023-01-01T00:00:00Z\",\n      \"billing_period_start\": \"2023-01-01\",\n      \"billing_period_end\": \"2023-01-01\"\n    }\n  ],\n  \"total_quantity\": 1.0\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subscription_id": {
+              "type": "integer",
+              "description": "Subscription ID",
+              "title": "subscription_id"
+            },
+            "billing_period_start": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter billed from this start date",
+              "title": "billing_period_start",
+              "type": "string"
+            },
+            "billing_period_end": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter billed until this end date",
+              "title": "billing_period_end",
+              "type": "string"
+            }
+          },
+          "title": "list_subscription_usage_recordsArguments",
+          "required": [
+            "subscription_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_invoice_line_items",
+        "description": "List line items for an invoice\n\nRetrieve all invoice_line_items for an invoice.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"invoice_id\": 1,\n      \"description\": \"Description\",\n      \"quantity\": 1.0,\n      \"unit_price\": 1.0,\n      \"amount\": 1.0,\n      \"line_type\": \"Line Type\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "invoice_id": {
+              "type": "integer",
+              "description": "Invoice ID to fetch line items for",
+              "title": "invoice_id"
+            }
+          },
+          "title": "list_invoice_line_itemsArguments",
+          "required": [
+            "invoice_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_invoice_line_item",
+        "description": "Add a line item to an invoice\n\nCreate an invoice_line_items record for charges.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"invoice_id\": 1,\n  \"description\": \"Description\",\n  \"quantity\": 1.0,\n  \"unit_price\": 1.0,\n  \"amount\": 1.0,\n  \"line_type\": \"Line Type\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "invoice_id": {
+              "type": "integer",
+              "description": "Invoice ID",
+              "title": "invoice_id"
+            },
+            "subscription_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "subscription_id",
+              "description": "Subscription ID if this line relates to a subscription",
+              "example": 5,
+              "type": "integer"
+            },
+            "pricing_plan_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "pricing_plan_id",
+              "description": "Pricing plan ID if relevant",
+              "example": 1,
+              "type": "integer"
+            },
+            "description": {
+              "type": "string",
+              "title": "description",
+              "description": "Human readable description for invoice line",
+              "example": "API Usage Add-on 125,000 calls"
+            },
+            "quantity": {
+              "type": "number",
+              "title": "quantity",
+              "description": "Billed quantity",
+              "example": 125.0
+            },
+            "unit_price": {
+              "type": "number",
+              "title": "unit_price",
+              "description": "Price per quantity unit",
+              "example": 0.02
+            },
+            "amount": {
+              "type": "number",
+              "title": "amount",
+              "description": "Total amount for this line",
+              "example": 2.5
+            },
+            "line_type": {
+              "type": "string",
+              "title": "line_type",
+              "description": "Line type: recurring, setup_fee, usage, discount, adjustment",
+              "example": "usage"
+            }
+          },
+          "title": "create_invoice_line_itemArguments",
+          "required": [
+            "invoice_id",
+            "description",
+            "quantity",
+            "unit_price",
+            "amount",
+            "line_type"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_dunning_policy_step",
+        "description": "Add a step to a dunning policy\n\nCreate a dunning_policy_steps record with retry and email actions.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"policy_id\": 1,\n  \"step_order\": 1,\n  \"days_after_failure\": 1,\n  \"action_retry_charge\": true,\n  \"action_send_email\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "policy_id": {
+              "type": "integer",
+              "description": "Dunning policy ID",
+              "title": "policy_id"
+            },
+            "step_order": {
+              "type": "integer",
+              "title": "step_order",
+              "description": "Ordering of this step within the policy",
+              "example": 1
+            },
+            "days_after_failure": {
+              "type": "integer",
+              "title": "days_after_failure",
+              "description": "Days after initial payment failure to perform this step",
+              "example": 1
+            },
+            "action_retry_charge": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "action_retry_charge",
+              "description": "Whether to retry the charge at this step",
+              "default": true,
+              "example": true,
+              "type": "boolean"
+            },
+            "action_send_email": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "action_send_email",
+              "description": "Whether to send a failure email notification at this step",
+              "default": true,
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_dunning_policy_stepArguments",
+          "required": [
+            "policy_id",
+            "step_order",
+            "days_after_failure"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_dunning_policy_steps",
+        "description": "List steps for a dunning policy\n\nRetrieve all steps for a dunning policy.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"policy_id\": 1,\n      \"step_order\": 1,\n      \"days_after_failure\": 1,\n      \"action_retry_charge\": true,\n      \"action_send_email\": true\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "policy_id": {
+              "type": "integer",
+              "description": "Dunning policy ID",
+              "title": "policy_id"
+            }
+          },
+          "title": "list_dunning_policy_stepsArguments",
+          "required": [
+            "policy_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_dunning_policy_outcome",
+        "description": "Add a final outcome to a dunning policy\n\nCreate a dunning_policy_outcomes record to define final actions.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"policy_id\": 1,\n  \"outcome\": \"Outcome\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "policy_id": {
+              "type": "integer",
+              "description": "Dunning policy ID",
+              "title": "policy_id"
+            },
+            "outcome": {
+              "type": "string",
+              "title": "outcome",
+              "description": "Outcome action",
+              "example": "cancel_subscription"
+            }
+          },
+          "title": "create_dunning_policy_outcomeArguments",
+          "required": [
+            "policy_id",
+            "outcome"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_dunning_policy_outcomes",
+        "description": "List outcomes for a dunning policy\n\nRetrieve all final outcomes for a policy.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"policy_id\": 1,\n      \"outcome\": \"Outcome\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "policy_id": {
+              "type": "integer",
+              "description": "Dunning policy ID",
+              "title": "policy_id"
+            }
+          },
+          "title": "list_dunning_policy_outcomesArguments",
+          "required": [
+            "policy_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_webhook_endpoint_event_type",
+        "description": "Subscribe endpoint to event type\n\nAssociate a webhook endpoint with an event type.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"endpoint_id\": 1,\n  \"event_type\": \"Event Type\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "endpoint_id": {
+              "type": "integer",
+              "description": "Webhook endpoint ID",
+              "title": "endpoint_id"
+            },
+            "event_type": {
+              "type": "string",
+              "title": "event_type",
+              "description": "Event type to subscribe to",
+              "example": "invoice_paid"
+            }
+          },
+          "title": "add_webhook_endpoint_event_typeArguments",
+          "required": [
+            "endpoint_id",
+            "event_type"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_trigger_test_invoice_paid_webhook",
+        "description": "Trigger test invoice_paid webhook event\n\nCreate invoice_paid webhook_events and deliveries for a paid invoice.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"webhook_event_id\": 1,\n  \"deliveries\": [\n    {\n      \"id\": 1,\n      \"endpoint_id\": 1,\n      \"status\": \"Status\",\n      \"attempt_number\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "invoice_id": {
+              "type": "integer",
+              "description": "Existing paid invoice ID to use as example",
+              "title": "invoice_id"
+            }
+          },
+          "title": "trigger_test_invoice_paid_webhookArguments",
+          "required": [
+            "invoice_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_product",
+        "description": "Get a single product by ID\n\nFetch a specific product by its ID.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"category\": \"Category\",\n  \"active\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "product_id": {
+              "type": "integer",
+              "description": "Product primary key",
+              "title": "product_id"
+            }
+          },
+          "title": "get_productArguments",
+          "required": [
+            "product_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_product",
+        "description": "Update an existing product\n\nUpdate mutable product fields like name, tax_code, or active.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"category\": \"Category\",\n  \"active\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "product_id": {
+              "type": "integer",
+              "description": "Product primary key to update",
+              "title": "product_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "New product name",
+              "example": "Pro Analytics Suite Plus",
+              "type": "string"
+            },
+            "tax_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "tax_code",
+              "description": "Updated tax code",
+              "example": "SaaS_DIGITAL_SERVICES",
+              "type": "string"
+            },
+            "revenue_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "revenue_code",
+              "description": "Updated revenue GL code",
+              "example": "4002",
+              "type": "string"
+            },
+            "deferred_revenue_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "deferred_revenue_code",
+              "description": "Updated deferred revenue GL code",
+              "example": "2506",
+              "type": "string"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active",
+              "description": "Set false to deactivate product",
+              "example": false,
+              "type": "boolean"
+            }
+          },
+          "title": "update_productArguments",
+          "required": [
+            "product_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_pricing_plan",
+        "description": "Get a pricing plan by ID\n\nFetch a specific pricing plan by ID.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"product_id\": 1,\n  \"billing_interval\": \"Billing Interval\",\n  \"currency\": \"Currency\",\n  \"unit_price\": 1.0,\n  \"billing_unit_quantity\": 1,\n  \"setup_fee\": 1.0,\n  \"usage_type\": \"Usage Type\",\n  \"active\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pricing_plan_id": {
+              "type": "integer",
+              "description": "Pricing plan ID",
+              "title": "pricing_plan_id"
+            }
+          },
+          "title": "get_pricing_planArguments",
+          "required": [
+            "pricing_plan_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_pricing_plan",
+        "description": "Update a pricing plan\n\nUpdate mutable pricing plan fields like name or pricing details.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"product_id\": 1,\n  \"billing_interval\": \"Billing Interval\",\n  \"currency\": \"Currency\",\n  \"unit_price\": 1.0,\n  \"billing_unit_quantity\": 1,\n  \"setup_fee\": 1.0,\n  \"usage_type\": \"Usage Type\",\n  \"active\": true\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pricing_plan_id": {
+              "type": "integer",
+              "description": "Pricing plan ID to update",
+              "title": "pricing_plan_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "New plan name",
+              "example": "API Usage Add-on Metered",
+              "type": "string"
+            },
+            "unit_price": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "unit_price",
+              "description": "Updated unit price",
+              "example": 0.025,
+              "type": "number"
+            },
+            "billing_unit_quantity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_unit_quantity",
+              "description": "Updated unit quantity",
+              "example": 1000,
+              "type": "integer"
+            },
+            "trial_period_days": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "trial_period_days",
+              "description": "Updated trial period days",
+              "example": 0,
+              "type": "integer"
+            },
+            "setup_fee": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "setup_fee",
+              "description": "Updated setup fee",
+              "example": 49.0,
+              "type": "number"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active",
+              "description": "Updated active/inactive flag",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "update_pricing_planArguments",
+          "required": [
+            "pricing_plan_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_customer",
+        "description": "Get a customer by ID\n\nFetch a specific customer owned by current user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"email\": \"Email\",\n  \"currency\": \"Currency\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "integer",
+              "description": "Customer ID",
+              "title": "customer_id"
+            }
+          },
+          "title": "get_customerArguments",
+          "required": [
+            "customer_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_customer",
+        "description": "Update a customer\n\nUpdate customer details like name, locale, or billing address.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"email\": \"Email\",\n  \"currency\": \"Currency\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {
+              "type": "integer",
+              "description": "Customer ID to update",
+              "title": "customer_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "Updated customer name",
+              "example": "Jane S. Founder",
+              "type": "string"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "currency",
+              "description": "Updated billing currency",
+              "example": "USD",
+              "type": "string"
+            },
+            "locale": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "locale",
+              "description": "Updated locale",
+              "example": "en-GB",
+              "type": "string"
+            },
+            "billing_address_line1": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_address_line1",
+              "description": "Updated address line 1",
+              "example": "456 Scaleup Blvd",
+              "type": "string"
+            },
+            "billing_address_line2": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_address_line2",
+              "description": "Updated address line 2",
+              "example": "Floor 8",
+              "type": "string"
+            },
+            "billing_city": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_city",
+              "description": "Updated city",
+              "example": "Brooklyn",
+              "type": "string"
+            },
+            "billing_state": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_state",
+              "description": "Updated state",
+              "example": "NY",
+              "type": "string"
+            },
+            "billing_postal_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_postal_code",
+              "description": "Updated postal code",
+              "example": "11201",
+              "type": "string"
+            },
+            "billing_country": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "billing_country",
+              "description": "Updated country",
+              "example": "US",
+              "type": "string"
+            }
+          },
+          "title": "update_customerArguments",
+          "required": [
+            "customer_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_subscription",
+        "description": "Get a subscription by ID\n\nFetch a subscription for a customer owned by current user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"customer_id\": 1,\n  \"pricing_plan_id\": 1,\n  \"status\": \"Status\",\n  \"quantity\": 1,\n  \"start_date\": \"2023-01-01\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subscription_id": {
+              "type": "integer",
+              "description": "Subscription ID",
+              "title": "subscription_id"
+            }
+          },
+          "title": "get_subscriptionArguments",
+          "required": [
+            "subscription_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_subscription",
+        "description": "Update a subscription\n\nUpdate subscription status, quantity, coupon_id, or cancel_at.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"customer_id\": 1,\n  \"pricing_plan_id\": 1,\n  \"status\": \"Status\",\n  \"quantity\": 1,\n  \"start_date\": \"2023-01-01\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subscription_id": {
+              "type": "integer",
+              "description": "Subscription ID",
+              "title": "subscription_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New status",
+              "example": "canceled",
+              "type": "string"
+            },
+            "quantity": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "quantity",
+              "description": "Updated quantity",
+              "example": 15,
+              "type": "integer"
+            },
+            "cancel_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "cancel_at",
+              "description": "Date to schedule cancellation",
+              "example": "2025-03-01",
+              "type": "string"
+            },
+            "coupon_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "coupon_id",
+              "description": "Coupon ID to apply or remove",
+              "example": 2,
+              "type": "integer"
+            }
+          },
+          "title": "update_subscriptionArguments",
+          "required": [
+            "subscription_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_invoice",
+        "description": "Get an invoice by ID\n\nFetch a single invoice for a customer owned by the current user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"customer_id\": 1,\n  \"status\": \"Status\",\n  \"currency\": \"Currency\",\n  \"subtotal\": 1.0,\n  \"discount_total\": 1.0,\n  \"tax_total\": 1.0,\n  \"total\": 1.0\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "invoice_id": {
+              "type": "integer",
+              "description": "Invoice ID",
+              "title": "invoice_id"
+            }
+          },
+          "title": "get_invoiceArguments",
+          "required": [
+            "invoice_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_invoice",
+        "description": "Update invoice totals and status\n\nUpdate invoice monetary totals and status.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"customer_id\": 1,\n  \"status\": \"Status\",\n  \"currency\": \"Currency\",\n  \"subtotal\": 1.0,\n  \"discount_total\": 1.0,\n  \"tax_total\": 1.0,\n  \"total\": 1.0\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "invoice_id": {
+              "type": "integer",
+              "description": "Invoice ID to update",
+              "title": "invoice_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Updated status for invoice",
+              "example": "open",
+              "type": "string"
+            },
+            "subtotal": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "subtotal",
+              "description": "Updated subtotal amount",
+              "example": 890.0,
+              "type": "number"
+            },
+            "discount_total": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "discount_total",
+              "description": "Updated discount total",
+              "example": 178.0,
+              "type": "number"
+            },
+            "tax_total": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "tax_total",
+              "description": "Updated tax total",
+              "example": 143.2,
+              "type": "number"
+            },
+            "total": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "total",
+              "description": "Updated final total",
+              "example": 855.2,
+              "type": "number"
+            }
+          },
+          "title": "update_invoiceArguments",
+          "required": [
+            "invoice_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_payment",
+        "description": "Update payment status and error details\n\nUpdate payment status, error fields, and attempt_number.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"invoice_id\": 1,\n  \"customer_id\": 1,\n  \"amount\": 1.0,\n  \"currency\": \"Currency\",\n  \"status\": \"Status\",\n  \"attempt_number\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "payment_id": {
+              "type": "integer",
+              "description": "Payment ID to update",
+              "title": "payment_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New payment status",
+              "example": "failed",
+              "type": "string"
+            },
+            "attempt_number": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "attempt_number",
+              "description": "Updated attempt number",
+              "example": 2,
+              "type": "integer"
+            },
+            "error_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "error_code",
+              "description": "Error code if failure occurs",
+              "example": "card_declined",
+              "type": "string"
+            },
+            "error_message": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "error_message",
+              "description": "Detailed error message",
+              "example": "Insufficient funds.",
+              "type": "string"
+            }
+          },
+          "title": "update_paymentArguments",
+          "required": [
+            "payment_id"
+          ]
+        }
+      }
+    }
+  ],
+  "temperature": 0.0,
+  "seed": 42,
+  "max_tokens": 8192,
+  "stop_token_ids": [
+    1,
+    50,
+    106
+  ],
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  }
+}

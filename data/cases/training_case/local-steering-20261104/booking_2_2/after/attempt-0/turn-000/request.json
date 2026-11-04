@@ -1,0 +1,2841 @@
+{
+  "model": "case-model",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool.\n\nLocal steering for this response only:\n{\n  \"precondition\": \"The assistant has already created the trip (ID 8) and added both flight segments (SFO-SEA and SEA-SFO).\",\n  \"decision_rule\": \"The assistant should call 'mcp_server_add_hotel_booking' with the specified parameters (city: 'Seattle', check_in_date: '2025-02-10', check_out_date: '2025-02-12', hotel_name: 'Downtown Seattle Hotel', nightly_rate: 210, property_type: 'mid-range', trip_id: 8) to complete the hotel booking requirement.\",\n  \"expected_transition\": \"The tool 'mcp_server_add_hotel_booking' is called successfully, returning a hotel booking ID, and the assistant provides a final confirmation of the completed trip.\",\n  \"recovery_check\": \"If the hotel booking fails or the rate exceeds 220 USD, the assistant must select a different property or notify the user of the constraint violation.\"\n}"
+    },
+    {
+      "role": "user",
+      "content": "Create a new trip in draft status for traveler 'Maria Gonzalez' with purpose 'Client meeting at Seattle HQ' and cost center 'SALES-NW', including a flight segment from 'SFO' to 'SEA' on '2025-02-10' departing after 8:00 and returning from 'SEA' to 'SFO' on '2025-02-12' after 17:00 in Economy, plus a hotel booking in downtown Seattle from '2025-02-10' to '2025-02-12' at a mid-range property under 220 USD per night."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-abd8406a3534a58f",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_search_travelers",
+            "arguments": "{\"first_name\": \"Maria\", \"last_name\": \"Gonzalez\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-abd8406a3534a58f",
+      "content": "{\"travelers\": [{\"id\": 1, \"company_id\": 1, \"first_name\": \"Maria\", \"last_name\": \"Gonzalez\", \"email\": \"maria.gonzalez@acmeanalytics.com\", \"user_id\": 2, \"department_id\": 1, \"status\": \"active\", \"created_at\": \"2026-08-05T05:46:47\", \"updated_at\": \"2026-11-02T05:46:47\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-b75cd0669b6bec60",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_create_trip",
+            "arguments": "{\"company_id\": 1, \"cost_center\": \"SALES-NW\", \"primary_traveler_id\": 1, \"purpose\": \"Client meeting at Seattle HQ\", \"status\": \"draft\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-b75cd0669b6bec60",
+      "content": "{\"id\": 8, \"trip_code\": \"TRIP-8\", \"company_id\": 1, \"primary_traveler_id\": 1, \"department_id\": null, \"cost_center\": \"SALES-NW\", \"purpose\": \"Client meeting at Seattle HQ\", \"status\": \"draft\", \"policy_id\": null, \"start_date\": null, \"end_date\": null, \"total_air_cost\": 0.0, \"total_hotel_cost\": 0.0, \"total_other_cost\": 0.0, \"total_cost\": 0.0, \"has_policy_violations\": false, \"external_export_status\": null, \"created_by_user_id\": 1, \"updated_by_user_id\": 1, \"created_at\": \"2026-11-03T06:07:41.047935\", \"updated_at\": \"2026-11-03T06:07:41.047935\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-88f8fc1b6619897e",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_add_flight_segment",
+            "arguments": "{\"cabin_class\": \"Economy\", \"departure_date\": \"2025-02-10\", \"departure_time_from\": \"08:00:00\", \"from_airport\": \"SFO\", \"trip_id\": 8, \"to_airport\": \"SEA\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-88f8fc1b6619897e",
+      "content": "{\"id\": 13, \"trip_id\": 8, \"from_airport\": \"SFO\", \"to_airport\": \"SEA\", \"departure_date\": \"2025-02-10\", \"departure_time_from\": \"08:00:00\", \"departure_time_to\": null, \"return_segment\": false, \"cabin_class\": \"Economy\", \"booked_fare\": null, \"currency\": \"USD\", \"booking_status\": \"planned\", \"carrier_code\": null, \"flight_number\": null, \"policy_compliant\": true, \"policy_violation_reason\": null, \"created_at\": \"2026-11-03T06:07:48.120589\", \"updated_at\": \"2026-11-03T06:07:48.120589\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-9ab534acc67bbae6",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_add_flight_segment",
+            "arguments": "{\"cabin_class\": \"Economy\", \"departure_date\": \"2025-02-12\", \"departure_time_from\": \"17:00:00\", \"from_airport\": \"SEA\", \"to_airport\": \"SFO\", \"return_segment\": true, \"trip_id\": 8}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9ab534acc67bbae6",
+      "content": "{\"id\": 14, \"trip_id\": 8, \"from_airport\": \"SEA\", \"to_airport\": \"SFO\", \"departure_date\": \"2025-02-12\", \"departure_time_from\": \"17:00:00\", \"departure_time_to\": null, \"return_segment\": true, \"cabin_class\": \"Economy\", \"booked_fare\": null, \"currency\": \"USD\", \"booking_status\": \"planned\", \"carrier_code\": null, \"flight_number\": null, \"policy_compliant\": true, \"policy_violation_reason\": null, \"created_at\": \"2026-11-03T06:07:56.935367\", \"updated_at\": \"2026-11-03T06:07:56.935367\"}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_current_user",
+        "description": "Get current authenticated user profile\n\nRetrieve the profile for the current authenticated user (user_id=1)\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"username\": \"Username\",\n  \"email\": \"Email\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "title": "get_current_userArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_my_pending_approval_steps",
+        "description": "List pending approval steps for current user\n\nRetrieve approval steps assigned to the current user with pending status\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"approval_steps\": [\n    {\n      \"id\": 1,\n      \"approval_request_id\": 1,\n      \"trip_id\": 1,\n      \"sequence\": 1,\n      \"status\": \"Status\",\n      \"assigned_to_user_id\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "title": "list_my_pending_approval_stepsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_traveler_expense_summary",
+        "description": "Get expense summary for traveler trips over date range\n\nCompute air and hotel spend for a traveler grouped by cost center\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"traveler_id\": 1,\n  \"start_date\": \"Start Date\",\n  \"end_date\": \"End Date\",\n  \"cost_centers\": [\n    {\n      \"total_air_spend\": 1.0,\n      \"total_hotel_spend\": 1.0,\n      \"total_other_spend\": 1.0,\n      \"has_policy_violations\": true,\n      \"trip_ids\": [\n        1\n      ]\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "traveler_id": {
+              "type": "integer",
+              "description": "Traveler id to aggregate expenses for",
+              "title": "traveler_id"
+            },
+            "start_date": {
+              "type": "string",
+              "description": "Include trips with start_date on or after this date",
+              "title": "start_date"
+            },
+            "end_date": {
+              "type": "string",
+              "description": "Include trips with start_date on or before this date",
+              "title": "end_date"
+            }
+          },
+          "title": "get_traveler_expense_summaryArguments",
+          "required": [
+            "traveler_id",
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_companies",
+        "description": "List companies with optional name filter\n\nRetrieve companies with optional exact or partial name filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"companies\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter companies by exact name match",
+              "title": "name",
+              "type": "string"
+            },
+            "name_contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter companies where name contains this value (case-insensitive)",
+              "title": "name_contains",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of companies to return",
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of companies to skip",
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_companiesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_company",
+        "description": "Create a new company\n\nCreate a company record for a new corporate customer\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Company name (must be unique)",
+              "example": "Acme Analytics"
+            },
+            "external_ref": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "external_ref",
+              "description": "External reference identifier used in other systems",
+              "example": "ACME-ERP-01",
+              "type": "string"
+            }
+          },
+          "title": "create_companyArguments",
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_departments",
+        "description": "List departments for a company\n\nRetrieve departments for a given company with optional name filter\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"departments\": [\n    {\n      \"id\": 1,\n      \"company_id\": 1,\n      \"name\": \"Name\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "integer",
+              "description": "Company primary key to filter departments",
+              "title": "company_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact department name within the company",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "title": "list_departmentsArguments",
+          "required": [
+            "company_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_roles",
+        "description": "List available roles\n\nRetrieve known roles such as Team Lead or Finance Manager\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"roles\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter roles by exact name",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "title": "list_rolesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_traveler",
+        "description": "Create a new traveler\n\nCreate a traveler record for an employee in a company\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"company_id\": 1,\n  \"first_name\": \"First Name\",\n  \"last_name\": \"Last Name\",\n  \"status\": \"Status\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "integer",
+              "title": "company_id",
+              "description": "Company primary key for this traveler",
+              "example": 1
+            },
+            "first_name": {
+              "type": "string",
+              "title": "first_name",
+              "description": "Traveler first name",
+              "example": "Maria"
+            },
+            "last_name": {
+              "type": "string",
+              "title": "last_name",
+              "description": "Traveler last name",
+              "example": "Gonzalez"
+            },
+            "email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "email",
+              "description": "Traveler email address",
+              "example": "maria.gonzalez@acme-analytics.com",
+              "type": "string"
+            },
+            "user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "user_id",
+              "description": "Optional linked users.id if traveler has a user account",
+              "example": 5,
+              "type": "integer"
+            },
+            "department_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "department_id",
+              "description": "Optional department this traveler belongs to",
+              "example": 10,
+              "type": "integer"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Traveler status, e.g., active or inactive",
+              "example": "active",
+              "type": "string"
+            }
+          },
+          "title": "create_travelerArguments",
+          "required": [
+            "company_id",
+            "first_name",
+            "last_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_search_travelers",
+        "description": "Search travelers by name, email, or company\n\nFind travelers for a company using name or email filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"travelers\": [\n    {\n      \"id\": 1,\n      \"company_id\": 1,\n      \"first_name\": \"First Name\",\n      \"last_name\": \"Last Name\",\n      \"status\": \"Status\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by company primary key",
+              "title": "company_id",
+              "type": "integer"
+            },
+            "first_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact first name",
+              "title": "first_name",
+              "type": "string"
+            },
+            "last_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact last name",
+              "title": "last_name",
+              "type": "string"
+            },
+            "email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by email address",
+              "title": "email",
+              "type": "string"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by traveler status",
+              "title": "status",
+              "type": "string"
+            }
+          },
+          "title": "search_travelersArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_hotel_brands",
+        "description": "List hotel brands with optional filter\n\nRetrieve hotel brands with optional name filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"hotel_brands\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter hotel brands by exact name",
+              "title": "name",
+              "type": "string"
+            },
+            "name_contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter where brand name contains this value",
+              "title": "name_contains",
+              "type": "string"
+            }
+          },
+          "title": "list_hotel_brandsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_hotel_brand",
+        "description": "Create a hotel brand\n\nCreate a hotel brand record like Marriott or Hilton\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Hotel brand name (must be unique)",
+              "example": "Marriott"
+            }
+          },
+          "title": "create_hotel_brandArguments",
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_travel_policy",
+        "description": "Create a travel policy for a company\n\nCreate a travel policy such as fare limits and cabin rules\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"company_id\": 1,\n  \"name\": \"Name\",\n  \"applies_to_scope\": \"Applies To Scope\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "integer",
+              "title": "company_id",
+              "description": "Company primary key that owns this policy",
+              "example": 1
+            },
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Policy name unique within company",
+              "example": "US Domestic Standard"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "High-level description of the policy",
+              "example": "Standard domestic travel policy for US-based travel",
+              "type": "string"
+            },
+            "applies_to_scope": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "applies_to_scope",
+              "description": "Scope for policy such as company or department",
+              "example": "company",
+              "type": "string"
+            }
+          },
+          "title": "create_travel_policyArguments",
+          "required": [
+            "company_id",
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_approval_policy_chain",
+        "description": "Create an approval policy chain\n\nCreate an approval chain record for a company\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"company_id\": 1,\n  \"name\": \"Name\",\n  \"is_default\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "integer",
+              "title": "company_id",
+              "description": "Company primary key that owns this chain",
+              "example": 1
+            },
+            "policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_id",
+              "description": "Optional travel policy id that this chain is associated with",
+              "example": 3001,
+              "type": "integer"
+            },
+            "department_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "department_id",
+              "description": "Optional department id for department-specific chain",
+              "example": 10,
+              "type": "integer"
+            },
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Name of the approval chain",
+              "example": "US Domestic Standard Default Chain"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "Description of when this chain is used",
+              "example": "Team Lead then Finance Manager for US domestic trips",
+              "type": "string"
+            },
+            "is_default": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_default",
+              "description": "Whether this chain is the default for the given scope",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_approval_policy_chainArguments",
+          "required": [
+            "company_id",
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_approval_policy_chains",
+        "description": "List approval policy chains\n\nRetrieve approval policy chains with optional filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"approval_policy_chains\": [\n    {\n      \"id\": 1,\n      \"company_id\": 1,\n      \"name\": \"Name\",\n      \"is_default\": true,\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "integer",
+              "description": "Company primary key",
+              "title": "company_id"
+            },
+            "policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter chains by specific policy id",
+              "title": "policy_id",
+              "type": "integer"
+            },
+            "department_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter chains by department id",
+              "title": "department_id",
+              "type": "integer"
+            },
+            "is_default": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by default chain flag",
+              "title": "is_default",
+              "type": "boolean"
+            }
+          },
+          "title": "list_approval_policy_chainsArguments",
+          "required": [
+            "company_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_trip",
+        "description": "Create a new trip in draft status\n\nCreate a base trip record in draft including traveler and purpose\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"company_id\": 1,\n  \"primary_traveler_id\": 1,\n  \"status\": \"Status\",\n  \"total_air_cost\": 1.0,\n  \"total_hotel_cost\": 1.0,\n  \"total_other_cost\": 1.0,\n  \"total_cost\": 1.0,\n  \"has_policy_violations\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "integer",
+              "title": "company_id",
+              "description": "Company primary key that owns this trip",
+              "example": 1
+            },
+            "primary_traveler_id": {
+              "type": "integer",
+              "title": "primary_traveler_id",
+              "description": "Primary traveler id for this trip",
+              "example": 1001
+            },
+            "department_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "department_id",
+              "description": "Department id associated with the trip",
+              "example": 10,
+              "type": "integer"
+            },
+            "cost_center": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "cost_center",
+              "description": "Trip cost center code",
+              "example": "SALES-NW",
+              "type": "string"
+            },
+            "purpose": {
+              "type": "string",
+              "title": "purpose",
+              "description": "Business purpose of the trip",
+              "example": "Client meeting at Seattle HQ"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Initial trip status, usually draft or planned",
+              "example": "draft",
+              "type": "string"
+            },
+            "policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_id",
+              "description": "Linked travel policy id if known at creation time",
+              "example": 3001,
+              "type": "integer"
+            },
+            "start_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "start_date",
+              "description": "Trip start date YYYY-MM-DD, often inferred from segments later",
+              "example": "2025-02-10",
+              "type": "string"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "end_date",
+              "description": "Trip end date YYYY-MM-DD",
+              "example": "2025-02-12",
+              "type": "string"
+            }
+          },
+          "title": "create_tripArguments",
+          "required": [
+            "company_id",
+            "primary_traveler_id",
+            "purpose"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_search_trips",
+        "description": "Search trips with filters\n\nSearch trips by company, traveler, date range, status, or violations\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"trips\": [\n    {\n      \"id\": 1,\n      \"company_id\": 1,\n      \"primary_traveler_id\": 1,\n      \"status\": \"Status\",\n      \"total_air_cost\": 1.0,\n      \"total_hotel_cost\": 1.0,\n      \"total_other_cost\": 1.0,\n      \"total_cost\": 1.0,\n      \"has_policy_violations\": true,\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by company id",
+              "title": "company_id",
+              "type": "integer"
+            },
+            "primary_traveler_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by primary traveler id",
+              "title": "primary_traveler_id",
+              "type": "integer"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by trip status",
+              "title": "status",
+              "type": "string"
+            },
+            "start_date_from": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return trips with start_date on or after this date",
+              "title": "start_date_from",
+              "type": "string"
+            },
+            "start_date_to": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return trips with start_date on or before this date",
+              "title": "start_date_to",
+              "type": "string"
+            },
+            "has_policy_violations": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter trips by presence of policy violations",
+              "title": "has_policy_violations",
+              "type": "boolean"
+            }
+          },
+          "title": "search_tripsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_trip_approval_request",
+        "description": "Create a trip approval request\n\nCreate an approval request for a trip and mark as submitted\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"status\": \"Status\",\n  \"submitted_by_user_id\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "title": "trip_id",
+              "description": "Trip id being submitted for approval",
+              "example": 4821
+            },
+            "policy_id": {
+              "type": "integer",
+              "title": "policy_id",
+              "description": "Travel policy id under which this trip is submitted",
+              "example": 3001
+            },
+            "chain_id": {
+              "type": "integer",
+              "title": "chain_id",
+              "description": "Approval policy chain id defining routing",
+              "example": 9001
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Initial approval request status, usually submitted",
+              "example": "submitted",
+              "type": "string"
+            }
+          },
+          "title": "create_trip_approval_requestArguments",
+          "required": [
+            "trip_id",
+            "policy_id",
+            "chain_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_trip_expense_export",
+        "description": "Create an expense export record for a trip\n\nCreate a trip_expense_exports entry with payload for an external system\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"external_system_name\": \"External System Name\",\n  \"export_status\": \"Export Status\",\n  \"payload\": {},\n  \"total_air_spend\": 1.0,\n  \"total_hotel_spend\": 1.0,\n  \"total_other_spend\": 1.0,\n  \"has_policy_violations\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "title": "trip_id",
+              "description": "Trip id whose expenses are being exported",
+              "example": 4821
+            },
+            "external_system_name": {
+              "type": "string",
+              "title": "external_system_name",
+              "description": "Name of external system receiving the export",
+              "example": "NetLedger ERP"
+            },
+            "export_status": {
+              "type": "string",
+              "title": "export_status",
+              "description": "Export status such as pending, exported, or failed",
+              "example": "pending"
+            },
+            "payload": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "payload",
+              "description": "JSON payload to be serialized into BLOB for export",
+              "example": {
+                "trip_code": "TRIP-4821"
+              }
+            },
+            "total_air_spend": {
+              "type": "number",
+              "title": "total_air_spend",
+              "description": "Total air spend used in export",
+              "example": 600.0
+            },
+            "total_hotel_spend": {
+              "type": "number",
+              "title": "total_hotel_spend",
+              "description": "Total hotel spend used in export",
+              "example": 400.0
+            },
+            "total_other_spend": {
+              "type": "number",
+              "title": "total_other_spend",
+              "description": "Total other spend used in export",
+              "example": 0.0
+            },
+            "has_policy_violations": {
+              "type": "boolean",
+              "title": "has_policy_violations",
+              "description": "Flag whether exported trip had policy violations",
+              "example": false
+            }
+          },
+          "title": "create_trip_expense_exportArguments",
+          "required": [
+            "trip_id",
+            "external_system_name",
+            "export_status",
+            "payload",
+            "total_air_spend",
+            "total_hotel_spend",
+            "total_other_spend",
+            "has_policy_violations"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_traveler_passport",
+        "description": "Add a passport for a traveler\n\nCreate a passport record for a traveler, optionally primary\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"traveler_id\": 1,\n  \"passport_number\": \"Passport Number\",\n  \"expiry_date\": \"Expiry Date\",\n  \"is_primary\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "traveler_id": {
+              "type": "integer",
+              "description": "Traveler primary key to attach passport to",
+              "title": "traveler_id"
+            },
+            "passport_number": {
+              "type": "string",
+              "title": "passport_number",
+              "description": "Passport number (unique per traveler)",
+              "example": "P12345678"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "country_code",
+              "description": "Country code issuing the passport (ISO 2-letter)",
+              "example": "US",
+              "type": "string"
+            },
+            "expiry_date": {
+              "type": "string",
+              "title": "expiry_date",
+              "description": "Passport expiry date in YYYY-MM-DD format",
+              "example": "2029-05-14"
+            },
+            "is_primary": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_primary",
+              "description": "Whether this is the primary passport for traveler",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "add_traveler_passportArguments",
+          "required": [
+            "traveler_id",
+            "passport_number",
+            "expiry_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_traveler_loyalty_program",
+        "description": "Add a loyalty program for a traveler\n\nCreate a loyalty membership for a traveler\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"traveler_id\": 1,\n  \"carrier_or_chain\": \"Carrier Or Chain\",\n  \"program_name\": \"Program Name\",\n  \"membership_number\": \"Membership Number\",\n  \"program_type\": \"Program Type\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "traveler_id": {
+              "type": "integer",
+              "description": "Traveler primary key to attach loyalty program to",
+              "title": "traveler_id"
+            },
+            "carrier_or_chain": {
+              "type": "string",
+              "title": "carrier_or_chain",
+              "description": "Airline carrier code or hotel chain name",
+              "example": "American Airlines"
+            },
+            "program_name": {
+              "type": "string",
+              "title": "program_name",
+              "description": "Name of the loyalty program",
+              "example": "AAdvantage"
+            },
+            "membership_number": {
+              "type": "string",
+              "title": "membership_number",
+              "description": "Loyalty program membership number",
+              "example": "AA998877"
+            },
+            "program_type": {
+              "type": "string",
+              "title": "program_type",
+              "description": "Program type, e.g., airline or hotel",
+              "example": "airline"
+            }
+          },
+          "title": "add_traveler_loyalty_programArguments",
+          "required": [
+            "traveler_id",
+            "carrier_or_chain",
+            "program_name",
+            "membership_number",
+            "program_type"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_traveler_preferences",
+        "description": "Create traveler preferences\n\nCreate initial traveler preferences like seat and hotel budget\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"traveler_id\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "traveler_id": {
+              "type": "integer",
+              "description": "Traveler primary key to attach preferences to",
+              "title": "traveler_id"
+            },
+            "seat_preference": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "seat_preference",
+              "description": "Seat preference such as aisle, window, or middle",
+              "example": "aisle",
+              "type": "string"
+            },
+            "hotel_budget_max": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "hotel_budget_max",
+              "description": "Preferred maximum nightly hotel rate",
+              "example": 220.0,
+              "type": "number"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "notes",
+              "description": "Free-form notes about traveler preferences",
+              "example": "Avoid red-eye flights",
+              "type": "string"
+            }
+          },
+          "title": "create_traveler_preferencesArguments",
+          "required": [
+            "traveler_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_traveler_preferences",
+        "description": "Update traveler preferences\n\nPartially update existing traveler preferences\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"traveler_id\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "traveler_id": {
+              "type": "integer",
+              "description": "Traveler primary key",
+              "title": "traveler_id"
+            },
+            "seat_preference": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "seat_preference",
+              "description": "New seat preference if updating",
+              "example": "aisle",
+              "type": "string"
+            },
+            "hotel_budget_max": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "hotel_budget_max",
+              "description": "New hotel budget max if updating",
+              "example": 250.0,
+              "type": "number"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "notes",
+              "description": "New notes if updating",
+              "example": "Prefers Marriott properties when available",
+              "type": "string"
+            }
+          },
+          "title": "update_traveler_preferencesArguments",
+          "required": [
+            "traveler_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_traveler_preferred_hotel_brand",
+        "description": "Add a preferred hotel brand for a traveler\n\nAssociate an existing hotel brand with a traveler as preferred\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"traveler_id\": 1,\n  \"hotel_brand_id\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "traveler_id": {
+              "type": "integer",
+              "description": "Traveler primary key",
+              "title": "traveler_id"
+            },
+            "hotel_brand_id": {
+              "type": "integer",
+              "title": "hotel_brand_id",
+              "description": "Hotel brand primary key to mark as preferred",
+              "example": 200
+            }
+          },
+          "title": "add_traveler_preferred_hotel_brandArguments",
+          "required": [
+            "traveler_id",
+            "hotel_brand_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_travel_policy_rule",
+        "description": "Add a rule to a travel policy\n\nCreate a single travel policy rule with type, key, and value\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"policy_id\": 1,\n  \"rule_type\": \"Rule Type\",\n  \"param_key\": \"Param Key\",\n  \"param_value\": \"Param Value\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "policy_id": {
+              "type": "integer",
+              "description": "Travel policy primary key",
+              "title": "policy_id"
+            },
+            "rule_type": {
+              "type": "string",
+              "title": "rule_type",
+              "description": "Rule type, such as airfare, cabin_class, advance_purchase",
+              "example": "airfare"
+            },
+            "param_key": {
+              "type": "string",
+              "title": "param_key",
+              "description": "Logical parameter key for the rule",
+              "example": "max_roundtrip_usd"
+            },
+            "param_value": {
+              "type": "string",
+              "title": "param_value",
+              "description": "Value for this rule's parameter",
+              "example": "800"
+            }
+          },
+          "title": "add_travel_policy_ruleArguments",
+          "required": [
+            "policy_id",
+            "rule_type",
+            "param_key",
+            "param_value"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_approval_policy_chain_step",
+        "description": "Add a step to an approval policy chain\n\nAppend a step to an approval policy chain specifying role or user\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"chain_id\": 1,\n  \"sequence\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "chain_id": {
+              "type": "integer",
+              "description": "Approval policy chain primary key",
+              "title": "chain_id"
+            },
+            "sequence": {
+              "type": "integer",
+              "title": "sequence",
+              "description": "Order of this step in the chain (1-based)",
+              "example": 1
+            },
+            "approver_role_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "approver_role_name",
+              "description": "Role name for approver at this step, if role-driven",
+              "example": "Team Lead",
+              "type": "string"
+            },
+            "approver_user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "approver_user_id",
+              "description": "Specific user id as approver, if user-specific",
+              "type": "integer"
+            }
+          },
+          "title": "add_approval_policy_chain_stepArguments",
+          "required": [
+            "chain_id",
+            "sequence"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_trip_by_code",
+        "description": "Get trip by trip_code\n\nRetrieve a trip using its unique human-readable trip_code\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"company_id\": 1,\n  \"primary_traveler_id\": 1,\n  \"status\": \"Status\",\n  \"total_air_cost\": 1.0,\n  \"total_hotel_cost\": 1.0,\n  \"total_other_cost\": 1.0,\n  \"total_cost\": 1.0,\n  \"has_policy_violations\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_code": {
+              "type": "string",
+              "description": "Trip code string unique in trips",
+              "title": "trip_code"
+            }
+          },
+          "title": "get_trip_by_codeArguments",
+          "required": [
+            "trip_code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_flight_segment",
+        "description": "Add a flight segment to a trip\n\nCreate a planned flight segment including airports, dates and cabin\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"from_airport\": \"From Airport\",\n  \"to_airport\": \"To Airport\",\n  \"departure_date\": \"Departure Date\",\n  \"return_segment\": true,\n  \"cabin_class\": \"Cabin Class\",\n  \"booking_status\": \"Booking Status\",\n  \"policy_compliant\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "description": "Trip primary key to attach the flight segment to",
+              "title": "trip_id"
+            },
+            "from_airport": {
+              "type": "string",
+              "title": "from_airport",
+              "description": "IATA code of origin airport",
+              "example": "SFO"
+            },
+            "to_airport": {
+              "type": "string",
+              "title": "to_airport",
+              "description": "IATA code of destination airport",
+              "example": "SEA"
+            },
+            "departure_date": {
+              "type": "string",
+              "title": "departure_date",
+              "description": "Departure date in YYYY-MM-DD format",
+              "example": "2025-02-10"
+            },
+            "departure_time_from": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "departure_time_from",
+              "description": "Earliest acceptable departure time (HH:MM:SS) for planning stage",
+              "example": "08:00:00",
+              "type": "string"
+            },
+            "departure_time_to": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "departure_time_to",
+              "description": "Latest acceptable departure time (HH:MM:SS) for planning stage",
+              "type": "string"
+            },
+            "return_segment": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "return_segment",
+              "description": "Flag if this is a return leg of a round trip (1 or 0 stored)",
+              "example": false,
+              "type": "boolean"
+            },
+            "cabin_class": {
+              "type": "string",
+              "title": "cabin_class",
+              "description": "Cabin class for this segment, e.g., Economy, Business",
+              "example": "Economy"
+            },
+            "booking_status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booking_status",
+              "description": "Initial booking status, usually planned",
+              "example": "planned",
+              "type": "string"
+            },
+            "carrier_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "carrier_code",
+              "description": "Airline carrier code if known when booking",
+              "example": "AA",
+              "type": "string"
+            },
+            "flight_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "flight_number",
+              "description": "Flight number if known when booking",
+              "example": "AA123",
+              "type": "string"
+            },
+            "booked_fare": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booked_fare",
+              "description": "Booked fare amount once confirmed",
+              "example": 350.0,
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "currency",
+              "description": "Currency code for fare",
+              "example": "USD",
+              "type": "string"
+            },
+            "policy_compliant": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_compliant",
+              "description": "Policy compliance flag",
+              "example": true,
+              "type": "boolean"
+            },
+            "policy_violation_reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_violation_reason",
+              "description": "Reason if the segment violates policy",
+              "example": "Fare exceeds max allowed",
+              "type": "string"
+            }
+          },
+          "title": "add_flight_segmentArguments",
+          "required": [
+            "trip_id",
+            "from_airport",
+            "to_airport",
+            "departure_date",
+            "cabin_class"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_flight_segments_for_trip",
+        "description": "List flight segments for a trip\n\nRetrieve all flight segments belonging to a given trip id\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"flight_segments\": [\n    {\n      \"id\": 1,\n      \"trip_id\": 1,\n      \"from_airport\": \"From Airport\",\n      \"to_airport\": \"To Airport\",\n      \"departure_date\": \"Departure Date\",\n      \"return_segment\": true,\n      \"cabin_class\": \"Cabin Class\",\n      \"booking_status\": \"Booking Status\",\n      \"policy_compliant\": true,\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "description": "Trip primary key",
+              "title": "trip_id"
+            }
+          },
+          "title": "list_flight_segments_for_tripArguments",
+          "required": [
+            "trip_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_hotel_booking",
+        "description": "Add a hotel booking to a trip\n\nCreate a planned hotel booking including city, dates and rate\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"city\": \"City\",\n  \"check_in_date\": \"Check In Date\",\n  \"check_out_date\": \"Check Out Date\",\n  \"booking_status\": \"Booking Status\",\n  \"policy_compliant\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "description": "Trip primary key to attach the hotel booking to",
+              "title": "trip_id"
+            },
+            "city": {
+              "type": "string",
+              "title": "city",
+              "description": "City where the hotel is located",
+              "example": "Seattle"
+            },
+            "hotel_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "hotel_name",
+              "description": "Name of the hotel property if known",
+              "example": "Seattle Downtown Midrange Hotel",
+              "type": "string"
+            },
+            "hotel_brand_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "hotel_brand_id",
+              "description": "Hotel brand id if property belongs to a known chain",
+              "example": 201,
+              "type": "integer"
+            },
+            "check_in_date": {
+              "type": "string",
+              "title": "check_in_date",
+              "description": "Check-in date YYYY-MM-DD",
+              "example": "2025-02-10"
+            },
+            "check_out_date": {
+              "type": "string",
+              "title": "check_out_date",
+              "description": "Check-out date YYYY-MM-DD",
+              "example": "2025-02-12"
+            },
+            "nightly_rate": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "nightly_rate",
+              "description": "Nightly rate amount for the booking",
+              "example": 210.0,
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "currency",
+              "description": "Currency code for nightly_rate",
+              "example": "USD",
+              "type": "string"
+            },
+            "total_nights": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "total_nights",
+              "description": "Total number of nights (can be derived from dates)",
+              "example": 2,
+              "type": "integer"
+            },
+            "total_cost": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "total_cost",
+              "description": "Total cost of stay (nightly_rate * nights)",
+              "example": 420.0,
+              "type": "number"
+            },
+            "property_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "property_type",
+              "description": "Type like mid-range, budget, luxury",
+              "example": "mid-range",
+              "type": "string"
+            },
+            "booking_status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booking_status",
+              "description": "Booking status (planned, booked, canceled)",
+              "example": "planned",
+              "type": "string"
+            },
+            "policy_compliant": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_compliant",
+              "description": "Policy compliance flag",
+              "example": true,
+              "type": "boolean"
+            },
+            "policy_violation_reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_violation_reason",
+              "description": "Explanation if booking is not policy compliant",
+              "example": "Rate above 220 USD limit",
+              "type": "string"
+            }
+          },
+          "title": "add_hotel_bookingArguments",
+          "required": [
+            "trip_id",
+            "city",
+            "check_in_date",
+            "check_out_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_hotel_bookings_for_trip",
+        "description": "List hotel bookings for a trip\n\nRetrieve all hotel bookings associated with a particular trip\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"hotel_bookings\": [\n    {\n      \"id\": 1,\n      \"trip_id\": 1,\n      \"city\": \"City\",\n      \"check_in_date\": \"Check In Date\",\n      \"check_out_date\": \"Check Out Date\",\n      \"booking_status\": \"Booking Status\",\n      \"policy_compliant\": true,\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "description": "Trip primary key",
+              "title": "trip_id"
+            }
+          },
+          "title": "list_hotel_bookings_for_tripArguments",
+          "required": [
+            "trip_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_recalculate_trip_costs",
+        "description": "Recalculate trip cost totals\n\nRecalculate total_air_cost, total_hotel_cost and total_cost for a trip\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"trip_id\": 1,\n  \"total_air_cost\": 1.0,\n  \"total_hotel_cost\": 1.0,\n  \"total_other_cost\": 1.0,\n  \"total_cost\": 1.0\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "description": "Trip primary key to recalculate totals for",
+              "title": "trip_id"
+            }
+          },
+          "title": "recalculate_trip_costsArguments",
+          "required": [
+            "trip_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_clone_trip_with_shift",
+        "description": "Clone a trip structure with date shift\n\nClone a trip's structure to a new draft trip with shifted dates\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"new_trip\": {\n    \"id\": 1,\n    \"company_id\": 1,\n    \"primary_traveler_id\": 1,\n    \"status\": \"Status\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "source_trip_id": {
+              "type": "integer",
+              "description": "Trip id of the source trip to clone",
+              "title": "source_trip_id"
+            },
+            "date_shift_days": {
+              "type": "integer",
+              "title": "date_shift_days",
+              "description": "Number of days to shift start/end dates and segments",
+              "example": 30
+            },
+            "primary_traveler_id": {
+              "type": "integer",
+              "title": "primary_traveler_id",
+              "description": "Primary traveler id for the new cloned trip",
+              "example": 2002
+            },
+            "purpose": {
+              "type": "string",
+              "title": "purpose",
+              "description": "Purpose text for the new cloned trip",
+              "example": "Quarterly account review"
+            },
+            "cost_center": {
+              "type": "string",
+              "title": "cost_center",
+              "description": "Cost center code for the new trip",
+              "example": "CS-ENTERPRISE"
+            }
+          },
+          "title": "clone_trip_with_shiftArguments",
+          "required": [
+            "source_trip_id",
+            "date_shift_days",
+            "primary_traveler_id",
+            "purpose",
+            "cost_center"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_trip_approval_step",
+        "description": "Create a step for an approval request\n\nCreate a single approval step for an approval request\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"approval_request_id\": 1,\n  \"sequence\": 1,\n  \"status\": \"Status\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "approval_request_id": {
+              "type": "integer",
+              "description": "Trip approval request primary key",
+              "title": "approval_request_id"
+            },
+            "sequence": {
+              "type": "integer",
+              "title": "sequence",
+              "description": "Position of this step in the approval sequence",
+              "example": 1
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Initial step status such as pending or skipped",
+              "example": "pending"
+            },
+            "approver_role_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "approver_role_name",
+              "description": "Role name associated with this step",
+              "example": "Team Lead",
+              "type": "string"
+            },
+            "approver_user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "approver_user_id",
+              "description": "User id of approver, if mapped to specific user",
+              "example": 15,
+              "type": "integer"
+            },
+            "assigned_to_user_id": {
+              "type": "integer",
+              "title": "assigned_to_user_id",
+              "description": "User id to whom this approval step is assigned",
+              "example": 15
+            },
+            "assigned_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "assigned_at",
+              "description": "Timestamp when step was assigned",
+              "example": "2025-01-20T08:10:00Z",
+              "type": "string"
+            }
+          },
+          "title": "create_trip_approval_stepArguments",
+          "required": [
+            "approval_request_id",
+            "sequence",
+            "status",
+            "assigned_to_user_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_decide_trip_approval_step",
+        "description": "Record a decision on an approval step\n\nApprove or reject a specific approval step with comment\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"approval_request_id\": 1,\n  \"sequence\": 1,\n  \"status\": \"Status\",\n  \"decision\": \"Decision\",\n  \"decided_at\": \"2023-01-01T00:00:00Z\",\n  \"decided_by_user_id\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "step_id": {
+              "type": "integer",
+              "description": "Approval step primary key",
+              "title": "step_id"
+            },
+            "decision": {
+              "type": "string",
+              "title": "decision",
+              "description": "Decision value such as approved or rejected",
+              "example": "approved"
+            },
+            "decision_comment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "decision_comment",
+              "description": "Approver comment explaining the decision",
+              "example": "Approved within budget and policy compliant",
+              "type": "string"
+            }
+          },
+          "title": "decide_trip_approval_stepArguments",
+          "required": [
+            "step_id",
+            "decision"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_trip_comment",
+        "description": "Add a comment on a trip\n\nAdd a comment to a trip with type and visibility\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"author_user_id\": 1,\n  \"comment_type\": \"Comment Type\",\n  \"visibility\": \"Visibility\",\n  \"content\": \"Content\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "description": "Trip id to add comment to",
+              "title": "trip_id"
+            },
+            "comment_type": {
+              "type": "string",
+              "title": "comment_type",
+              "description": "Type of comment (submission, approval, internal, traveler)",
+              "example": "submission"
+            },
+            "visibility": {
+              "type": "string",
+              "title": "visibility",
+              "description": "Visibility of comment (external or internal)",
+              "example": "external"
+            },
+            "content": {
+              "type": "string",
+              "title": "content",
+              "description": "Text content of the comment",
+              "example": "Urgent client presentation; need confirmation by Friday"
+            }
+          },
+          "title": "add_trip_commentArguments",
+          "required": [
+            "trip_id",
+            "comment_type",
+            "visibility",
+            "content"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_trip_policy_violation",
+        "description": "Record a policy violation for a trip\n\nCreate a policy violation record for a trip component\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"component_type\": \"Component Type\",\n  \"violation_code\": \"Violation Code\",\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "description": "Trip id where violation occurred",
+              "title": "trip_id"
+            },
+            "component_type": {
+              "type": "string",
+              "title": "component_type",
+              "description": "Component type such as flight, hotel, or trip",
+              "example": "flight"
+            },
+            "component_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "component_id",
+              "description": "Component id like flight_segments.id or hotel_bookings.id",
+              "example": 10001,
+              "type": "integer"
+            },
+            "violation_code": {
+              "type": "string",
+              "title": "violation_code",
+              "description": "Short violation code identifier",
+              "example": "AIR_MAX_FARE_EXCEEDED"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "Detailed description of the violation",
+              "example": "Round-trip airfare exceeds allowed 800 USD limit.",
+              "type": "string"
+            },
+            "severity": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "severity",
+              "description": "Severity level such as low, medium, high",
+              "example": "medium",
+              "type": "string"
+            }
+          },
+          "title": "add_trip_policy_violationArguments",
+          "required": [
+            "trip_id",
+            "component_type",
+            "violation_code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_trip_notification_for_primary_traveler",
+        "description": "Create a notification for the primary traveler of a trip\n\nPost a notification message into the trip notification feed\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"traveler_id\": 1,\n  \"channel\": \"Channel\",\n  \"message\": \"Message\",\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "description": "Trip id for which to notify the primary traveler",
+              "title": "trip_id"
+            },
+            "channel": {
+              "type": "string",
+              "title": "channel",
+              "description": "Notification channel such as in_app or email",
+              "example": "in_app"
+            },
+            "message": {
+              "type": "string",
+              "title": "message",
+              "description": "Notification message content",
+              "example": "Your trip has policy violations. Contact your travel coordinator."
+            }
+          },
+          "title": "create_trip_notification_for_primary_travelerArguments",
+          "required": [
+            "trip_id",
+            "channel",
+            "message"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_mark_trip_notification_read",
+        "description": "Mark a trip notification as read\n\nSet read_at timestamp for a specific notification\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"traveler_id\": 1,\n  \"channel\": \"Channel\",\n  \"message\": \"Message\",\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "notification_id": {
+              "type": "integer",
+              "description": "Trip notification primary key",
+              "title": "notification_id"
+            }
+          },
+          "title": "mark_trip_notification_readArguments",
+          "required": [
+            "notification_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_company_by_id",
+        "description": "Get company by ID\n\nRetrieve a single company by primary key\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "integer",
+              "description": "Company primary key",
+              "title": "company_id"
+            }
+          },
+          "title": "get_company_by_idArguments",
+          "required": [
+            "company_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_traveler_by_id",
+        "description": "Get traveler by ID\n\nRetrieve a single traveler by primary key\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"company_id\": 1,\n  \"first_name\": \"First Name\",\n  \"last_name\": \"Last Name\",\n  \"status\": \"Status\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "traveler_id": {
+              "type": "integer",
+              "description": "Traveler primary key",
+              "title": "traveler_id"
+            }
+          },
+          "title": "get_traveler_by_idArguments",
+          "required": [
+            "traveler_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_trip",
+        "description": "Update trip header fields\n\nPartially update trip fields such as status, policy, purpose or dates\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"company_id\": 1,\n  \"primary_traveler_id\": 1,\n  \"status\": \"Status\",\n  \"total_air_cost\": 1.0,\n  \"total_hotel_cost\": 1.0,\n  \"total_other_cost\": 1.0,\n  \"total_cost\": 1.0,\n  \"has_policy_violations\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "integer",
+              "description": "Trip primary key",
+              "title": "trip_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New trip status such as draft, submitted, approved, booked, canceled",
+              "example": "booked",
+              "type": "string"
+            },
+            "policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_id",
+              "description": "Change the policy id associated with this trip",
+              "example": 3001,
+              "type": "integer"
+            },
+            "purpose": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "purpose",
+              "description": "Update the purpose text",
+              "example": "Quarterly account review",
+              "type": "string"
+            },
+            "cost_center": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "cost_center",
+              "description": "Update the cost center code",
+              "example": "CS-ENTERPRISE",
+              "type": "string"
+            },
+            "start_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "start_date",
+              "description": "Update trip start date YYYY-MM-DD",
+              "example": "2025-03-12",
+              "type": "string"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "end_date",
+              "description": "Update trip end date YYYY-MM-DD",
+              "example": "2025-03-14",
+              "type": "string"
+            },
+            "has_policy_violations": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "has_policy_violations",
+              "description": "Set whether trip has any policy violations",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "update_tripArguments",
+          "required": [
+            "trip_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_flight_segment",
+        "description": "Update a flight segment\n\nUpdate a specific flight segment such as fare or status\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"from_airport\": \"From Airport\",\n  \"to_airport\": \"To Airport\",\n  \"departure_date\": \"Departure Date\",\n  \"return_segment\": true,\n  \"cabin_class\": \"Cabin Class\",\n  \"booking_status\": \"Booking Status\",\n  \"policy_compliant\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "segment_id": {
+              "type": "integer",
+              "description": "Flight segment primary key",
+              "title": "segment_id"
+            },
+            "departure_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "departure_date",
+              "description": "Update departure date",
+              "example": "2025-02-10",
+              "type": "string"
+            },
+            "departure_time_from": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "departure_time_from",
+              "description": "Update departure time from",
+              "example": "09:30:00",
+              "type": "string"
+            },
+            "departure_time_to": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "departure_time_to",
+              "description": "Update departure time to",
+              "type": "string"
+            },
+            "return_segment": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "return_segment",
+              "description": "Update return flag",
+              "example": true,
+              "type": "boolean"
+            },
+            "cabin_class": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "cabin_class",
+              "description": "Update cabin class",
+              "example": "Economy",
+              "type": "string"
+            },
+            "booked_fare": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booked_fare",
+              "description": "Set the booked fare cost",
+              "example": 320.0,
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "currency",
+              "description": "Update currency code",
+              "example": "USD",
+              "type": "string"
+            },
+            "booking_status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booking_status",
+              "description": "Update booking status (planned, booked, canceled)",
+              "example": "booked",
+              "type": "string"
+            },
+            "carrier_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "carrier_code",
+              "description": "Set carrier code once booked",
+              "example": "AA",
+              "type": "string"
+            },
+            "flight_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "flight_number",
+              "description": "Set flight number once booked",
+              "example": "AA456",
+              "type": "string"
+            },
+            "policy_compliant": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_compliant",
+              "description": "Set policy compliance flag",
+              "example": true,
+              "type": "boolean"
+            },
+            "policy_violation_reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_violation_reason",
+              "description": "Update policy violation reason",
+              "type": "string"
+            }
+          },
+          "title": "update_flight_segmentArguments",
+          "required": [
+            "segment_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_hotel_booking",
+        "description": "Update a hotel booking\n\nUpdate a hotel booking such as rate, status or policy flags\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"city\": \"City\",\n  \"check_in_date\": \"Check In Date\",\n  \"check_out_date\": \"Check Out Date\",\n  \"booking_status\": \"Booking Status\",\n  \"policy_compliant\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "integer",
+              "description": "Hotel booking primary key",
+              "title": "booking_id"
+            },
+            "hotel_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "hotel_name",
+              "description": "Update hotel name",
+              "example": "Hilton Berlin City Center",
+              "type": "string"
+            },
+            "hotel_brand_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "hotel_brand_id",
+              "description": "Update hotel brand id",
+              "example": 210,
+              "type": "integer"
+            },
+            "check_in_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "check_in_date",
+              "description": "Update check-in date",
+              "example": "2025-04-05",
+              "type": "string"
+            },
+            "check_out_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "check_out_date",
+              "description": "Update check-out date",
+              "example": "2025-04-08",
+              "type": "string"
+            },
+            "nightly_rate": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "nightly_rate",
+              "description": "Update nightly rate",
+              "example": 195.0,
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "currency",
+              "description": "Update currency",
+              "example": "EUR",
+              "type": "string"
+            },
+            "total_nights": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "total_nights",
+              "description": "Update total nights",
+              "example": 3,
+              "type": "integer"
+            },
+            "total_cost": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "total_cost",
+              "description": "Update total cost",
+              "example": 585.0,
+              "type": "number"
+            },
+            "property_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "property_type",
+              "description": "Update property type",
+              "example": "mid-range",
+              "type": "string"
+            },
+            "booking_status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "booking_status",
+              "description": "Update booking status (planned, booked, canceled)",
+              "example": "canceled",
+              "type": "string"
+            },
+            "policy_compliant": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_compliant",
+              "description": "Update policy compliance flag",
+              "example": true,
+              "type": "boolean"
+            },
+            "policy_violation_reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_violation_reason",
+              "description": "Update violation reason",
+              "type": "string"
+            }
+          },
+          "title": "update_hotel_bookingArguments",
+          "required": [
+            "booking_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_trip_approval_request",
+        "description": "Update a trip approval request\n\nUpdate approval request status or final decision\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"trip_id\": 1,\n  \"status\": \"Status\",\n  \"submitted_by_user_id\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "approval_request_id": {
+              "type": "integer",
+              "description": "Trip approval request primary key",
+              "title": "approval_request_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Update request status (e.g., in_progress, completed)",
+              "example": "completed",
+              "type": "string"
+            },
+            "final_decision": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "final_decision",
+              "description": "Final decision value such as approved or rejected",
+              "example": "approved",
+              "type": "string"
+            }
+          },
+          "title": "update_trip_approval_requestArguments",
+          "required": [
+            "approval_request_id"
+          ]
+        }
+      }
+    }
+  ],
+  "temperature": 0.0,
+  "seed": 42,
+  "max_tokens": 8192,
+  "stop_token_ids": [
+    1,
+    50,
+    106
+  ],
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  }
+}

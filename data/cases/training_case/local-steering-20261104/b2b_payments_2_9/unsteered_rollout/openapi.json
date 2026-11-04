@@ -1,0 +1,3982 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FlowGate B2B Payments & Invoicing Network",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/reports/receivables-aging": {
+      "get": {
+        "tags": [
+          "reports",
+          "invoices"
+        ],
+        "summary": "Get receivables aging buckets for an organization",
+        "description": "Compute open receivables grouped into aging buckets",
+        "operationId": "get_receivables_aging",
+        "parameters": [
+          {
+            "name": "seller_org_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Seller organization id whose receivables to analyze",
+              "title": "Seller Org Id"
+            },
+            "description": "Seller organization id whose receivables to analyze",
+            "example": 1
+          },
+          {
+            "name": "as_of_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Cutoff date YYYY-MM-DD to compute aging",
+              "title": "As Of Date"
+            },
+            "description": "Cutoff date YYYY-MM-DD to compute aging",
+            "example": "2025-03-01"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Currency code to include in the report",
+              "title": "Currency"
+            },
+            "description": "Currency code to include in the report",
+            "example": "USD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceivablesAgingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/credit-note-applications": {
+      "post": {
+        "tags": [
+          "credit_note_applications"
+        ],
+        "summary": "Apply a credit note amount to an invoice",
+        "description": "Apply part of a credit note to an invoice",
+        "operationId": "create_credit_note_application",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditNoteApplicationCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditNoteApplicationModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organization-addresses": {
+      "post": {
+        "tags": [
+          "organizations",
+          "addresses"
+        ],
+        "summary": "Link an address to an organization",
+        "description": "Associate an existing address with an organization",
+        "operationId": "create_organization_address",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationAddressCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationAddressModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organization-customers": {
+      "post": {
+        "tags": [
+          "organization_customers"
+        ],
+        "summary": "Create a seller-buyer customer relationship",
+        "description": "Link a seller organization to a buyer organization",
+        "operationId": "create_organization_customer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationCustomerCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationCustomerModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/by-payment-id": {
+      "get": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Get payment by external payment_id",
+        "description": "Retrieve a payment row using the external payment_id string",
+        "operationId": "get_payment_by_payment_id",
+        "parameters": [
+          {
+            "name": "payment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "External payment identifier to look up",
+              "title": "Payment Id"
+            },
+            "description": "External payment identifier to look up",
+            "example": "PMT-2025-00077"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/credit-notes/by-number": {
+      "get": {
+        "tags": [
+          "credit_notes"
+        ],
+        "summary": "Get credit note by seller and credit_note_number",
+        "description": "Fetch a specific credit note by seller_org_id and number",
+        "operationId": "get_credit_note_by_number",
+        "parameters": [
+          {
+            "name": "seller_org_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Seller organization id that owns the credit note",
+              "title": "Seller Org Id"
+            },
+            "description": "Seller organization id that owns the credit note",
+            "example": 1
+          },
+          {
+            "name": "credit_note_number",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Credit note number to look up",
+              "title": "Credit Note Number"
+            },
+            "description": "Credit note number to look up",
+            "example": "CN-2025-0003"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditNoteModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invoices/by-number": {
+      "get": {
+        "tags": [
+          "invoices"
+        ],
+        "summary": "Get an invoice by seller and invoice_number",
+        "description": "Look up an invoice using seller_org_id and invoice_number",
+        "operationId": "get_invoice_by_number",
+        "parameters": [
+          {
+            "name": "seller_org_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Seller organization id that owns the invoice number",
+              "title": "Seller Org Id"
+            },
+            "description": "Seller organization id that owns the invoice number",
+            "example": 1
+          },
+          {
+            "name": "invoice_number",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Invoice number within the seller org",
+              "title": "Invoice Number"
+            },
+            "description": "Invoice number within the seller org",
+            "example": "INV-2025-0142"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/remittance-advices": {
+      "post": {
+        "tags": [
+          "remittance_advices"
+        ],
+        "summary": "Create a remittance advice allocation",
+        "description": "Allocate a portion of a payment to an invoice",
+        "operationId": "create_remittance_advice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemittanceAdviceCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemittanceAdviceModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customer-contacts": {
+      "post": {
+        "tags": [
+          "customer_contacts"
+        ],
+        "summary": "Create a customer contact for an organization",
+        "description": "Register a contact email for a buyer organization",
+        "operationId": "create_customer_contact",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerContactCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerContactModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment-requests": {
+      "post": {
+        "tags": [
+          "payment_requests"
+        ],
+        "summary": "Create a payment request for an invoice",
+        "description": "Create a payment request for a specific invoice",
+        "operationId": "create_payment_request",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequestCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentRequestModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organizations": {
+      "get": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "List organizations with optional name filter",
+        "description": "List organizations optionally filtered by name substring with pagination",
+        "operationId": "list_organizations",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional case-insensitive substring match on organization name",
+              "title": "Name"
+            },
+            "description": "Optional case-insensitive substring match on organization name",
+            "example": "Acme Retail"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of organizations to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of organizations to return",
+            "example": 50
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of organizations to skip for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of organizations to skip for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Create a new organization",
+        "description": "Create a new organization with a default currency",
+        "operationId": "create_organization",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment-terms": {
+      "post": {
+        "tags": [
+          "payment_terms"
+        ],
+        "summary": "Create payment terms for an organization",
+        "description": "Create payment terms like Net 30 or early payment discounts",
+        "operationId": "create_payment_terms",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentTermCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTermModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "payment_terms"
+        ],
+        "summary": "List payment terms for an organization",
+        "description": "Search payment terms by organization, name, and currency",
+        "operationId": "list_payment_terms",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Owning organization id to filter payment terms",
+              "title": "Org Id"
+            },
+            "description": "Owning organization id to filter payment terms",
+            "example": 1
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional exact name filter for payment terms",
+              "title": "Name"
+            },
+            "description": "Optional exact name filter for payment terms",
+            "example": "Net 30"
+          },
+          {
+            "name": "applicable_currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional currency code filter",
+              "title": "Applicable Currency"
+            },
+            "description": "Optional currency code filter",
+            "example": "USD"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status if provided",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status if provided",
+            "example": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTermListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bank-accounts": {
+      "get": {
+        "tags": [
+          "bank_accounts"
+        ],
+        "summary": "List bank accounts for an organization",
+        "description": "Fetch active bank accounts for an organization",
+        "operationId": "list_bank_accounts",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Organization id that owns the bank accounts",
+              "title": "Org Id"
+            },
+            "description": "Organization id that owns the bank accounts",
+            "example": 1
+          },
+          {
+            "name": "bank_account_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional code filter to get a single bank account",
+              "title": "Bank Account Code"
+            },
+            "description": "Optional code filter to get a single bank account",
+            "example": "BA-PRIMARY-USD"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status when provided",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status when provided",
+            "example": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankAccountListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/credit-notes": {
+      "post": {
+        "tags": [
+          "credit_notes"
+        ],
+        "summary": "Create a credit note for a buyer",
+        "description": "Issue a credit note from a seller to a buyer",
+        "operationId": "create_credit_note",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditNoteCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditNoteModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/addresses": {
+      "post": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "Create a postal address record",
+        "description": "Create a reusable postal address row",
+        "operationId": "create_address",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invoices": {
+      "post": {
+        "tags": [
+          "invoices"
+        ],
+        "summary": "Create a new invoice header",
+        "description": "Create the invoice header row without line items",
+        "operationId": "create_invoice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Create or record a payment metadata entry",
+        "description": "Record inbound payments with metadata and status",
+        "operationId": "create_payment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invoice-line-items/{line_item_id}/approval": {
+      "patch": {
+        "tags": [
+          "invoice_line_items"
+        ],
+        "summary": "Update line item approval_status and dispute_reason",
+        "description": "Approve or dispute line items while setting dispute_reason",
+        "operationId": "update_invoice_line_item_approval",
+        "parameters": [
+          {
+            "name": "line_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Invoice line item primary key",
+              "title": "Line Item Id"
+            },
+            "description": "Invoice line item primary key",
+            "example": 2005
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceLineItemApprovalUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceLineItemApprovalUpdateModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invoices/{invoice_id}/workflow-stage": {
+      "patch": {
+        "tags": [
+          "invoices"
+        ],
+        "summary": "Update invoice workflow_stage only",
+        "description": "Transition an invoice to a new workflow_stage",
+        "operationId": "update_invoice_workflow_stage",
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Invoice primary key to update",
+              "title": "Invoice Id"
+            },
+            "description": "Invoice primary key to update",
+            "example": 1001
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceWorkflowUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceWorkflowUpdateModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/{id}/reconciliation-status": {
+      "patch": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Update payment reconciliation_status",
+        "description": "Mark a payment as partially_reconciled or reconciled",
+        "operationId": "update_payment_reconciliation_status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Payment internal primary key",
+              "title": "Id"
+            },
+            "description": "Payment internal primary key",
+            "example": 4001
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentReconciliationUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentReconciliationUpdateModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/credit-notes/{id}/remaining-amount": {
+      "patch": {
+        "tags": [
+          "credit_notes"
+        ],
+        "summary": "Update credit note remaining_amount",
+        "description": "Decrease remaining_amount on a credit note after applications",
+        "operationId": "update_credit_note_remaining_amount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Credit note primary key",
+              "title": "Id"
+            },
+            "description": "Credit note primary key",
+            "example": 6001
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditNoteRemainingUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditNoteRemainingUpdateModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invoices/{invoice_id}/line-items": {
+      "post": {
+        "tags": [
+          "invoice_line_items"
+        ],
+        "summary": "Add a line item to an invoice",
+        "description": "Append a single line item to an existing invoice",
+        "operationId": "create_invoice_line_item",
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Invoice id this line will belong to",
+              "title": "Invoice Id"
+            },
+            "description": "Invoice id this line will belong to",
+            "example": 1001
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceLineItemCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceLineItemModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "invoice_line_items"
+        ],
+        "summary": "List line items for an invoice",
+        "description": "Fetch all line items for an invoice",
+        "operationId": "list_invoice_line_items",
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Invoice primary key whose lines to fetch",
+              "title": "Invoice Id"
+            },
+            "description": "Invoice primary key whose lines to fetch",
+            "example": 1001
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceLineItemListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invoices/{invoice_id}/amounts": {
+      "patch": {
+        "tags": [
+          "invoices"
+        ],
+        "summary": "Update invoice total_amount and open_balance",
+        "description": "Adjust invoice monetary amounts after changes",
+        "operationId": "update_invoice_amounts",
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Invoice primary key",
+              "title": "Invoice Id"
+            },
+            "description": "Invoice primary key",
+            "example": 1001
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceAmountsUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceAmountsUpdateModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invoices/{invoice_id}": {
+      "get": {
+        "tags": [
+          "invoices"
+        ],
+        "summary": "Get an invoice by id",
+        "description": "Retrieve full invoice header details by internal invoice id",
+        "operationId": "get_invoice_by_id",
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Internal invoice primary key",
+              "title": "Invoice Id"
+            },
+            "description": "Internal invoice primary key",
+            "example": 1001
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddressCreateRequest": {
+        "properties": {
+          "line1": {
+            "type": "string",
+            "title": "Line1",
+            "description": "Primary street address line",
+            "example": "120 Market St"
+          },
+          "line2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line2",
+            "description": "Secondary address information such as suite or floor",
+            "example": "Suite 300"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City",
+            "description": "City or locality",
+            "example": "Denver"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State",
+            "description": "State or region code",
+            "example": "CO"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code",
+            "description": "Postal or ZIP code",
+            "example": "80202"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "description": "ISO country name or code",
+            "example": "USA"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line1",
+          "country"
+        ],
+        "title": "AddressCreateRequest"
+      },
+      "AddressModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Address primary key",
+            "example": 10
+          },
+          "line1": {
+            "type": "string",
+            "title": "Line1",
+            "description": "Primary street address line",
+            "example": "120 Market St"
+          },
+          "line2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line2",
+            "description": "Secondary address information",
+            "example": "Suite 300"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City",
+            "description": "City or locality",
+            "example": "Denver"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State",
+            "description": "State or region code",
+            "example": "CO"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code",
+            "description": "Postal or ZIP code",
+            "example": "80202"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "description": "Country name or code",
+            "example": "USA"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T09:05:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T09:05:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "line1",
+          "country",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AddressModel"
+      },
+      "AgingBucketModel": {
+        "properties": {
+          "bucket_name": {
+            "type": "string",
+            "title": "Bucket Name",
+            "description": "Label of the aging bucket",
+            "example": "0-30"
+          },
+          "min_days_overdue": {
+            "type": "integer",
+            "title": "Min Days Overdue",
+            "description": "Minimum days overdue in this bucket, inclusive",
+            "example": 0
+          },
+          "max_days_overdue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Days Overdue",
+            "description": "Maximum days overdue in this bucket, inclusive, null for open-ended",
+            "example": 30
+          },
+          "total_open_balance": {
+            "type": "number",
+            "title": "Total Open Balance",
+            "description": "Sum of open_balance of invoices in this bucket",
+            "example": 125000.5
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket_name",
+          "min_days_overdue",
+          "total_open_balance"
+        ],
+        "title": "AgingBucketModel"
+      },
+      "BankAccountListResponse": {
+        "properties": {
+          "bank_accounts": {
+            "items": {
+              "$ref": "#/components/schemas/BankAccountModel"
+            },
+            "type": "array",
+            "title": "Bank Accounts",
+            "description": "List of bank accounts",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "bank_accounts"
+        ],
+        "title": "BankAccountListResponse"
+      },
+      "BankAccountModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Bank account primary key",
+            "example": 7
+          },
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id",
+            "description": "Organization id that owns the account",
+            "example": 1
+          },
+          "bank_account_code": {
+            "type": "string",
+            "title": "Bank Account Code",
+            "description": "Short code used in API calls to reference this account",
+            "example": "BA-PRIMARY-USD"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency supported by this bank account",
+            "example": "USD"
+          },
+          "bank_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Name",
+            "description": "Name of the bank",
+            "example": "First National Bank"
+          },
+          "account_number_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Number Masked",
+            "description": "Masked bank account number for display",
+            "example": "****5678"
+          },
+          "routing_number_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Number Masked",
+            "description": "Masked routing number for display",
+            "example": "*****123"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "True if the bank account is active",
+            "example": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2024-07-01T09:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2024-08-01T09:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "org_id",
+          "bank_account_code",
+          "currency",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BankAccountModel"
+      },
+      "CreditNoteApplicationCreateRequest": {
+        "properties": {
+          "credit_note_id": {
+            "type": "integer",
+            "title": "Credit Note Id",
+            "description": "Credit note primary key being applied",
+            "example": 6001
+          },
+          "invoice_id": {
+            "type": "integer",
+            "title": "Invoice Id",
+            "description": "Invoice primary key receiving the credit",
+            "example": 8001
+          },
+          "applied_amount": {
+            "type": "number",
+            "title": "Applied Amount",
+            "description": "Amount of the credit_note applied to this invoice",
+            "example": 500.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "credit_note_id",
+          "invoice_id",
+          "applied_amount"
+        ],
+        "title": "CreditNoteApplicationCreateRequest"
+      },
+      "CreditNoteApplicationModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Credit note application primary key",
+            "example": 7001
+          },
+          "credit_note_id": {
+            "type": "integer",
+            "title": "Credit Note Id",
+            "description": "Credit note primary key",
+            "example": 6001
+          },
+          "invoice_id": {
+            "type": "integer",
+            "title": "Invoice Id",
+            "description": "Invoice primary key",
+            "example": 8001
+          },
+          "applied_amount": {
+            "type": "number",
+            "title": "Applied Amount",
+            "description": "Amount of credit applied to this invoice",
+            "example": 500.0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T11:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T11:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "credit_note_id",
+          "invoice_id",
+          "applied_amount",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CreditNoteApplicationModel"
+      },
+      "CreditNoteCreateRequest": {
+        "properties": {
+          "credit_note_number": {
+            "type": "string",
+            "title": "Credit Note Number",
+            "description": "Unique credit note number per seller organization",
+            "example": "CN-2025-0003"
+          },
+          "seller_org_id": {
+            "type": "integer",
+            "title": "Seller Org Id",
+            "description": "Seller organization issuing the credit note",
+            "example": 1
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization receiving the credit",
+            "example": 5
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency of the credit note",
+            "example": "USD"
+          },
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount",
+            "description": "Total credit amount granted",
+            "example": 750.0
+          },
+          "remaining_amount": {
+            "type": "number",
+            "title": "Remaining Amount",
+            "description": "Remaining amount that can still be applied",
+            "example": 750.0
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Reason for issuing the credit note",
+            "example": "Volume rebate Q4 2024"
+          }
+        },
+        "type": "object",
+        "required": [
+          "credit_note_number",
+          "seller_org_id",
+          "buyer_org_id",
+          "currency",
+          "total_amount",
+          "remaining_amount"
+        ],
+        "title": "CreditNoteCreateRequest"
+      },
+      "CreditNoteModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Credit note primary key",
+            "example": 6001
+          },
+          "credit_note_number": {
+            "type": "string",
+            "title": "Credit Note Number",
+            "description": "Credit note number",
+            "example": "CN-2025-0003"
+          },
+          "seller_org_id": {
+            "type": "integer",
+            "title": "Seller Org Id",
+            "description": "Seller organization id",
+            "example": 1
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization id",
+            "example": 5
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency of the credit note",
+            "example": "USD"
+          },
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount",
+            "description": "Total credit note amount",
+            "example": 750.0
+          },
+          "remaining_amount": {
+            "type": "number",
+            "title": "Remaining Amount",
+            "description": "Unapplied credit amount still available",
+            "example": 750.0
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Reason for the credit",
+            "example": "Volume rebate Q4 2024"
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id",
+            "description": "User who created the credit note",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T10:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T10:30:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "credit_note_number",
+          "seller_org_id",
+          "buyer_org_id",
+          "currency",
+          "total_amount",
+          "remaining_amount",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CreditNoteModel"
+      },
+      "CreditNoteRemainingUpdateModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Credit note primary key",
+            "example": 6001
+          },
+          "credit_note_number": {
+            "type": "string",
+            "title": "Credit Note Number",
+            "description": "Credit note number",
+            "example": "CN-2025-0003"
+          },
+          "remaining_amount": {
+            "type": "number",
+            "title": "Remaining Amount",
+            "description": "Updated remaining_amount",
+            "example": 0.0
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp when remaining_amount was updated",
+            "example": "2025-01-02T11:05:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "credit_note_number",
+          "remaining_amount",
+          "updated_at"
+        ],
+        "title": "CreditNoteRemainingUpdateModel"
+      },
+      "CreditNoteRemainingUpdateRequest": {
+        "properties": {
+          "remaining_amount": {
+            "type": "number",
+            "title": "Remaining Amount",
+            "description": "New remaining_amount value for this credit note",
+            "example": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "remaining_amount"
+        ],
+        "title": "CreditNoteRemainingUpdateRequest"
+      },
+      "CustomerContactCreateRequest": {
+        "properties": {
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization id this contact belongs to",
+            "example": 5
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "description": "Contact email address",
+            "example": "jane.doe@acmeretail.com"
+          },
+          "is_primary": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Primary",
+            "description": "Whether this contact should be primary for the buyer",
+            "default": false,
+            "example": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "buyer_org_id",
+          "email"
+        ],
+        "title": "CustomerContactCreateRequest"
+      },
+      "CustomerContactModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Customer contact primary key",
+            "example": 22
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization id",
+            "example": 5
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "description": "Contact email address",
+            "example": "jane.doe@acmeretail.com"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "description": "True if this is the primary contact",
+            "example": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T09:07:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T09:07:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "buyer_org_id",
+          "email",
+          "is_primary",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CustomerContactModel"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InvoiceAmountsUpdateModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Invoice primary key",
+            "example": 1001
+          },
+          "invoice_number": {
+            "type": "string",
+            "title": "Invoice Number",
+            "description": "Invoice number",
+            "example": "INV-2024-1201"
+          },
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount",
+            "description": "Updated total_amount",
+            "example": 7500.0
+          },
+          "open_balance": {
+            "type": "number",
+            "title": "Open Balance",
+            "description": "Updated open_balance",
+            "example": 2000.0
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp of the monetary update",
+            "example": "2025-01-02T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "invoice_number",
+          "total_amount",
+          "open_balance",
+          "updated_at"
+        ],
+        "title": "InvoiceAmountsUpdateModel"
+      },
+      "InvoiceAmountsUpdateRequest": {
+        "properties": {
+          "total_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Amount",
+            "description": "New total_amount for the invoice, if recalculated",
+            "example": 5500.0
+          },
+          "open_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Balance",
+            "description": "New open_balance for the invoice after allocations",
+            "example": 1500.0
+          }
+        },
+        "type": "object",
+        "title": "InvoiceAmountsUpdateRequest"
+      },
+      "InvoiceCreateRequest": {
+        "properties": {
+          "invoice_number": {
+            "type": "string",
+            "title": "Invoice Number",
+            "description": "Unique invoice number per seller organization",
+            "example": "INV-2025-0142"
+          },
+          "seller_org_id": {
+            "type": "integer",
+            "title": "Seller Org Id",
+            "description": "Seller organization id issuing the invoice",
+            "example": 1
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization id for this invoice",
+            "example": 5
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Invoice currency code",
+            "example": "USD"
+          },
+          "invoice_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Invoice Date",
+            "description": "Invoice issue date in ISO format YYYY-MM-DD",
+            "example": "2025-01-05"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Due Date",
+            "description": "Invoice due date in ISO format YYYY-MM-DD",
+            "example": "2025-02-04"
+          },
+          "payment_terms_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms Id",
+            "description": "Optional payment_terms.id linked to this invoice",
+            "example": 10
+          },
+          "workflow_stage": {
+            "type": "string",
+            "title": "Workflow Stage",
+            "description": "Workflow stage for the invoice lifecycle",
+            "example": "draft"
+          },
+          "total_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Amount",
+            "description": "Starting total amount",
+            "default": 0.0,
+            "example": 0.0
+          },
+          "open_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Balance",
+            "description": "Starting open balance",
+            "default": 0.0,
+            "example": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "invoice_number",
+          "seller_org_id",
+          "buyer_org_id",
+          "currency",
+          "invoice_date",
+          "due_date",
+          "workflow_stage"
+        ],
+        "title": "InvoiceCreateRequest"
+      },
+      "InvoiceLineItemApprovalUpdateModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Line item primary key",
+            "example": 2005
+          },
+          "invoice_id": {
+            "type": "integer",
+            "title": "Invoice Id",
+            "description": "Invoice primary key",
+            "example": 1042
+          },
+          "line_number": {
+            "type": "integer",
+            "title": "Line Number",
+            "description": "Line sequence number",
+            "example": 3
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Line description",
+            "example": "Custom machining surcharge"
+          },
+          "approval_status": {
+            "type": "string",
+            "title": "Approval Status",
+            "description": "Updated approval_status",
+            "example": "disputed"
+          },
+          "dispute_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Reason",
+            "description": "Updated dispute_reason if any",
+            "example": "Unapproved additional charge"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp when the line was last updated",
+            "example": "2025-01-10T12:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "invoice_id",
+          "line_number",
+          "description",
+          "approval_status",
+          "updated_at"
+        ],
+        "title": "InvoiceLineItemApprovalUpdateModel"
+      },
+      "InvoiceLineItemApprovalUpdateRequest": {
+        "properties": {
+          "approval_status": {
+            "type": "string",
+            "title": "Approval Status",
+            "description": "New approval_status value for this line",
+            "example": "disputed"
+          },
+          "dispute_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Reason",
+            "description": "Reason for dispute when marking a line as disputed",
+            "example": "Unapproved additional charge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "approval_status"
+        ],
+        "title": "InvoiceLineItemApprovalUpdateRequest"
+      },
+      "InvoiceLineItemCreateRequest": {
+        "properties": {
+          "line_number": {
+            "type": "integer",
+            "title": "Line Number",
+            "description": "Sequential line number within the invoice",
+            "example": 1
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Line item description",
+            "example": "Steel bolts M8"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity",
+            "description": "Quantity of items or units",
+            "example": 500.0
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price",
+            "description": "Unit price in invoice currency",
+            "example": 0.35
+          },
+          "tax_rate": {
+            "type": "number",
+            "title": "Tax Rate",
+            "description": "Tax rate percentage applied to this line",
+            "example": 7.5
+          },
+          "line_subtotal": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Subtotal",
+            "description": "Precomputed quantity * unit_price, if client calculates",
+            "example": 175.0
+          },
+          "tax_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Amount",
+            "description": "Precomputed tax_amount, if client calculates",
+            "example": 13.13
+          },
+          "line_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Total",
+            "description": "Precomputed line_total, if client calculates",
+            "example": 188.13
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_number",
+          "description",
+          "quantity",
+          "unit_price",
+          "tax_rate"
+        ],
+        "title": "InvoiceLineItemCreateRequest"
+      },
+      "InvoiceLineItemListResponse": {
+        "properties": {
+          "line_items": {
+            "items": {
+              "$ref": "#/components/schemas/InvoiceLineItemModel"
+            },
+            "type": "array",
+            "title": "Line Items",
+            "description": "List of invoice line items",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_items"
+        ],
+        "title": "InvoiceLineItemListResponse"
+      },
+      "InvoiceLineItemModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Line item primary key",
+            "example": 2001
+          },
+          "invoice_id": {
+            "type": "integer",
+            "title": "Invoice Id",
+            "description": "Invoice primary key this line belongs to",
+            "example": 1001
+          },
+          "line_number": {
+            "type": "integer",
+            "title": "Line Number",
+            "description": "Line sequence number",
+            "example": 1
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Line description",
+            "example": "Steel bolts M8"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity",
+            "description": "Quantity ordered",
+            "example": 500.0
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price",
+            "description": "Unit price",
+            "example": 0.35
+          },
+          "tax_rate": {
+            "type": "number",
+            "title": "Tax Rate",
+            "description": "Tax rate percentage",
+            "example": 7.5
+          },
+          "line_subtotal": {
+            "type": "number",
+            "title": "Line Subtotal",
+            "description": "Quantity times unit_price",
+            "example": 175.0
+          },
+          "tax_amount": {
+            "type": "number",
+            "title": "Tax Amount",
+            "description": "Tax amount for this line",
+            "example": 13.13
+          },
+          "line_total": {
+            "type": "number",
+            "title": "Line Total",
+            "description": "Total for this line including tax",
+            "example": 188.13
+          },
+          "approval_status": {
+            "type": "string",
+            "title": "Approval Status",
+            "description": "Current approval_status of the line",
+            "example": "pending"
+          },
+          "dispute_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Reason",
+            "description": "Dispute reason if line is disputed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T09:40:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T09:40:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "invoice_id",
+          "line_number",
+          "description",
+          "quantity",
+          "unit_price",
+          "tax_rate",
+          "line_subtotal",
+          "tax_amount",
+          "line_total",
+          "approval_status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "InvoiceLineItemModel"
+      },
+      "InvoiceModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Invoice primary key",
+            "example": 1001
+          },
+          "invoice_number": {
+            "type": "string",
+            "title": "Invoice Number",
+            "description": "Invoice number unique per seller",
+            "example": "INV-2025-0142"
+          },
+          "seller_org_id": {
+            "type": "integer",
+            "title": "Seller Org Id",
+            "description": "Seller organization id",
+            "example": 1
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization id",
+            "example": 5
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Invoice currency code",
+            "example": "USD"
+          },
+          "invoice_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Invoice Date",
+            "description": "Invoice date",
+            "example": "2025-01-05"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Due Date",
+            "description": "Invoice due date",
+            "example": "2025-02-04"
+          },
+          "payment_terms_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms Id",
+            "description": "Linked payment terms id if any",
+            "example": 10
+          },
+          "workflow_stage": {
+            "type": "string",
+            "title": "Workflow Stage",
+            "description": "Current workflow stage",
+            "example": "draft"
+          },
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount",
+            "description": "Current total amount including tax from all line items",
+            "example": 305.0
+          },
+          "open_balance": {
+            "type": "number",
+            "title": "Open Balance",
+            "description": "Current unpaid balance after credits and payments",
+            "example": 305.0
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id",
+            "description": "Id of the user who created the invoice",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T09:15:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T09:15:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "invoice_number",
+          "seller_org_id",
+          "buyer_org_id",
+          "currency",
+          "invoice_date",
+          "due_date",
+          "workflow_stage",
+          "total_amount",
+          "open_balance",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "InvoiceModel"
+      },
+      "InvoiceWorkflowUpdateModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Invoice primary key",
+            "example": 1001
+          },
+          "invoice_number": {
+            "type": "string",
+            "title": "Invoice Number",
+            "description": "Invoice number",
+            "example": "INV-2025-0110"
+          },
+          "workflow_stage": {
+            "type": "string",
+            "title": "Workflow Stage",
+            "description": "Updated workflow_stage value",
+            "example": "sent_to_buyer"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp when workflow_stage was updated",
+            "example": "2025-01-02T09:30:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "invoice_number",
+          "workflow_stage",
+          "updated_at"
+        ],
+        "title": "InvoiceWorkflowUpdateModel"
+      },
+      "InvoiceWorkflowUpdateRequest": {
+        "properties": {
+          "workflow_stage": {
+            "type": "string",
+            "title": "Workflow Stage",
+            "description": "New workflow_stage value for the invoice",
+            "example": "sent_to_buyer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workflow_stage"
+        ],
+        "title": "InvoiceWorkflowUpdateRequest"
+      },
+      "OrganizationAddressCreateRequest": {
+        "properties": {
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id",
+            "description": "Organization id to which the address belongs",
+            "example": 3
+          },
+          "address_id": {
+            "type": "integer",
+            "title": "Address Id",
+            "description": "Existing address id to link",
+            "example": 10
+          },
+          "address_type": {
+            "type": "string",
+            "title": "Address Type",
+            "description": "Type of address for the organization",
+            "example": "billing"
+          },
+          "is_primary": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Primary",
+            "description": "Mark this as the primary address for this type",
+            "default": false,
+            "example": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "org_id",
+          "address_id",
+          "address_type"
+        ],
+        "title": "OrganizationAddressCreateRequest"
+      },
+      "OrganizationAddressModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Organization address link primary key",
+            "example": 15
+          },
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id",
+            "description": "Organization id",
+            "example": 3
+          },
+          "address_id": {
+            "type": "integer",
+            "title": "Address Id",
+            "description": "Linked address id",
+            "example": 10
+          },
+          "address_type": {
+            "type": "string",
+            "title": "Address Type",
+            "description": "Address usage type for this organization",
+            "example": "billing"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "description": "True if this is the primary address of this type",
+            "example": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T09:06:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T09:06:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "org_id",
+          "address_id",
+          "address_type",
+          "is_primary",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OrganizationAddressModel"
+      },
+      "OrganizationCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique legal name of the organization",
+            "example": "Acme Retail LLC"
+          },
+          "default_currency": {
+            "type": "string",
+            "title": "Default Currency",
+            "description": "Default ISO currency code for this organization",
+            "example": "USD"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "default_currency"
+        ],
+        "title": "OrganizationCreateRequest"
+      },
+      "OrganizationCustomerCreateRequest": {
+        "properties": {
+          "seller_org_id": {
+            "type": "integer",
+            "title": "Seller Org Id",
+            "description": "Organization id of the seller",
+            "example": 1
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Organization id of the buyer organization",
+            "example": 5
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Customer relationship status",
+            "example": "active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seller_org_id",
+          "buyer_org_id",
+          "status"
+        ],
+        "title": "OrganizationCustomerCreateRequest"
+      },
+      "OrganizationCustomerModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Organization customer link primary key",
+            "example": 30
+          },
+          "seller_org_id": {
+            "type": "integer",
+            "title": "Seller Org Id",
+            "description": "Seller organization id",
+            "example": 1
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization id",
+            "example": 5
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Customer relationship status",
+            "example": "active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T09:08:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T09:08:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "seller_org_id",
+          "buyer_org_id",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OrganizationCustomerModel"
+      },
+      "OrganizationListResponse": {
+        "properties": {
+          "organizations": {
+            "items": {
+              "$ref": "#/components/schemas/OrganizationModel"
+            },
+            "type": "array",
+            "title": "Organizations",
+            "description": "List of organizations",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "organizations"
+        ],
+        "title": "OrganizationListResponse"
+      },
+      "OrganizationModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Organization primary key",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Organization legal name",
+            "example": "Acme Retail LLC"
+          },
+          "default_currency": {
+            "type": "string",
+            "title": "Default Currency",
+            "description": "Default ISO currency code used by this organization",
+            "example": "USD"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2024-12-01T10:15:30Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2024-12-10T08:22:11Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "default_currency",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OrganizationModel"
+      },
+      "PaymentCreateRequest": {
+        "properties": {
+          "payment_id": {
+            "type": "string",
+            "title": "Payment Id",
+            "description": "External unique payment identifier",
+            "example": "PMT-2025-00077"
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization that is paying",
+            "example": 5
+          },
+          "payer_bank_account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payer Bank Account Id",
+            "description": "Optional payer bank account id if stored"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Payment method code such as wire or ACH",
+            "example": "wire"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Payment currency code",
+            "example": "USD"
+          },
+          "scheduled_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Date",
+            "description": "Scheduled or expected settlement date YYYY-MM-DD",
+            "example": "2025-01-22"
+          },
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount",
+            "description": "Total payment amount",
+            "example": 12500.0
+          },
+          "reconciliation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reconciliation Status",
+            "description": "Initial reconciliation status",
+            "default": "unreconciled",
+            "example": "unreconciled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment_id",
+          "buyer_org_id",
+          "method",
+          "currency",
+          "total_amount"
+        ],
+        "title": "PaymentCreateRequest"
+      },
+      "PaymentModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Payment primary key",
+            "example": 4001
+          },
+          "payment_id": {
+            "type": "string",
+            "title": "Payment Id",
+            "description": "External payment identifier",
+            "example": "PMT-2025-00077"
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization id",
+            "example": 5
+          },
+          "payer_bank_account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payer Bank Account Id",
+            "description": "Payer bank account id if any"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Payment method used",
+            "example": "wire"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Payment currency code",
+            "example": "USD"
+          },
+          "scheduled_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Date",
+            "description": "Scheduled payment date",
+            "example": "2025-01-22"
+          },
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount",
+            "description": "Total payment amount",
+            "example": 12500.0
+          },
+          "reconciliation_status": {
+            "type": "string",
+            "title": "Reconciliation Status",
+            "description": "Current reconciliation status",
+            "example": "unreconciled"
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id",
+            "description": "User who created the payment record",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T10:20:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T10:20:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "payment_id",
+          "buyer_org_id",
+          "method",
+          "currency",
+          "total_amount",
+          "reconciliation_status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PaymentModel"
+      },
+      "PaymentReconciliationUpdateModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Payment primary key",
+            "example": 4001
+          },
+          "payment_id": {
+            "type": "string",
+            "title": "Payment Id",
+            "description": "External payment identifier",
+            "example": "PMT-2025-00077"
+          },
+          "reconciliation_status": {
+            "type": "string",
+            "title": "Reconciliation Status",
+            "description": "Updated reconciliation_status value",
+            "example": "reconciled"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp when reconciliation_status was updated",
+            "example": "2025-01-25T12:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "payment_id",
+          "reconciliation_status",
+          "updated_at"
+        ],
+        "title": "PaymentReconciliationUpdateModel"
+      },
+      "PaymentReconciliationUpdateRequest": {
+        "properties": {
+          "reconciliation_status": {
+            "type": "string",
+            "title": "Reconciliation Status",
+            "description": "New reconciliation_status value",
+            "example": "reconciled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reconciliation_status"
+        ],
+        "title": "PaymentReconciliationUpdateRequest"
+      },
+      "PaymentRequestCreateRequest": {
+        "properties": {
+          "payment_request_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Request Number",
+            "description": "Optional externally visible payment request number",
+            "example": "PR-2025-00015"
+          },
+          "invoice_id": {
+            "type": "integer",
+            "title": "Invoice Id",
+            "description": "Invoice primary key this payment request relates to",
+            "example": 1010
+          },
+          "vendor_org_id": {
+            "type": "integer",
+            "title": "Vendor Org Id",
+            "description": "Vendor organization id initiating the request",
+            "example": 1
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization id expected to pay",
+            "example": 5
+          },
+          "bank_account_id": {
+            "type": "integer",
+            "title": "Bank Account Id",
+            "description": "Bank account id where funds should be received",
+            "example": 7
+          },
+          "requested_amount": {
+            "type": "number",
+            "title": "Requested Amount",
+            "description": "Amount requested for payment",
+            "example": 2500.0
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency of the payment request",
+            "example": "USD"
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Scheduled Date",
+            "description": "Requested payment date YYYY-MM-DD",
+            "example": "2025-01-20"
+          },
+          "payment_method": {
+            "type": "string",
+            "title": "Payment Method",
+            "description": "Expected payment method type",
+            "example": "ACH"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "Initial status of the payment request",
+            "default": "pending",
+            "example": "pending"
+          }
+        },
+        "type": "object",
+        "required": [
+          "invoice_id",
+          "vendor_org_id",
+          "buyer_org_id",
+          "bank_account_id",
+          "requested_amount",
+          "currency",
+          "scheduled_date",
+          "payment_method"
+        ],
+        "title": "PaymentRequestCreateRequest"
+      },
+      "PaymentRequestModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Payment request primary key",
+            "example": 3001
+          },
+          "payment_request_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Request Number",
+            "description": "Payment request number if provided",
+            "example": "PR-2025-00015"
+          },
+          "invoice_id": {
+            "type": "integer",
+            "title": "Invoice Id",
+            "description": "Related invoice primary key",
+            "example": 1010
+          },
+          "vendor_org_id": {
+            "type": "integer",
+            "title": "Vendor Org Id",
+            "description": "Vendor organization id",
+            "example": 1
+          },
+          "buyer_org_id": {
+            "type": "integer",
+            "title": "Buyer Org Id",
+            "description": "Buyer organization id",
+            "example": 5
+          },
+          "bank_account_id": {
+            "type": "integer",
+            "title": "Bank Account Id",
+            "description": "Bank account id for payment receipt",
+            "example": 7
+          },
+          "requested_amount": {
+            "type": "number",
+            "title": "Requested Amount",
+            "description": "Requested payment amount",
+            "example": 2500.0
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency used for this payment request",
+            "example": "USD"
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Scheduled Date",
+            "description": "Requested payment date",
+            "example": "2025-01-20"
+          },
+          "payment_method": {
+            "type": "string",
+            "title": "Payment Method",
+            "description": "Payment method such as ACH or wire",
+            "example": "ACH"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Current payment request status",
+            "example": "pending"
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id",
+            "description": "User who created the payment request",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T10:15:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T10:15:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "invoice_id",
+          "vendor_org_id",
+          "buyer_org_id",
+          "bank_account_id",
+          "requested_amount",
+          "currency",
+          "scheduled_date",
+          "payment_method",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PaymentRequestModel"
+      },
+      "PaymentTermCreateRequest": {
+        "properties": {
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id",
+            "description": "Owning organization id for these payment terms",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique payment terms name per organization",
+            "example": "Net 45 with 2% 10, Net 30"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Human-readable description of the payment terms",
+            "example": "2% discount if paid within 10 days, net 45 standard"
+          },
+          "net_days": {
+            "type": "integer",
+            "title": "Net Days",
+            "description": "Number of days from invoice_date to standard due date",
+            "example": 45
+          },
+          "discount_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Percentage",
+            "description": "Early payment discount percentage if applicable",
+            "example": 2.0
+          },
+          "discount_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Days",
+            "description": "Number of days for early payment discount to apply",
+            "example": 10
+          },
+          "applicable_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applicable Currency",
+            "description": "Currency code these terms apply to, null means all",
+            "example": "USD"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Whether these payment terms are active and usable",
+            "default": true,
+            "example": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "org_id",
+          "name",
+          "net_days"
+        ],
+        "title": "PaymentTermCreateRequest"
+      },
+      "PaymentTermListResponse": {
+        "properties": {
+          "payment_terms": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentTermModel"
+            },
+            "type": "array",
+            "title": "Payment Terms",
+            "description": "List of payment terms",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment_terms"
+        ],
+        "title": "PaymentTermListResponse"
+      },
+      "PaymentTermModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Payment terms primary key",
+            "example": 12
+          },
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id",
+            "description": "Owning organization id",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Payment terms name",
+            "example": "Net 45 with 2% 10, Net 30"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Payment terms description",
+            "example": "2% discount if paid within 10 days, net 45 standard"
+          },
+          "net_days": {
+            "type": "integer",
+            "title": "Net Days",
+            "description": "Number of days to standard due date",
+            "example": 45
+          },
+          "discount_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Percentage",
+            "description": "Early payment discount percent if any",
+            "example": 2.0
+          },
+          "discount_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Days",
+            "description": "Early payment discount window in days",
+            "example": 10
+          },
+          "applicable_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applicable Currency",
+            "description": "Currency code this term applies to",
+            "example": "USD"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "True if the terms are active",
+            "example": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-02T09:10:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T09:10:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "org_id",
+          "name",
+          "net_days",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PaymentTermModel"
+      },
+      "ReceivablesAgingResponse": {
+        "properties": {
+          "seller_org_id": {
+            "type": "integer",
+            "title": "Seller Org Id",
+            "description": "Seller organization id for this report",
+            "example": 1
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency code used in this report",
+            "example": "USD"
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of Date",
+            "description": "Reference date used for aging calculation",
+            "example": "2025-03-01"
+          },
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/AgingBucketModel"
+            },
+            "type": "array",
+            "title": "Buckets",
+            "description": "Aging buckets with totals",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "seller_org_id",
+          "currency",
+          "as_of_date",
+          "buckets"
+        ],
+        "title": "ReceivablesAgingResponse"
+      },
+      "RemittanceAdviceCreateRequest": {
+        "properties": {
+          "payment_id": {
+            "type": "integer",
+            "title": "Payment Id",
+            "description": "Payment internal id this allocation uses",
+            "example": 4001
+          },
+          "invoice_id": {
+            "type": "integer",
+            "title": "Invoice Id",
+            "description": "Invoice internal id receiving the allocation",
+            "example": 9001
+          },
+          "allocated_amount": {
+            "type": "number",
+            "title": "Allocated Amount",
+            "description": "Amount from the payment applied to this invoice",
+            "example": 8000.0
+          },
+          "discount_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Amount",
+            "description": "Discount applied as part of this payment",
+            "default": 0.0,
+            "example": 160.0
+          },
+          "write_off_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Write Off Amount",
+            "description": "Amount written off and not expected to be collected",
+            "default": 0.0,
+            "example": 40.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment_id",
+          "invoice_id",
+          "allocated_amount"
+        ],
+        "title": "RemittanceAdviceCreateRequest"
+      },
+      "RemittanceAdviceModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Remittance advice primary key",
+            "example": 5001
+          },
+          "payment_id": {
+            "type": "integer",
+            "title": "Payment Id",
+            "description": "Payment primary key used for this allocation",
+            "example": 4001
+          },
+          "invoice_id": {
+            "type": "integer",
+            "title": "Invoice Id",
+            "description": "Invoice primary key receiving the allocation",
+            "example": 9001
+          },
+          "allocated_amount": {
+            "type": "number",
+            "title": "Allocated Amount",
+            "description": "Allocated amount applied to the invoice",
+            "example": 8000.0
+          },
+          "discount_amount": {
+            "type": "number",
+            "title": "Discount Amount",
+            "description": "Discount amount associated with this allocation",
+            "example": 160.0
+          },
+          "write_off_amount": {
+            "type": "number",
+            "title": "Write Off Amount",
+            "description": "Write-off amount associated with this allocation",
+            "example": 0.0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-25T11:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-25T11:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "payment_id",
+          "invoice_id",
+          "allocated_amount",
+          "discount_amount",
+          "write_off_amount",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "RemittanceAdviceModel"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

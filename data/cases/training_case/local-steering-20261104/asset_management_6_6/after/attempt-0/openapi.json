@@ -1,0 +1,5975 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Fleetio Simplified API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/reports/fleet_utilization_maintenance": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Fleet utilization and maintenance cost report",
+        "description": "Compute miles, fuel cost, maintenance cost, and cost per mile for vehicles.",
+        "operationId": "report_fleet_utilization_maintenance",
+        "parameters": [
+          {
+            "name": "fleet_name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fleet name to report on",
+              "title": "Fleet Name"
+            },
+            "description": "Fleet name to report on",
+            "example": "Delivery Fleet"
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Start date (YYYY-MM-DD) inclusive",
+              "title": "From Date"
+            },
+            "description": "Start date (YYYY-MM-DD) inclusive",
+            "example": "2025-10-03"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "End date (YYYY-MM-DD) inclusive",
+              "title": "To Date"
+            },
+            "description": "End date (YYYY-MM-DD) inclusive",
+            "example": "2025-12-31"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/asset_driver_assignments": {
+      "post": {
+        "tags": [
+          "asset_driver_assignments"
+        ],
+        "summary": "Assign driver to asset",
+        "description": "Create a new asset-driver assignment for a date range.",
+        "operationId": "create_asset_driver_assignment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetDriverAssignmentCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDriverAssignmentCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "asset_driver_assignments"
+        ],
+        "summary": "List asset-driver assignments",
+        "description": "Retrieve asset-driver assignments filtered by asset, driver, or date range.",
+        "operationId": "list_asset_driver_assignments",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset ID",
+              "title": "Asset Id"
+            },
+            "description": "Filter by asset ID",
+            "example": 10
+          },
+          {
+            "name": "driver_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by driver ID",
+              "title": "Driver Id"
+            },
+            "description": "Filter by driver ID",
+            "example": 3
+          },
+          {
+            "name": "start_date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter assignments starting on or after this date",
+              "title": "Start Date From"
+            },
+            "description": "Filter assignments starting on or after this date",
+            "example": "2025-01-01"
+          },
+          {
+            "name": "start_date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter assignments starting on or before this date",
+              "title": "Start Date To"
+            },
+            "description": "Filter assignments starting on or before this date",
+            "example": "2025-01-31"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDriverAssignmentsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inspection_items_results": {
+      "post": {
+        "tags": [
+          "inspections"
+        ],
+        "summary": "Create inspection item result",
+        "description": "Record the result for a single inspection_checklist_item under an inspection.",
+        "operationId": "create_inspection_item_result",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectionItemResultCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionItemResultCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issue_work_order_links": {
+      "post": {
+        "tags": [
+          "issues",
+          "work_orders"
+        ],
+        "summary": "Link issue to work order",
+        "description": "Create a link between an issue and a work order for traceability.",
+        "operationId": "create_issue_work_order_link",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueWorkOrderLinkCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueWorkOrderLinkCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inspection_checklists": {
+      "get": {
+        "tags": [
+          "inspection_checklists"
+        ],
+        "summary": "List inspection checklists",
+        "description": "Retrieve inspection checklist templates including DOT pre-trip lists.",
+        "operationId": "list_inspection_checklists",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional exact name filter",
+              "title": "Name"
+            },
+            "description": "Optional exact name filter",
+            "example": "DOT Pre-Trip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionChecklistsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/odometer_readings": {
+      "post": {
+        "tags": [
+          "odometer_readings"
+        ],
+        "summary": "Log odometer reading",
+        "description": "Record a new odometer reading for an asset and update its current_odometer.",
+        "operationId": "create_odometer_reading",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OdometerReadingCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OdometerReadingCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "odometer_readings"
+        ],
+        "summary": "List odometer readings",
+        "description": "Retrieve odometer readings for an asset with optional time range filtering.",
+        "operationId": "list_odometer_readings",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Asset ID to filter readings",
+              "title": "Asset Id"
+            },
+            "description": "Asset ID to filter readings",
+            "example": 10
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start timestamp (inclusive) for readings",
+              "title": "From"
+            },
+            "description": "Start timestamp (inclusive) for readings",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End timestamp (inclusive) for readings",
+              "title": "To"
+            },
+            "description": "End timestamp (inclusive) for readings",
+            "example": "2025-01-31T23:59:59Z"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OdometerReadingsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/service_schedules": {
+      "post": {
+        "tags": [
+          "service_schedules"
+        ],
+        "summary": "Create service schedule",
+        "description": "Create a service schedule for an asset based on mileage/time or engine hours.",
+        "operationId": "create_service_schedule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceScheduleCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceScheduleCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/service_reminders": {
+      "get": {
+        "tags": [
+          "service_reminders"
+        ],
+        "summary": "List service reminders",
+        "description": "Retrieve service reminders filtered by asset, schedule, or status.",
+        "operationId": "list_service_reminders",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter reminders by asset ID",
+              "title": "Asset Id"
+            },
+            "description": "Filter reminders by asset ID",
+            "example": 10
+          },
+          {
+            "name": "schedule_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter reminders by schedule ID",
+              "title": "Schedule Id"
+            },
+            "description": "Filter reminders by schedule ID",
+            "example": 5
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status: 'open','completed','dismissed'",
+              "title": "Status"
+            },
+            "description": "Filter by status: 'open','completed','dismissed'",
+            "example": "open"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceRemindersListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/service_programs": {
+      "post": {
+        "tags": [
+          "service_programs"
+        ],
+        "summary": "Create service program",
+        "description": "Create a reusable service program template for grouping schedules.",
+        "operationId": "create_service_program",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceProgramCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceProgramCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/work_order_tasks": {
+      "post": {
+        "tags": [
+          "work_order_tasks"
+        ],
+        "summary": "Add task to work order",
+        "description": "Create a new work_order_task line item under a work order.",
+        "operationId": "create_work_order_task",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkOrderTaskCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderTaskCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fuel_entries": {
+      "post": {
+        "tags": [
+          "fuel_entries"
+        ],
+        "summary": "Create fuel entry",
+        "description": "Log a fuel purchase for an asset and optionally update fuel metrics.",
+        "operationId": "create_fuel_entry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FuelEntryCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FuelEntryCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/bulk": {
+      "post": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Bulk create equipment assets",
+        "description": "Create multiple equipment assets in one request using external_asset_id.",
+        "operationId": "bulk_create_equipment_assets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkEquipmentAssetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkEquipmentAssetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/work_orders": {
+      "post": {
+        "tags": [
+          "work_orders"
+        ],
+        "summary": "Create work order",
+        "description": "Create a new work_order for an asset, optionally linked to a service reminder.",
+        "operationId": "create_work_order",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkOrderCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inspections": {
+      "post": {
+        "tags": [
+          "inspections"
+        ],
+        "summary": "Create inspection",
+        "description": "Create an inspection header record for an asset using a specific checklist.",
+        "operationId": "create_inspection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/drivers": {
+      "get": {
+        "tags": [
+          "drivers"
+        ],
+        "summary": "List drivers",
+        "description": "Retrieve all drivers with optional name filtering.",
+        "operationId": "list_drivers",
+        "parameters": [
+          {
+            "name": "full_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional case-insensitive partial name filter",
+              "title": "Full Name"
+            },
+            "description": "Optional case-insensitive partial name filter",
+            "example": "Maria Lopez"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriversListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "drivers"
+        ],
+        "summary": "Create a driver",
+        "description": "Create a new driver record for assignment to assets.",
+        "operationId": "create_driver",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fleets": {
+      "get": {
+        "tags": [
+          "fleets"
+        ],
+        "summary": "List fleets for current user",
+        "description": "Retrieve all fleets created by the current authenticated user.",
+        "operationId": "list_fleets",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional case-insensitive name filter",
+              "title": "Name"
+            },
+            "description": "Optional case-insensitive name filter",
+            "example": "Delivery Fleet"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "fleets"
+        ],
+        "summary": "Create a new fleet",
+        "description": "Create a new fleet owned by the current authenticated user.",
+        "operationId": "create_fleet",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "List assets",
+        "description": "Retrieve assets for current user with optional filters.",
+        "operationId": "list_assets",
+        "parameters": [
+          {
+            "name": "asset_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset_type ('vehicle' or 'equipment')",
+              "title": "Asset Type"
+            },
+            "description": "Filter by asset_type ('vehicle' or 'equipment')",
+            "example": "vehicle"
+          },
+          {
+            "name": "fleet_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by associated fleet name (case-insensitive)",
+              "title": "Fleet Name"
+            },
+            "description": "Filter by associated fleet name (case-insensitive)",
+            "example": "Delivery Fleet"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset operational status",
+              "title": "Status"
+            },
+            "description": "Filter by asset operational status",
+            "example": "active"
+          },
+          {
+            "name": "vin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter vehicles by VIN",
+              "title": "Vin"
+            },
+            "description": "Filter vehicles by VIN",
+            "example": "1HGCM82633A004352"
+          },
+          {
+            "name": "license_plate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter vehicles by license plate",
+              "title": "License Plate"
+            },
+            "description": "Filter vehicles by license plate",
+            "example": "ABC-1234"
+          },
+          {
+            "name": "external_asset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter equipment by external_asset_id",
+              "title": "External Asset Id"
+            },
+            "description": "Filter equipment by external_asset_id",
+            "example": "FORKLIFT-001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Create an asset",
+        "description": "Create a new vehicle or equipment asset and associate it with a fleet.",
+        "operationId": "create_asset",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues": {
+      "post": {
+        "tags": [
+          "issues"
+        ],
+        "summary": "Create issue",
+        "description": "Create an issue for an asset, optionally linked to an inspection item result.",
+        "operationId": "create_issue",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shops": {
+      "get": {
+        "tags": [
+          "shops"
+        ],
+        "summary": "List shops",
+        "description": "Retrieve all in-house and external shops available for work orders.",
+        "operationId": "list_shops",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional case-insensitive partial name filter",
+              "title": "Name"
+            },
+            "description": "Optional case-insensitive partial name filter",
+            "example": "Goodyear"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by shop type: 'in_house' or 'external'",
+              "title": "Type"
+            },
+            "description": "Filter by shop type: 'in_house' or 'external'",
+            "example": "in_house"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/service_schedules/{schedule_id}/generate_reminders": {
+      "post": {
+        "tags": [
+          "service_schedules",
+          "service_reminders"
+        ],
+        "summary": "Generate service reminders",
+        "description": "Generate due service_reminders for a schedule based on current metrics.",
+        "operationId": "generate_service_reminders_for_schedule",
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Service schedule ID to generate reminders for",
+              "title": "Schedule Id"
+            },
+            "description": "Service schedule ID to generate reminders for",
+            "example": 5
+          },
+          {
+            "name": "as_of_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Logical 'today' date for due_date calculations (YYYY-MM-DD)",
+              "title": "As Of Date"
+            },
+            "description": "Logical 'today' date for due_date calculations (YYYY-MM-DD)",
+            "example": "2025-01-07"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateServiceRemindersResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/{asset_id}/metrics/fuel_cost_per_mile": {
+      "post": {
+        "tags": [
+          "assets",
+          "metrics"
+        ],
+        "summary": "Recalculate fuel cost per mile",
+        "description": "Recompute and store fuel_cost_per_mile for an asset based on entries and readings.",
+        "operationId": "recalculate_fuel_cost_per_mile",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Asset ID whose metric will be recalculated",
+              "title": "Asset Id"
+            },
+            "description": "Asset ID whose metric will be recalculated",
+            "example": 10
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional start date for calculation window",
+              "title": "From Date"
+            },
+            "description": "Optional start date for calculation window",
+            "example": "2024-10-01"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional end date for calculation window",
+              "title": "To Date"
+            },
+            "description": "Optional end date for calculation window",
+            "example": "2025-01-07"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FuelCostPerMileMetricResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inspection_checklists/{checklist_id}/items": {
+      "get": {
+        "tags": [
+          "inspection_checklists"
+        ],
+        "summary": "List items for checklist",
+        "description": "Retrieve inspection_checklist_items for a given checklist to submit inspection results.",
+        "operationId": "list_inspection_checklist_items",
+        "parameters": [
+          {
+            "name": "checklist_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Checklist ID whose items to retrieve",
+              "title": "Checklist Id"
+            },
+            "description": "Checklist ID whose items to retrieve",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionChecklistItemsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/service_reminders/{reminder_id}": {
+      "patch": {
+        "tags": [
+          "service_reminders"
+        ],
+        "summary": "Update service reminder status",
+        "description": "Partially update a service reminder, typically to mark it completed or dismissed.",
+        "operationId": "update_service_reminder",
+        "parameters": [
+          {
+            "name": "reminder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Service reminder ID to update",
+              "title": "Reminder Id"
+            },
+            "description": "Service reminder ID to update",
+            "example": 8
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceReminderUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceReminderUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/work_orders/{work_order_id}": {
+      "patch": {
+        "tags": [
+          "work_orders"
+        ],
+        "summary": "Update work order",
+        "description": "Partially update a work order such as status, costs, or completion time.",
+        "operationId": "update_work_order",
+        "parameters": [
+          {
+            "name": "work_order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Work order ID to update",
+              "title": "Work Order Id"
+            },
+            "description": "Work order ID to update",
+            "example": 30
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkOrderUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/work_order_tasks/{task_id}": {
+      "patch": {
+        "tags": [
+          "work_order_tasks"
+        ],
+        "summary": "Update work order task",
+        "description": "Partially update a work order task status, costs, or position.",
+        "operationId": "update_work_order_task",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Work order task ID",
+              "title": "Task Id"
+            },
+            "description": "Work order task ID",
+            "example": 101
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkOrderTaskUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderTaskUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/{asset_id}": {
+      "patch": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Update asset fields",
+        "description": "Partially update fields of an asset such as status, fleet, or metrics.",
+        "operationId": "update_asset",
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Asset ID to update",
+              "title": "Asset Id"
+            },
+            "description": "Asset ID to update",
+            "example": 10
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues/{issue_id}": {
+      "patch": {
+        "tags": [
+          "issues"
+        ],
+        "summary": "Update issue",
+        "description": "Update issue fields like status, resolution_note, actual_cost, or resolved_at.",
+        "operationId": "update_issue",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Issue ID to update",
+              "title": "Issue Id"
+            },
+            "description": "Issue ID to update",
+            "example": 60
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AssetCreateRequest": {
+        "properties": {
+          "asset_type": {
+            "type": "string",
+            "title": "Asset Type",
+            "description": "Type of asset ('vehicle' or 'equipment')",
+            "example": "vehicle"
+          },
+          "vin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vin",
+            "description": "VIN for vehicles (required when asset_type is 'vehicle')",
+            "example": "1HGCM82633A004352"
+          },
+          "license_plate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License Plate",
+            "description": "License plate for vehicles",
+            "example": "ABC-1234"
+          },
+          "external_asset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Asset Id",
+            "description": "Unique ID for equipment (e.g., internal tag)",
+            "example": "FORKLIFT-001"
+          },
+          "make": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Make",
+            "description": "Manufacturer name",
+            "example": "Ford"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Model name",
+            "example": "Transit 250"
+          },
+          "model_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Year",
+            "description": "Model year",
+            "example": 2022
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Display name for asset (often used for equipment)",
+            "example": "Hyster H50 forklift"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "Operational status (default 'active')",
+            "default": "active",
+            "example": "active"
+          },
+          "status_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Reason",
+            "description": "Optional reason for the status",
+            "example": "New vehicle added"
+          },
+          "acquisition_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Date",
+            "description": "Date asset was acquired (YYYY-MM-DD)",
+            "example": "2024-12-15"
+          },
+          "purchase_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Price",
+            "description": "Purchase price",
+            "example": 35000.0
+          },
+          "fleet_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fleet Id",
+            "description": "Fleet ID to associate this asset with",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_type"
+        ],
+        "title": "AssetCreateRequest"
+      },
+      "AssetCreateResponse": {
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/AssetModel",
+            "description": "Created asset",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset"
+        ],
+        "title": "AssetCreateResponse"
+      },
+      "AssetDriverAssignmentCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID to assign to the driver",
+            "example": 10
+          },
+          "driver_id": {
+            "type": "integer",
+            "title": "Driver Id",
+            "description": "Driver ID being assigned",
+            "example": 3
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Assignment start date (YYYY-MM-DD)",
+            "example": "2025-01-05"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "Assignment end date (YYYY-MM-DD), nullable for open-ended",
+            "example": "2025-01-10"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "driver_id",
+          "start_date"
+        ],
+        "title": "AssetDriverAssignmentCreateRequest"
+      },
+      "AssetDriverAssignmentCreateResponse": {
+        "properties": {
+          "assignment": {
+            "$ref": "#/components/schemas/AssetDriverAssignmentModel",
+            "description": "Created assignment",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "assignment"
+        ],
+        "title": "AssetDriverAssignmentCreateResponse"
+      },
+      "AssetDriverAssignmentModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Assignment ID",
+            "example": 5
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Assigned asset ID",
+            "example": 10
+          },
+          "driver_id": {
+            "type": "integer",
+            "title": "Driver Id",
+            "description": "Assigned driver ID",
+            "example": 3
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Start date",
+            "example": "2025-01-05"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "End date",
+            "example": "2025-01-10"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "User ID that created assignment",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-05T09:00:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-05T09:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "driver_id",
+          "start_date",
+          "created_by"
+        ],
+        "title": "AssetDriverAssignmentModel"
+      },
+      "AssetDriverAssignmentsListResponse": {
+        "properties": {
+          "assignments": {
+            "items": {
+              "$ref": "#/components/schemas/AssetDriverAssignmentModel"
+            },
+            "type": "array",
+            "title": "Assignments",
+            "description": "List of assignments",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "assignments"
+        ],
+        "title": "AssetDriverAssignmentsListResponse"
+      },
+      "AssetModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "asset_type": {
+            "type": "string",
+            "title": "Asset Type",
+            "description": "Asset type ('vehicle' or 'equipment')",
+            "example": "vehicle"
+          },
+          "vin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vin",
+            "description": "Vehicle VIN (null for equipment)",
+            "example": "1HGCM82633A004352"
+          },
+          "license_plate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License Plate",
+            "description": "License plate (vehicles only)",
+            "example": "ABC-1234"
+          },
+          "external_asset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Asset Id",
+            "description": "External asset identifier for equipment",
+            "example": "FORKLIFT-001"
+          },
+          "make": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Make",
+            "description": "Manufacturer",
+            "example": "Ford"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Model name",
+            "example": "Transit 250"
+          },
+          "model_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Year",
+            "description": "Model year",
+            "example": 2022
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Human-friendly asset name",
+            "example": "Hyster H50 forklift"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Operational status",
+            "example": "active"
+          },
+          "status_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Reason",
+            "description": "Optional reason for current status",
+            "example": "In maintenance"
+          },
+          "acquisition_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Date",
+            "description": "Date the asset was acquired",
+            "example": "2024-01-15"
+          },
+          "purchase_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Price",
+            "description": "Purchase price in asset currency",
+            "example": 42000.0
+          },
+          "current_odometer": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Odometer",
+            "description": "Latest known odometer reading in miles",
+            "example": 75230.0
+          },
+          "current_engine_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Engine Hours",
+            "description": "Latest known engine hours for equipment",
+            "example": 1200.5
+          },
+          "fuel_cost_per_mile": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fuel Cost Per Mile",
+            "description": "Calculated fuel cost per mile",
+            "example": 0.25
+          },
+          "fleet_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fleet Id",
+            "description": "Associated fleet ID",
+            "example": 1
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "User ID that created the asset (always 1)",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-01T10:00:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-07T09:45:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_type",
+          "status",
+          "created_by"
+        ],
+        "title": "AssetModel"
+      },
+      "AssetUpdateRequest": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "New operational status",
+            "example": "active"
+          },
+          "status_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Reason",
+            "description": "Reason for status change",
+            "example": "Reactivated after inspection"
+          },
+          "fleet_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fleet Id",
+            "description": "Change associated fleet",
+            "example": 1
+          },
+          "current_odometer": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Odometer",
+            "description": "Update latest odometer reading",
+            "example": 75230.0
+          },
+          "current_engine_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Engine Hours",
+            "description": "Update latest engine hours reading",
+            "example": 1250.0
+          },
+          "fuel_cost_per_mile": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fuel Cost Per Mile",
+            "description": "Update fuel cost-per-mile metric",
+            "example": 0.27
+          }
+        },
+        "type": "object",
+        "title": "AssetUpdateRequest"
+      },
+      "AssetUpdateResponse": {
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/AssetModel",
+            "description": "Updated asset",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset"
+        ],
+        "title": "AssetUpdateResponse"
+      },
+      "AssetsListResponse": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/AssetModel"
+            },
+            "type": "array",
+            "title": "Assets",
+            "description": "List of assets",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "assets"
+        ],
+        "title": "AssetsListResponse"
+      },
+      "BulkEquipmentAssetItem": {
+        "properties": {
+          "asset_type": {
+            "type": "string",
+            "title": "Asset Type",
+            "description": "Asset type (must be 'equipment')",
+            "example": "equipment"
+          },
+          "external_asset_id": {
+            "type": "string",
+            "title": "External Asset Id",
+            "description": "External asset ID",
+            "example": "FORKLIFT-001"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Asset name",
+            "example": "Hyster H50 forklift"
+          },
+          "make": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Make",
+            "description": "Manufacturer",
+            "example": "Hyster"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Model",
+            "example": "H50"
+          },
+          "acquisition_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Date",
+            "description": "Acquisition date",
+            "example": "2024-09-01"
+          },
+          "purchase_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Price",
+            "description": "Purchase price",
+            "example": 25000.0
+          },
+          "fleet_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fleet Id",
+            "description": "Fleet ID",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_type",
+          "external_asset_id"
+        ],
+        "title": "BulkEquipmentAssetItem"
+      },
+      "BulkEquipmentAssetRequest": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/BulkEquipmentAssetItem"
+            },
+            "type": "array",
+            "title": "Assets",
+            "description": "Array of equipment asset definitions",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "assets"
+        ],
+        "title": "BulkEquipmentAssetRequest"
+      },
+      "BulkEquipmentAssetResponse": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/AssetModel"
+            },
+            "type": "array",
+            "title": "Assets",
+            "description": "Created equipment assets",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "assets"
+        ],
+        "title": "BulkEquipmentAssetResponse"
+      },
+      "DriverCreateRequest": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Driver full legal name",
+            "example": "Maria Lopez"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "Driver email address",
+            "example": "maria.lopez@example.com"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone",
+            "description": "Driver phone number",
+            "example": "+1-555-123-4567"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name"
+        ],
+        "title": "DriverCreateRequest"
+      },
+      "DriverCreateResponse": {
+        "properties": {
+          "driver": {
+            "$ref": "#/components/schemas/DriverModel",
+            "description": "Created driver",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "driver"
+        ],
+        "title": "DriverCreateResponse"
+      },
+      "DriverModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Driver ID",
+            "example": 1
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Driver full name",
+            "example": "Maria Lopez"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "Driver email address",
+            "example": "maria.lopez@example.com"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone",
+            "description": "Driver phone number",
+            "example": "+1-555-123-4567"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-01T09:00:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name"
+        ],
+        "title": "DriverModel"
+      },
+      "DriversListResponse": {
+        "properties": {
+          "drivers": {
+            "items": {
+              "$ref": "#/components/schemas/DriverModel"
+            },
+            "type": "array",
+            "title": "Drivers",
+            "description": "List of drivers",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "drivers"
+        ],
+        "title": "DriversListResponse"
+      },
+      "FleetCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique fleet name",
+            "example": "Delivery Fleet"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description of the fleet",
+            "example": "All vans used for local deliveries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "FleetCreateRequest"
+      },
+      "FleetCreateResponse": {
+        "properties": {
+          "fleet": {
+            "$ref": "#/components/schemas/FleetModel",
+            "description": "Created fleet",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "fleet"
+        ],
+        "title": "FleetCreateResponse"
+      },
+      "FleetModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Fleet ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Fleet name",
+            "example": "Delivery Fleet"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Fleet description",
+            "example": "Primary delivery vehicles"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "User ID who created the fleet",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-01T10:00:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-02T11:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_by"
+        ],
+        "title": "FleetModel"
+      },
+      "FleetReportResponse": {
+        "properties": {
+          "fleet_name": {
+            "type": "string",
+            "title": "Fleet Name",
+            "description": "Reported fleet name",
+            "example": "Delivery Fleet"
+          },
+          "from_date": {
+            "type": "string",
+            "format": "date",
+            "title": "From Date",
+            "description": "Report period start date",
+            "example": "2025-10-03"
+          },
+          "to_date": {
+            "type": "string",
+            "format": "date",
+            "title": "To Date",
+            "description": "Report period end date",
+            "example": "2025-12-31"
+          },
+          "vehicles": {
+            "items": {
+              "$ref": "#/components/schemas/FleetReportVehicleEntry"
+            },
+            "type": "array",
+            "title": "Vehicles",
+            "description": "Per-vehicle metrics",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "fleet_name",
+          "from_date",
+          "to_date",
+          "vehicles"
+        ],
+        "title": "FleetReportResponse"
+      },
+      "FleetReportVehicleEntry": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Vehicle asset ID",
+            "example": 10
+          },
+          "vin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vin",
+            "description": "Vehicle VIN",
+            "example": "1HGCM82633A004352"
+          },
+          "license_plate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License Plate",
+            "description": "Vehicle license plate",
+            "example": "ABC-1234"
+          },
+          "make": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Make",
+            "description": "Make",
+            "example": "Ford"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Model",
+            "example": "Transit 250"
+          },
+          "model_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Year",
+            "description": "Model year",
+            "example": 2022
+          },
+          "total_miles_driven": {
+            "type": "number",
+            "title": "Total Miles Driven",
+            "description": "Miles driven in period (based on odometer readings)",
+            "example": 3200.0
+          },
+          "total_fuel_cost": {
+            "type": "number",
+            "title": "Total Fuel Cost",
+            "description": "Sum of fuel total_cost in period",
+            "example": 850.0
+          },
+          "total_maintenance_cost": {
+            "type": "number",
+            "title": "Total Maintenance Cost",
+            "description": "Sum of work_order actual_total_cost in period",
+            "example": 420.0
+          },
+          "average_cost_per_mile": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Cost Per Mile",
+            "description": "Average combined cost per mile (fuel + maintenance)",
+            "example": 0.4
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "total_miles_driven",
+          "total_fuel_cost",
+          "total_maintenance_cost"
+        ],
+        "title": "FleetReportVehicleEntry"
+      },
+      "FleetsListResponse": {
+        "properties": {
+          "fleets": {
+            "items": {
+              "$ref": "#/components/schemas/FleetModel"
+            },
+            "type": "array",
+            "title": "Fleets",
+            "description": "List of fleets",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "fleets"
+        ],
+        "title": "FleetsListResponse"
+      },
+      "FuelCostPerMileMetricResponse": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "fuel_cost_per_mile": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fuel Cost Per Mile",
+            "description": "Recalculated fuel cost per mile",
+            "example": 0.24
+          },
+          "total_fuel_cost": {
+            "type": "number",
+            "title": "Total Fuel Cost",
+            "description": "Total fuel cost used in calculation",
+            "example": 520.0
+          },
+          "miles_driven": {
+            "type": "number",
+            "title": "Miles Driven",
+            "description": "Total miles driven in calculation window",
+            "example": 2100.0
+          },
+          "from_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Date",
+            "description": "Effective start date used",
+            "example": "2024-10-01"
+          },
+          "to_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Date",
+            "description": "Effective end date used",
+            "example": "2025-01-07"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "total_fuel_cost",
+          "miles_driven"
+        ],
+        "title": "FuelCostPerMileMetricResponse"
+      },
+      "FuelEntryCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID the fuel entry belongs to",
+            "example": 10
+          },
+          "vendor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Name",
+            "description": "Name of fuel vendor or station",
+            "example": "Shell Station #204"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity",
+            "description": "Fuel quantity purchased",
+            "example": 14.5
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price",
+            "description": "Price per unit of fuel",
+            "example": 3.65
+          },
+          "total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Cost",
+            "description": "Total fuel cost (auto-calculated if omitted)",
+            "example": 52.93
+          },
+          "odometer_at_fill": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Odometer At Fill",
+            "description": "Odometer reading at fill time",
+            "example": 75260.0
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit",
+            "description": "Fuel unit (default 'gal')",
+            "default": "gal",
+            "example": "gal"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency",
+            "description": "Currency code (default 'USD')",
+            "default": "USD",
+            "example": "USD"
+          },
+          "filled_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Filled At",
+            "description": "Datetime fuel was filled (ISO 8601)",
+            "example": "2025-01-07T10:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "quantity",
+          "unit_price",
+          "filled_at"
+        ],
+        "title": "FuelEntryCreateRequest"
+      },
+      "FuelEntryCreateResponse": {
+        "properties": {
+          "fuel_entry": {
+            "$ref": "#/components/schemas/FuelEntryModel",
+            "description": "Created fuel entry",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "fuel_entry"
+        ],
+        "title": "FuelEntryCreateResponse"
+      },
+      "FuelEntryModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Fuel entry ID",
+            "example": 50
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "vendor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Name",
+            "description": "Vendor name",
+            "example": "Shell Station #204"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity",
+            "description": "Quantity purchased",
+            "example": 14.5
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price",
+            "description": "Price per unit",
+            "example": 3.65
+          },
+          "total_cost": {
+            "type": "number",
+            "title": "Total Cost",
+            "description": "Total cost",
+            "example": 52.93
+          },
+          "odometer_at_fill": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Odometer At Fill",
+            "description": "Odometer at fill",
+            "example": 75260.0
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Fuel unit",
+            "example": "gal"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency code",
+            "example": "USD"
+          },
+          "filled_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Filled At",
+            "description": "Fill timestamp",
+            "example": "2025-01-07T10:00:00Z"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "Creator user ID",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-07T10:01:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-07T10:01:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "quantity",
+          "unit_price",
+          "total_cost",
+          "unit",
+          "currency",
+          "filled_at",
+          "created_by"
+        ],
+        "title": "FuelEntryModel"
+      },
+      "GenerateServiceRemindersResponse": {
+        "properties": {
+          "created_reminders": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceReminderModel"
+            },
+            "type": "array",
+            "title": "Created Reminders",
+            "description": "Created service reminders",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "created_reminders"
+        ],
+        "title": "GenerateServiceRemindersResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InspectionChecklistItemModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Checklist item ID",
+            "example": 10
+          },
+          "checklist_id": {
+            "type": "integer",
+            "title": "Checklist Id",
+            "description": "Checklist ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Item name",
+            "example": "Left rear tire tread"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Item description",
+            "example": "Check tread depth and condition of left rear tire."
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position",
+            "description": "Order of item in checklist",
+            "example": 5
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2024-10-01T08:05:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2024-10-01T08:05:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "checklist_id",
+          "name"
+        ],
+        "title": "InspectionChecklistItemModel"
+      },
+      "InspectionChecklistItemsListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InspectionChecklistItemModel"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Checklist items",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "InspectionChecklistItemsListResponse"
+      },
+      "InspectionChecklistModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Checklist ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Checklist name",
+            "example": "DOT Pre-Trip"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Checklist description",
+            "example": "Daily DOT-compliant pre-trip inspection"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "Creator user ID",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2024-10-01T08:00:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2024-10-15T09:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_by"
+        ],
+        "title": "InspectionChecklistModel"
+      },
+      "InspectionChecklistsListResponse": {
+        "properties": {
+          "inspection_checklists": {
+            "items": {
+              "$ref": "#/components/schemas/InspectionChecklistModel"
+            },
+            "type": "array",
+            "title": "Inspection Checklists",
+            "description": "List of inspection checklists",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "inspection_checklists"
+        ],
+        "title": "InspectionChecklistsListResponse"
+      },
+      "InspectionCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Inspected asset ID",
+            "example": 10
+          },
+          "checklist_id": {
+            "type": "integer",
+            "title": "Checklist Id",
+            "description": "Checklist template used",
+            "example": 1
+          },
+          "driver_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Id",
+            "description": "Driver who performed the inspection",
+            "example": 3
+          },
+          "inspection_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Inspection Date",
+            "description": "Inspection date (YYYY-MM-DD)",
+            "example": "2025-01-07"
+          },
+          "inspection_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inspection Time",
+            "description": "Inspection time (HH:MM:SS)",
+            "example": "09:35:00"
+          },
+          "overall_status": {
+            "type": "string",
+            "title": "Overall Status",
+            "description": "Overall inspection status: 'pass' or 'fail'",
+            "example": "fail"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "General notes about the inspection",
+            "example": "Left rear tire tread below limit."
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "checklist_id",
+          "inspection_date",
+          "overall_status"
+        ],
+        "title": "InspectionCreateRequest"
+      },
+      "InspectionCreateResponse": {
+        "properties": {
+          "inspection": {
+            "$ref": "#/components/schemas/InspectionModel",
+            "description": "Created inspection",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "inspection"
+        ],
+        "title": "InspectionCreateResponse"
+      },
+      "InspectionItemResultCreateRequest": {
+        "properties": {
+          "inspection_id": {
+            "type": "integer",
+            "title": "Inspection Id",
+            "description": "Inspection ID this result belongs to",
+            "example": 40
+          },
+          "checklist_item_id": {
+            "type": "integer",
+            "title": "Checklist Item Id",
+            "description": "Checklist item ID inspected",
+            "example": 10
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Result: 'pass','fail','na'",
+            "example": "fail"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Notes about this item",
+            "example": "Tread worn below legal limit."
+          },
+          "photo_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Ref",
+            "description": "Reference to stored photo evidence",
+            "example": "photo_2025-01-07_0935.jpg"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inspection_id",
+          "checklist_item_id",
+          "status"
+        ],
+        "title": "InspectionItemResultCreateRequest"
+      },
+      "InspectionItemResultCreateResponse": {
+        "properties": {
+          "inspection_item_result": {
+            "$ref": "#/components/schemas/InspectionItemResultModel",
+            "description": "Created inspection item result",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "inspection_item_result"
+        ],
+        "title": "InspectionItemResultCreateResponse"
+      },
+      "InspectionItemResultModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Item result ID",
+            "example": 200
+          },
+          "inspection_id": {
+            "type": "integer",
+            "title": "Inspection Id",
+            "description": "Inspection ID",
+            "example": 40
+          },
+          "checklist_item_id": {
+            "type": "integer",
+            "title": "Checklist Item Id",
+            "description": "Checklist item ID",
+            "example": 10
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Result status",
+            "example": "fail"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Item notes",
+            "example": "Tread worn below legal limit."
+          },
+          "photo_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Ref",
+            "description": "Photo reference",
+            "example": "photo_2025-01-07_0935.jpg"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-07T09:41:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-07T09:41:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "inspection_id",
+          "checklist_item_id",
+          "status"
+        ],
+        "title": "InspectionItemResultModel"
+      },
+      "InspectionModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Inspection ID",
+            "example": 40
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "checklist_id": {
+            "type": "integer",
+            "title": "Checklist Id",
+            "description": "Checklist ID",
+            "example": 1
+          },
+          "driver_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Id",
+            "description": "Driver ID",
+            "example": 3
+          },
+          "inspection_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Inspection Date",
+            "description": "Inspection date",
+            "example": "2025-01-07"
+          },
+          "inspection_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inspection Time",
+            "description": "Inspection time",
+            "example": "09:35:00"
+          },
+          "overall_status": {
+            "type": "string",
+            "title": "Overall Status",
+            "description": "Overall status",
+            "example": "fail"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Inspection notes",
+            "example": "Left rear tire tread below limit."
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "Creator user ID",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-07T09:40:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-07T09:40:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "checklist_id",
+          "inspection_date",
+          "overall_status",
+          "created_by"
+        ],
+        "title": "InspectionModel"
+      },
+      "IssueCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID the issue affects",
+            "example": 10
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Short issue title",
+            "example": "Left rear tire tread below limit"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed issue description",
+            "example": "Daily inspection found rear left tire below legal tread depth."
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source: 'inspection','manual','other'",
+            "example": "inspection"
+          },
+          "source_inspection_item_result_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Inspection Item Result Id",
+            "description": "ID of related inspection item result, if any",
+            "example": 200
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "Severity: 'low','medium','high','critical'",
+            "example": "high"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Initial status: 'open','in_progress','resolved','closed'",
+            "example": "open"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date",
+            "description": "Due date to resolve issue (YYYY-MM-DD)",
+            "example": "2025-01-10"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "title",
+          "source",
+          "severity",
+          "status"
+        ],
+        "title": "IssueCreateRequest"
+      },
+      "IssueCreateResponse": {
+        "properties": {
+          "issue": {
+            "$ref": "#/components/schemas/IssueModel",
+            "description": "Created issue",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue"
+        ],
+        "title": "IssueCreateResponse"
+      },
+      "IssueModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Issue ID",
+            "example": 60
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Title",
+            "example": "Left rear tire tread below limit"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Description",
+            "example": "Daily inspection found rear left tire below legal tread depth."
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source",
+            "example": "inspection"
+          },
+          "source_inspection_item_result_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Inspection Item Result Id",
+            "description": "Linked inspection item result ID",
+            "example": 200
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "Severity level",
+            "example": "high"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Issue status",
+            "example": "open"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date",
+            "description": "Due date",
+            "example": "2025-01-10"
+          },
+          "resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Note",
+            "description": "Resolution details"
+          },
+          "actual_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Cost",
+            "description": "Actual resolution cost"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At",
+            "description": "Resolution timestamp"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "Creator user ID",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-07T09:45:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-07T09:45:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "title",
+          "source",
+          "severity",
+          "status",
+          "created_by"
+        ],
+        "title": "IssueModel"
+      },
+      "IssueUpdateRequest": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "New status",
+            "example": "resolved"
+          },
+          "resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Note",
+            "description": "Note describing resolution",
+            "example": "Tire replaced at Goodyear Shop #18 on 2025-01-08"
+          },
+          "actual_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Cost",
+            "description": "Actual cost to resolve the issue",
+            "example": 210.0
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At",
+            "description": "Datetime when issue was resolved",
+            "example": "2025-01-08T16:00:00Z"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date",
+            "description": "Updated due date if not resolved",
+            "example": "2025-01-10"
+          }
+        },
+        "type": "object",
+        "title": "IssueUpdateRequest"
+      },
+      "IssueUpdateResponse": {
+        "properties": {
+          "issue": {
+            "$ref": "#/components/schemas/IssueModel",
+            "description": "Updated issue",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue"
+        ],
+        "title": "IssueUpdateResponse"
+      },
+      "IssueWorkOrderLinkCreateRequest": {
+        "properties": {
+          "issue_id": {
+            "type": "integer",
+            "title": "Issue Id",
+            "description": "Issue ID to link",
+            "example": 60
+          },
+          "work_order_id": {
+            "type": "integer",
+            "title": "Work Order Id",
+            "description": "Work order ID to link",
+            "example": 30
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue_id",
+          "work_order_id"
+        ],
+        "title": "IssueWorkOrderLinkCreateRequest"
+      },
+      "IssueWorkOrderLinkCreateResponse": {
+        "properties": {
+          "issue_work_order_link": {
+            "$ref": "#/components/schemas/IssueWorkOrderLinkModel",
+            "description": "Created issue-work order link",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue_work_order_link"
+        ],
+        "title": "IssueWorkOrderLinkCreateResponse"
+      },
+      "IssueWorkOrderLinkModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Link ID",
+            "example": 5
+          },
+          "issue_id": {
+            "type": "integer",
+            "title": "Issue Id",
+            "description": "Issue ID",
+            "example": 60
+          },
+          "work_order_id": {
+            "type": "integer",
+            "title": "Work Order Id",
+            "description": "Work order ID",
+            "example": 30
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Link creation timestamp",
+            "example": "2025-01-08T16:05:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "issue_id",
+          "work_order_id"
+        ],
+        "title": "IssueWorkOrderLinkModel"
+      },
+      "OdometerReadingCreateAssetPart": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "current_odometer": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Odometer",
+            "description": "Updated current odometer value",
+            "example": 75230.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "OdometerReadingCreateAssetPart"
+      },
+      "OdometerReadingCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID for the reading",
+            "example": 10
+          },
+          "reading_value": {
+            "type": "number",
+            "title": "Reading Value",
+            "description": "Odometer value in miles",
+            "example": 75230.0
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit",
+            "description": "Unit of measurement (default 'mi')",
+            "default": "mi",
+            "example": "mi"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source of reading, e.g., 'driver report'",
+            "example": "driver report"
+          },
+          "reading_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Reading At",
+            "description": "Timestamp of the reading (ISO 8601)",
+            "example": "2025-01-07T09:30:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "reading_value",
+          "source",
+          "reading_at"
+        ],
+        "title": "OdometerReadingCreateRequest"
+      },
+      "OdometerReadingCreateResponse": {
+        "properties": {
+          "odometer_reading": {
+            "$ref": "#/components/schemas/OdometerReadingModel",
+            "description": "Created odometer reading",
+            "example": {}
+          },
+          "asset": {
+            "$ref": "#/components/schemas/OdometerReadingCreateAssetPart",
+            "description": "Asset with updated odometer",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "odometer_reading",
+          "asset"
+        ],
+        "title": "OdometerReadingCreateResponse"
+      },
+      "OdometerReadingModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Reading ID",
+            "example": 100
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "reading_value": {
+            "type": "number",
+            "title": "Reading Value",
+            "description": "Odometer value",
+            "example": 75230.0
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Unit of measurement",
+            "example": "mi"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source of reading",
+            "example": "driver report"
+          },
+          "reading_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Reading At",
+            "description": "Reading timestamp",
+            "example": "2025-01-07T09:30:00Z"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "User ID who logged the reading",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-07T09:31:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-01-07T09:31:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "reading_value",
+          "unit",
+          "source",
+          "reading_at",
+          "created_by"
+        ],
+        "title": "OdometerReadingModel"
+      },
+      "OdometerReadingsListResponse": {
+        "properties": {
+          "odometer_readings": {
+            "items": {
+              "$ref": "#/components/schemas/OdometerReadingModel"
+            },
+            "type": "array",
+            "title": "Odometer Readings",
+            "description": "List of odometer readings",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "odometer_readings"
+        ],
+        "title": "OdometerReadingsListResponse"
+      },
+      "ServiceProgramCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique service program name",
+            "example": "Standard Oil Change"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Description of the service program",
+            "example": "Oil change and filter replacement every 5k miles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ServiceProgramCreateRequest"
+      },
+      "ServiceProgramCreateResponse": {
+        "properties": {
+          "service_program": {
+            "$ref": "#/components/schemas/ServiceProgramModel",
+            "description": "Created service program",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_program"
+        ],
+        "title": "ServiceProgramCreateResponse"
+      },
+      "ServiceProgramModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Service program ID",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Program name",
+            "example": "Standard Oil Change"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Program description",
+            "example": "Oil change and filter replacement every 5k miles"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "Creator user ID",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-05T08:20:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-05T08:20:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_by"
+        ],
+        "title": "ServiceProgramModel"
+      },
+      "ServiceReminderModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Service reminder ID",
+            "example": 8
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "schedule_id": {
+            "type": "integer",
+            "title": "Schedule Id",
+            "description": "Service schedule ID",
+            "example": 5
+          },
+          "reminder_type": {
+            "type": "string",
+            "title": "Reminder Type",
+            "description": "Reminder type (always 'service')",
+            "example": "service"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name",
+            "description": "Service name",
+            "example": "Oil Change"
+          },
+          "due_odometer": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Odometer",
+            "description": "Odometer at which service is due",
+            "example": 75000.0
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date",
+            "description": "Date by which service is due",
+            "example": "2025-07-07"
+          },
+          "due_engine_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Engine Hours",
+            "description": "Engine hours at which service is due"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Reminder status",
+            "example": "open"
+          },
+          "triggered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triggered At",
+            "description": "When the reminder was generated",
+            "example": "2025-01-07T11:00:00Z"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "When reminder was completed"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "Creator user ID",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-07T11:00:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-07T11:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "schedule_id",
+          "reminder_type",
+          "service_name",
+          "status",
+          "created_by"
+        ],
+        "title": "ServiceReminderModel"
+      },
+      "ServiceReminderUpdateRequest": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "New status: 'open','completed','dismissed'",
+            "example": "completed"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "Completion timestamp (ISO 8601)",
+            "example": "2025-01-08T15:00:00Z"
+          }
+        },
+        "type": "object",
+        "title": "ServiceReminderUpdateRequest"
+      },
+      "ServiceReminderUpdateResponse": {
+        "properties": {
+          "service_reminder": {
+            "$ref": "#/components/schemas/ServiceReminderModel",
+            "description": "Updated service reminder",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_reminder"
+        ],
+        "title": "ServiceReminderUpdateResponse"
+      },
+      "ServiceRemindersListResponse": {
+        "properties": {
+          "service_reminders": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceReminderModel"
+            },
+            "type": "array",
+            "title": "Service Reminders",
+            "description": "List of service reminders",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_reminders"
+        ],
+        "title": "ServiceRemindersListResponse"
+      },
+      "ServiceScheduleCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID to attach this schedule to",
+            "example": 10
+          },
+          "program_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Id",
+            "description": "Optional service program ID",
+            "example": 2
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name",
+            "description": "Name of the service (e.g., 'Oil Change')",
+            "example": "Oil Change"
+          },
+          "trigger_type": {
+            "type": "string",
+            "title": "Trigger Type",
+            "description": "Trigger type: 'mileage_time' or 'engine_hours'",
+            "example": "mileage_time"
+          },
+          "interval_miles": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Miles",
+            "description": "Mileage interval between services",
+            "example": 5000.0
+          },
+          "interval_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Months",
+            "description": "Months interval between services",
+            "example": 6
+          },
+          "interval_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Hours",
+            "description": "Engine hour interval for equipment schedules",
+            "example": 250.0
+          },
+          "start_odometer": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Odometer",
+            "description": "Base odometer from which to start scheduling",
+            "example": 70000.0
+          },
+          "start_engine_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Engine Hours",
+            "description": "Base engine hours for equipment schedules",
+            "example": 0.0
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Whether the schedule is active (1) or inactive (0)",
+            "default": 1,
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "service_name",
+          "trigger_type"
+        ],
+        "title": "ServiceScheduleCreateRequest"
+      },
+      "ServiceScheduleCreateResponse": {
+        "properties": {
+          "service_schedule": {
+            "$ref": "#/components/schemas/ServiceScheduleModel",
+            "description": "Created service schedule",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_schedule"
+        ],
+        "title": "ServiceScheduleCreateResponse"
+      },
+      "ServiceScheduleModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Service schedule ID",
+            "example": 5
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "program_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Id",
+            "description": "Service program ID",
+            "example": 2
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name",
+            "description": "Service name",
+            "example": "Oil Change"
+          },
+          "trigger_type": {
+            "type": "string",
+            "title": "Trigger Type",
+            "description": "Trigger type",
+            "example": "mileage_time"
+          },
+          "interval_miles": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Miles",
+            "description": "Mileage interval",
+            "example": 5000.0
+          },
+          "interval_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Months",
+            "description": "Months interval",
+            "example": 6
+          },
+          "interval_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Hours",
+            "description": "Hours interval"
+          },
+          "start_odometer": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Odometer",
+            "description": "Start odometer",
+            "example": 70000.0
+          },
+          "start_engine_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Engine Hours",
+            "description": "Start engine hours"
+          },
+          "is_active": {
+            "type": "integer",
+            "title": "Is Active",
+            "description": "Active flag",
+            "example": 1
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "Creator user ID",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-05T08:30:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-05T08:30:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "service_name",
+          "trigger_type",
+          "is_active",
+          "created_by"
+        ],
+        "title": "ServiceScheduleModel"
+      },
+      "ShopModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Shop ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Shop name",
+            "example": "Main In-House Shop"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Shop type",
+            "example": "in_house"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address",
+            "description": "Shop address",
+            "example": "1234 Service Rd, Springfield, IL"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone",
+            "description": "Shop phone number",
+            "example": "+1-555-987-6543"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2024-12-01T08:00:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2024-12-15T09:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "title": "ShopModel"
+      },
+      "ShopsListResponse": {
+        "properties": {
+          "shops": {
+            "items": {
+              "$ref": "#/components/schemas/ShopModel"
+            },
+            "type": "array",
+            "title": "Shops",
+            "description": "List of shops",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "shops"
+        ],
+        "title": "ShopsListResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WorkOrderCreateRequest": {
+        "properties": {
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID the work order is for",
+            "example": 10
+          },
+          "shop_id": {
+            "type": "integer",
+            "title": "Shop Id",
+            "description": "Shop ID handling the work order",
+            "example": 1
+          },
+          "service_reminder_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Reminder Id",
+            "description": "Optional linked service reminder ID",
+            "example": 8
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Work order title",
+            "example": "Oil Change - January 2025"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed description of work",
+            "example": "Perform scheduled oil and filter change."
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Initial status: 'open','in_progress','completed','closed','canceled'",
+            "example": "open"
+          },
+          "estimated_total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Total Cost",
+            "description": "Estimated total cost of work",
+            "example": 105.0
+          },
+          "opened_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Opened At",
+            "description": "Datetime the work order is opened",
+            "example": "2025-01-07T12:00:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "shop_id",
+          "title",
+          "status",
+          "opened_at"
+        ],
+        "title": "WorkOrderCreateRequest"
+      },
+      "WorkOrderCreateResponse": {
+        "properties": {
+          "work_order": {
+            "$ref": "#/components/schemas/WorkOrderModel",
+            "description": "Created work order",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "work_order"
+        ],
+        "title": "WorkOrderCreateResponse"
+      },
+      "WorkOrderModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Work order ID",
+            "example": 30
+          },
+          "asset_id": {
+            "type": "integer",
+            "title": "Asset Id",
+            "description": "Asset ID",
+            "example": 10
+          },
+          "shop_id": {
+            "type": "integer",
+            "title": "Shop Id",
+            "description": "Shop ID",
+            "example": 1
+          },
+          "service_reminder_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Reminder Id",
+            "description": "Linked service reminder ID",
+            "example": 8
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Work order title",
+            "example": "Oil Change - January 2025"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Work order description",
+            "example": "Perform scheduled oil and filter change."
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Work order status",
+            "example": "open"
+          },
+          "estimated_total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Total Cost",
+            "description": "Estimated total cost",
+            "example": 105.0
+          },
+          "actual_total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Total Cost",
+            "description": "Actual total cost"
+          },
+          "opened_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Opened At",
+            "description": "Opened timestamp",
+            "example": "2025-01-07T12:00:00Z"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "Completed timestamp"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By",
+            "description": "Creator user ID",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-07T12:01:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-07T12:01:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "shop_id",
+          "title",
+          "status",
+          "opened_at",
+          "created_by"
+        ],
+        "title": "WorkOrderModel"
+      },
+      "WorkOrderTaskCreateRequest": {
+        "properties": {
+          "work_order_id": {
+            "type": "integer",
+            "title": "Work Order Id",
+            "description": "Work order ID this task belongs to",
+            "example": 30
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the maintenance task",
+            "example": "Replace engine oil"
+          },
+          "estimated_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Cost",
+            "description": "Estimated cost for this task",
+            "example": 80.0
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position",
+            "description": "Display order of the task in work order",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "work_order_id",
+          "description"
+        ],
+        "title": "WorkOrderTaskCreateRequest"
+      },
+      "WorkOrderTaskCreateResponse": {
+        "properties": {
+          "work_order_task": {
+            "$ref": "#/components/schemas/WorkOrderTaskModel",
+            "description": "Created work order task",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "work_order_task"
+        ],
+        "title": "WorkOrderTaskCreateResponse"
+      },
+      "WorkOrderTaskModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Task ID",
+            "example": 101
+          },
+          "work_order_id": {
+            "type": "integer",
+            "title": "Work Order Id",
+            "description": "Work order ID",
+            "example": 30
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Task description",
+            "example": "Replace engine oil"
+          },
+          "estimated_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Cost",
+            "description": "Estimated cost",
+            "example": 80.0
+          },
+          "actual_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Cost",
+            "description": "Actual cost"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Task status",
+            "example": "open"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position",
+            "description": "Order in work order",
+            "example": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-07T12:02:00Z"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2025-01-07T12:02:00Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "work_order_id",
+          "description",
+          "status"
+        ],
+        "title": "WorkOrderTaskModel"
+      },
+      "WorkOrderTaskUpdateRequest": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "Task status: 'open','in_progress','completed','canceled'",
+            "example": "completed"
+          },
+          "estimated_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Cost",
+            "description": "Updated estimated cost",
+            "example": 80.0
+          },
+          "actual_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Cost",
+            "description": "Actual cost",
+            "example": 90.0
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position",
+            "description": "Task position in work order",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "title": "WorkOrderTaskUpdateRequest"
+      },
+      "WorkOrderTaskUpdateResponse": {
+        "properties": {
+          "work_order_task": {
+            "$ref": "#/components/schemas/WorkOrderTaskModel",
+            "description": "Updated work order task",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "work_order_task"
+        ],
+        "title": "WorkOrderTaskUpdateResponse"
+      },
+      "WorkOrderUpdateRequest": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "New status",
+            "example": "completed"
+          },
+          "estimated_total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Total Cost",
+            "description": "Updated estimated cost",
+            "example": 105.0
+          },
+          "actual_total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Total Cost",
+            "description": "Actual total cost after completion",
+            "example": 110.0
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "Completion timestamp",
+            "example": "2025-01-08T14:30:00Z"
+          }
+        },
+        "type": "object",
+        "title": "WorkOrderUpdateRequest"
+      },
+      "WorkOrderUpdateResponse": {
+        "properties": {
+          "work_order": {
+            "$ref": "#/components/schemas/WorkOrderModel",
+            "description": "Updated work order",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "work_order"
+        ],
+        "title": "WorkOrderUpdateResponse"
+      }
+    }
+  }
+}

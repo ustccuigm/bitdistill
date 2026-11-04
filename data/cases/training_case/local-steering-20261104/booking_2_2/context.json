@@ -1,0 +1,86 @@
+[
+  {
+    "role": "system",
+    "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool."
+  },
+  {
+    "role": "user",
+    "content": "Create a new trip in draft status for traveler 'Maria Gonzalez' with purpose 'Client meeting at Seattle HQ' and cost center 'SALES-NW', including a flight segment from 'SFO' to 'SEA' on '2025-02-10' departing after 8:00 and returning from 'SEA' to 'SFO' on '2025-02-12' after 17:00 in Economy, plus a hotel booking in downtown Seattle from '2025-02-10' to '2025-02-12' at a mid-range property under 220 USD per night."
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "id": "chatcmpl-tool-abd8406a3534a58f",
+        "type": "function",
+        "function": {
+          "name": "mcp_server_search_travelers",
+          "arguments": "{\"first_name\": \"Maria\", \"last_name\": \"Gonzalez\"}"
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "tool_call_id": "chatcmpl-tool-abd8406a3534a58f",
+    "content": "{\"travelers\": [{\"id\": 1, \"company_id\": 1, \"first_name\": \"Maria\", \"last_name\": \"Gonzalez\", \"email\": \"maria.gonzalez@acmeanalytics.com\", \"user_id\": 2, \"department_id\": 1, \"status\": \"active\", \"created_at\": \"2026-08-05T05:46:47\", \"updated_at\": \"2026-11-02T05:46:47\"}]}"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "id": "chatcmpl-tool-b75cd0669b6bec60",
+        "type": "function",
+        "function": {
+          "name": "mcp_server_create_trip",
+          "arguments": "{\"company_id\": 1, \"cost_center\": \"SALES-NW\", \"primary_traveler_id\": 1, \"purpose\": \"Client meeting at Seattle HQ\", \"status\": \"draft\"}"
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "tool_call_id": "chatcmpl-tool-b75cd0669b6bec60",
+    "content": "{\"id\": 8, \"trip_code\": \"TRIP-8\", \"company_id\": 1, \"primary_traveler_id\": 1, \"department_id\": null, \"cost_center\": \"SALES-NW\", \"purpose\": \"Client meeting at Seattle HQ\", \"status\": \"draft\", \"policy_id\": null, \"start_date\": null, \"end_date\": null, \"total_air_cost\": 0.0, \"total_hotel_cost\": 0.0, \"total_other_cost\": 0.0, \"total_cost\": 0.0, \"has_policy_violations\": false, \"external_export_status\": null, \"created_by_user_id\": 1, \"updated_by_user_id\": 1, \"created_at\": \"2026-11-03T06:07:41.047935\", \"updated_at\": \"2026-11-03T06:07:41.047935\"}"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "id": "chatcmpl-tool-88f8fc1b6619897e",
+        "type": "function",
+        "function": {
+          "name": "mcp_server_add_flight_segment",
+          "arguments": "{\"cabin_class\": \"Economy\", \"departure_date\": \"2025-02-10\", \"departure_time_from\": \"08:00:00\", \"from_airport\": \"SFO\", \"trip_id\": 8, \"to_airport\": \"SEA\"}"
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "tool_call_id": "chatcmpl-tool-88f8fc1b6619897e",
+    "content": "{\"id\": 13, \"trip_id\": 8, \"from_airport\": \"SFO\", \"to_airport\": \"SEA\", \"departure_date\": \"2025-02-10\", \"departure_time_from\": \"08:00:00\", \"departure_time_to\": null, \"return_segment\": false, \"cabin_class\": \"Economy\", \"booked_fare\": null, \"currency\": \"USD\", \"booking_status\": \"planned\", \"carrier_code\": null, \"flight_number\": null, \"policy_compliant\": true, \"policy_violation_reason\": null, \"created_at\": \"2026-11-03T06:07:48.120589\", \"updated_at\": \"2026-11-03T06:07:48.120589\"}"
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "id": "chatcmpl-tool-9ab534acc67bbae6",
+        "type": "function",
+        "function": {
+          "name": "mcp_server_add_flight_segment",
+          "arguments": "{\"cabin_class\": \"Economy\", \"departure_date\": \"2025-02-12\", \"departure_time_from\": \"17:00:00\", \"from_airport\": \"SEA\", \"to_airport\": \"SFO\", \"return_segment\": true, \"trip_id\": 8}"
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "tool_call_id": "chatcmpl-tool-9ab534acc67bbae6",
+    "content": "{\"id\": 14, \"trip_id\": 8, \"from_airport\": \"SEA\", \"to_airport\": \"SFO\", \"departure_date\": \"2025-02-12\", \"departure_time_from\": \"17:00:00\", \"departure_time_to\": null, \"return_segment\": true, \"cabin_class\": \"Economy\", \"booked_fare\": null, \"currency\": \"USD\", \"booking_status\": \"planned\", \"carrier_code\": null, \"flight_number\": null, \"policy_compliant\": true, \"policy_violation_reason\": null, \"created_at\": \"2026-11-03T06:07:56.935367\", \"updated_at\": \"2026-11-03T06:07:56.935367\"}"
+  }
+]
