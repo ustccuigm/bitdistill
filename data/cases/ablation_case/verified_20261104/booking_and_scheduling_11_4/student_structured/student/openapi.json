@@ -1,0 +1,6142 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CareQueue Outpatient Clinic Scheduler API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/scheduling/conflicting-bookings-for-time-off": {
+      "get": {
+        "tags": [
+          "scheduling"
+        ],
+        "summary": "Find bookings conflicting with time-off",
+        "description": "List bookings whose slots overlap a time-off window",
+        "operationId": "list_conflicting_bookings_for_time_off",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Provider ID",
+              "title": "Provider Id"
+            },
+            "description": "Provider ID",
+            "example": "PROV-2201"
+          },
+          {
+            "name": "clinic_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Clinic ID",
+              "title": "Clinic Id"
+            },
+            "description": "Clinic ID",
+            "example": "CLIN-02"
+          },
+          {
+            "name": "start_datetime",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Start datetime of time-off window",
+              "title": "Start Datetime"
+            },
+            "description": "Start datetime of time-off window",
+            "example": "2026-01-15T13:00:00"
+          },
+          {
+            "name": "end_datetime",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "End datetime of time-off window",
+              "title": "End Datetime"
+            },
+            "description": "End datetime of time-off window",
+            "example": "2026-01-15T15:00:00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictingBookingsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/next-available-slot-for-booking": {
+      "get": {
+        "tags": [
+          "scheduling"
+        ],
+        "summary": "Next available slot for booking",
+        "description": "Find next appointment_slot for the same provider with capacity",
+        "operationId": "find_next_available_slot_for_booking",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Existing booking whose provider is used to search",
+              "title": "Booking Id"
+            },
+            "description": "Existing booking whose provider is used to search",
+            "example": "BK-10293"
+          },
+          {
+            "name": "visit_type_name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Visit type name",
+              "title": "Visit Type Name"
+            },
+            "description": "Visit type name",
+            "example": "Follow-up Visit"
+          },
+          {
+            "name": "visit_mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Visit mode required",
+              "title": "Visit Mode"
+            },
+            "description": "Visit mode required",
+            "example": "telehealth"
+          },
+          {
+            "name": "start_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Search window start datetime",
+              "title": "Start From"
+            },
+            "description": "Search window start datetime",
+            "example": "2026-01-03T00:00:00"
+          },
+          {
+            "name": "end_until",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Search window end datetime",
+              "title": "End Until"
+            },
+            "description": "Search window end datetime",
+            "example": "2026-01-17T23:59:59"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NextSlotForBookingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/earliest-available-slot": {
+      "get": {
+        "tags": [
+          "scheduling"
+        ],
+        "summary": "Find earliest available slot",
+        "description": "Search slots to find earliest available with capacity",
+        "operationId": "find_earliest_available_slot",
+        "parameters": [
+          {
+            "name": "clinic_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict search to a specific clinic_id",
+              "title": "Clinic Id"
+            },
+            "description": "Restrict search to a specific clinic_id",
+            "example": "CLIN-01"
+          },
+          {
+            "name": "specialty_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter providers by specialty name",
+              "title": "Specialty Name"
+            },
+            "description": "Filter providers by specialty name",
+            "example": "Family Medicine"
+          },
+          {
+            "name": "visit_type_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter slots by visit type name",
+              "title": "Visit Type Name"
+            },
+            "description": "Filter slots by visit type name",
+            "example": "New Patient Visit"
+          },
+          {
+            "name": "visit_mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Required visit_mode: in_person or telehealth",
+              "title": "Visit Mode"
+            },
+            "description": "Required visit_mode: in_person or telehealth",
+            "example": "in_person"
+          },
+          {
+            "name": "start_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Earliest allowed slot start (ISO8601)",
+              "title": "Start From"
+            },
+            "description": "Earliest allowed slot start (ISO8601)",
+            "example": "2026-01-01T00:00:00"
+          },
+          {
+            "name": "end_until",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Latest allowed slot start (ISO8601)",
+              "title": "End Until"
+            },
+            "description": "Latest allowed slot start (ISO8601)",
+            "example": "2026-01-08T00:00:00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EarliestSlotResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/utilization-reports": {
+      "post": {
+        "tags": [
+          "utilization_reports"
+        ],
+        "summary": "Generate a clinic utilization report",
+        "description": "Compute utilization_reports for a clinic and date range",
+        "operationId": "generate_utilization_report",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UtilizationReportGenerateRequest",
+                "description": "Utilization report generate payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UtilizationReportModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "utilization_reports"
+        ],
+        "summary": "Get a clinic utilization report",
+        "description": "Retrieve utilization_reports and parse report_json",
+        "operationId": "get_utilization_report",
+        "parameters": [
+          {
+            "name": "clinic_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Clinic ID to load report for",
+              "title": "Clinic Id"
+            },
+            "description": "Clinic ID to load report for",
+            "example": "CLIN-03"
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Report start date (YYYY-MM-DD)",
+              "title": "Start Date"
+            },
+            "description": "Report start date (YYYY-MM-DD)",
+            "example": "2026-01-01"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Report end date (YYYY-MM-DD)",
+              "title": "End Date"
+            },
+            "description": "Report end date (YYYY-MM-DD)",
+            "example": "2026-01-31"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UtilizationReportGetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/appointment-slots": {
+      "post": {
+        "tags": [
+          "appointment_slots"
+        ],
+        "summary": "Create a single appointment slot",
+        "description": "Create one appointment_slots row",
+        "operationId": "create_appointment_slot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentSlotCreateRequest",
+                "description": "Appointment slot create payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentSlotModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "appointment_slots"
+        ],
+        "summary": "List appointment slots with availability",
+        "description": "Retrieve appointment_slots with filters and capacity info",
+        "operationId": "list_appointment_slots",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by provider_id",
+              "title": "Provider Id"
+            },
+            "description": "Filter by provider_id",
+            "example": "PROV-2201"
+          },
+          {
+            "name": "clinic_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by clinic_id",
+              "title": "Clinic Id"
+            },
+            "description": "Filter by clinic_id",
+            "example": "CLIN-01"
+          },
+          {
+            "name": "visit_type_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by visit_type_id",
+              "title": "Visit Type Id"
+            },
+            "description": "Filter by visit_type_id",
+            "example": 5
+          },
+          {
+            "name": "visit_mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by visit_mode",
+              "title": "Visit Mode"
+            },
+            "description": "Filter by visit_mode",
+            "example": "in_person"
+          },
+          {
+            "name": "start_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only slots starting at or after this datetime",
+              "title": "Start From"
+            },
+            "description": "Only slots starting at or after this datetime",
+            "example": "2026-01-01T00:00:00"
+          },
+          {
+            "name": "end_until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only slots starting at or before this datetime",
+              "title": "End Until"
+            },
+            "description": "Only slots starting at or before this datetime",
+            "example": "2026-01-07T23:59:59"
+          },
+          {
+            "name": "only_with_capacity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, only slots where remaining capacity>0",
+              "default": false,
+              "title": "Only With Capacity"
+            },
+            "description": "If true, only slots where remaining capacity>0",
+            "example": true
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of slots to return",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of slots to return",
+            "example": 100
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pagination offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Pagination offset",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentSlotsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/time-off-blocks": {
+      "post": {
+        "tags": [
+          "time_off_blocks"
+        ],
+        "summary": "Create a provider time-off block",
+        "description": "Add a time_off_block for a provider at a clinic",
+        "operationId": "create_time_off_block",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeOffBlockCreateRequest",
+                "description": "Time off block create payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeOffBlockModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "time_off_blocks"
+        ],
+        "summary": "List time-off blocks",
+        "description": "Retrieve provider time_off_blocks with filters",
+        "operationId": "list_time_off_blocks",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by provider_id",
+              "title": "Provider Id"
+            },
+            "description": "Filter by provider_id",
+            "example": "PROV-2201"
+          },
+          {
+            "name": "clinic_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by clinic_id",
+              "title": "Clinic Id"
+            },
+            "description": "Filter by clinic_id",
+            "example": "CLIN-02"
+          },
+          {
+            "name": "start_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include blocks ending after this datetime",
+              "title": "Start From"
+            },
+            "description": "Include blocks ending after this datetime",
+            "example": "2026-01-01T00:00:00"
+          },
+          {
+            "name": "end_until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include blocks starting before this datetime",
+              "title": "End Until"
+            },
+            "description": "Include blocks starting before this datetime",
+            "example": "2026-01-31T23:59:59"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeOffBlocksListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/diagnosis-tags": {
+      "post": {
+        "tags": [
+          "diagnosis_tags"
+        ],
+        "summary": "Ensure or create a diagnosis tag",
+        "description": "Create a diagnosis_tags row if not existing",
+        "operationId": "create_diagnosis_tag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiagnosisTagCreateRequest",
+                "description": "Diagnosis tag create payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosisTagModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing-codes": {
+      "post": {
+        "tags": [
+          "billing_codes"
+        ],
+        "summary": "Ensure or create a billing code",
+        "description": "Create a billing_codes row if not existing",
+        "operationId": "create_billing_code",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingCodeCreateRequest",
+                "description": "Billing code create payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingCodeModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rosters/daily": {
+      "post": {
+        "tags": [
+          "daily_roster_summaries"
+        ],
+        "summary": "Generate and store daily roster",
+        "description": "Compute and upsert daily_roster_summaries for a clinic and date",
+        "operationId": "generate_daily_roster",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DailyRosterGenerateRequest",
+                "description": "Daily roster generate payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyRosterSummaryModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "daily_roster_summaries"
+        ],
+        "summary": "Get a clinic daily roster summary",
+        "description": "Retrieve roster summary as structured JSON",
+        "operationId": "get_daily_roster",
+        "parameters": [
+          {
+            "name": "clinic_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Clinic ID",
+              "title": "Clinic Id"
+            },
+            "description": "Clinic ID",
+            "example": "CLIN-01"
+          },
+          {
+            "name": "roster_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Date for the roster (YYYY-MM-DD)",
+              "title": "Roster Date"
+            },
+            "description": "Date for the roster (YYYY-MM-DD)",
+            "example": "2026-01-20"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyRosterGetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/specialties": {
+      "get": {
+        "tags": [
+          "specialties"
+        ],
+        "summary": "List specialties with filters",
+        "description": "Retrieve specialties with optional name filter",
+        "operationId": "list_specialties",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial specialty name search",
+              "title": "Name"
+            },
+            "description": "Exact or partial specialty name search",
+            "example": "Family Medicine"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of specialties to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of specialties to return",
+            "example": 50
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpecialtiesListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "specialties"
+        ],
+        "summary": "Create a new specialty",
+        "description": "Create a new specialty record if not existing",
+        "operationId": "create_specialty",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpecialtyCreateRequest",
+                "description": "Specialty create payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpecialtyCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/visit-types": {
+      "get": {
+        "tags": [
+          "visit_types"
+        ],
+        "summary": "List visit types",
+        "description": "Retrieve visit types with optional filters",
+        "operationId": "list_visit_types",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial visit type name",
+              "title": "Name"
+            },
+            "description": "Exact or partial visit type name",
+            "example": "New Patient Visit"
+          },
+          {
+            "name": "visit_mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by visit_mode (in_person, telehealth, either)",
+              "title": "Visit Mode"
+            },
+            "description": "Filter by visit_mode (in_person, telehealth, either)",
+            "example": "in_person"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of visit types to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of visit types to return",
+            "example": 50
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitTypesListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "visit_types"
+        ],
+        "summary": "Create a new visit type",
+        "description": "Create a visit type with duration and mode",
+        "operationId": "create_visit_type",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisitTypeCreateRequest",
+                "description": "Visit type create payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitTypeCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/visit-notes": {
+      "post": {
+        "tags": [
+          "visit_notes"
+        ],
+        "summary": "Create visit notes metadata",
+        "description": "Create a visit_notes row for a booking",
+        "operationId": "create_visit_note",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisitNoteCreateRequest",
+                "description": "Visit note create payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitNoteModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers": {
+      "post": {
+        "tags": [
+          "providers"
+        ],
+        "summary": "Create a new provider profile",
+        "description": "Create a provider with profile fields",
+        "operationId": "create_provider",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderCreateRequest",
+                "description": "Provider create payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "providers"
+        ],
+        "summary": "List providers with optional filters",
+        "description": "Retrieve providers filtered by various fields",
+        "operationId": "list_providers",
+        "parameters": [
+          {
+            "name": "specialty_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter providers by specialty_id",
+              "title": "Specialty Id"
+            },
+            "description": "Filter providers by specialty_id",
+            "example": 1
+          },
+          {
+            "name": "specialty_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter providers by specialty name",
+              "title": "Specialty Name"
+            },
+            "description": "Filter providers by specialty name",
+            "example": "Family Medicine"
+          },
+          {
+            "name": "clinic_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by primary_clinic_id",
+              "title": "Clinic Id"
+            },
+            "description": "Filter by primary_clinic_id",
+            "example": "CLIN-01"
+          },
+          {
+            "name": "active_flag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active_flag",
+              "title": "Active Flag"
+            },
+            "description": "Filter by active_flag",
+            "example": 1
+          },
+          {
+            "name": "full_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial match on full_name",
+              "title": "Full Name"
+            },
+            "description": "Exact or partial match on full_name",
+            "example": "Nguyen"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of providers to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of providers to return",
+            "example": 50
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvidersListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/check-ins": {
+      "post": {
+        "tags": [
+          "check_ins",
+          "bookings"
+        ],
+        "summary": "Record a check-in for a booking",
+        "description": "Create a check_in row and update booking status",
+        "operationId": "create_check_in_for_booking",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckInCreateRequest",
+                "description": "Check-in create payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckInCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients": {
+      "post": {
+        "tags": [
+          "patients"
+        ],
+        "summary": "Create a new patient",
+        "description": "Create a new patient record",
+        "operationId": "create_patient",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientCreateRequest",
+                "description": "Patient create payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "patients"
+        ],
+        "summary": "Search patients by name and DOB",
+        "description": "Retrieve patients by full_name and/or date_of_birth",
+        "operationId": "search_patients",
+        "parameters": [
+          {
+            "name": "full_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial full name filter",
+              "title": "Full Name"
+            },
+            "description": "Exact or partial full name filter",
+            "example": "John Doe"
+          },
+          {
+            "name": "date_of_birth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "DOB filter in YYYY-MM-DD",
+              "title": "Date Of Birth"
+            },
+            "description": "DOB filter in YYYY-MM-DD",
+            "example": "1985-04-12"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of patients to return",
+              "default": 25,
+              "title": "Limit"
+            },
+            "description": "Maximum number of patients to return",
+            "example": 25
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings": {
+      "post": {
+        "tags": [
+          "bookings"
+        ],
+        "summary": "Create a booking on a slot",
+        "description": "Create a bookings row for a patient on a slot",
+        "operationId": "create_booking",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingCreateRequest",
+                "description": "Booking create payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "bookings"
+        ],
+        "summary": "List bookings with filters",
+        "description": "Retrieve bookings filtered by provider, clinic, patient, etc.",
+        "operationId": "list_bookings",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter bookings by provider_id",
+              "title": "Provider Id"
+            },
+            "description": "Filter bookings by provider_id",
+            "example": "PROV-2201"
+          },
+          {
+            "name": "clinic_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by clinic_id",
+              "title": "Clinic Id"
+            },
+            "description": "Filter by clinic_id",
+            "example": "CLIN-01"
+          },
+          {
+            "name": "patient_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by patient_id",
+              "title": "Patient Id"
+            },
+            "description": "Filter by patient_id",
+            "example": 1001
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by booking status",
+              "title": "Status"
+            },
+            "description": "Filter by booking status",
+            "example": "scheduled"
+          },
+          {
+            "name": "appointment_start_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Slots starting on/after this datetime",
+              "title": "Appointment Start From"
+            },
+            "description": "Slots starting on/after this datetime",
+            "example": "2026-01-15T00:00:00"
+          },
+          {
+            "name": "appointment_start_until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Slots starting on/before this datetime",
+              "title": "Appointment Start Until"
+            },
+            "description": "Slots starting on/before this datetime",
+            "example": "2026-01-15T23:59:59"
+          },
+          {
+            "name": "include_slot_details",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, join appointment_slots to include time info",
+              "default": false,
+              "title": "Include Slot Details"
+            },
+            "description": "If true, join appointment_slots to include time info",
+            "example": true
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number of bookings to return",
+              "default": 200,
+              "title": "Limit"
+            },
+            "description": "Max number of bookings to return",
+            "example": 200
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pagination offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Pagination offset",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinics": {
+      "get": {
+        "tags": [
+          "clinics"
+        ],
+        "summary": "List clinics with optional filters",
+        "description": "Retrieve clinics with optional name and location filters",
+        "operationId": "list_clinics",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact clinic name filter",
+              "title": "Name"
+            },
+            "description": "Exact clinic name filter",
+            "example": "Downtown Clinic"
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter clinics by location string",
+              "title": "Location"
+            },
+            "description": "Filter clinics by location string",
+            "example": "Downtown"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of clinics to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of clinics to return",
+            "example": 50
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/visit-notes/{visit_note_id}/diagnosis-tags": {
+      "post": {
+        "tags": [
+          "visit_note_diagnosis_tags"
+        ],
+        "summary": "Attach diagnosis tags to a visit note",
+        "description": "Create visit_note_diagnosis_tags rows for given tag IDs",
+        "operationId": "attach_diagnosis_tags_to_visit_note",
+        "parameters": [
+          {
+            "name": "visit_note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Visit note ID",
+              "title": "Visit Note Id"
+            },
+            "description": "Visit note ID",
+            "example": "VN-5507-A"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisitNoteDiagnosisTagsAttachRequest",
+                "description": "Diagnosis tags attach payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitNoteDiagnosisTagsAttachResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/visit-notes/{visit_note_id}/billing-codes": {
+      "post": {
+        "tags": [
+          "visit_note_billing_codes"
+        ],
+        "summary": "Attach billing codes to a visit note",
+        "description": "Create visit_note_billing_codes rows for given codes",
+        "operationId": "attach_billing_codes_to_visit_note",
+        "parameters": [
+          {
+            "name": "visit_note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Visit note ID",
+              "title": "Visit Note Id"
+            },
+            "description": "Visit note ID",
+            "example": "VN-5507-A"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisitNoteBillingCodesAttachRequest",
+                "description": "Billing codes attach payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitNoteBillingCodesAttachResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers/{provider_id}/weekly-schedules": {
+      "post": {
+        "tags": [
+          "provider_weekly_schedules"
+        ],
+        "summary": "Create provider weekly schedule rule",
+        "description": "Create a recurring weekly schedule row",
+        "operationId": "create_weekly_schedule",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Provider ID to attach this weekly schedule to",
+              "title": "Provider Id"
+            },
+            "description": "Provider ID to attach this weekly schedule to",
+            "example": "PROV-4401"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeeklyScheduleCreateRequest",
+                "description": "Weekly schedule create payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyScheduleModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "provider_weekly_schedules"
+        ],
+        "summary": "List weekly schedules for a provider",
+        "description": "Retrieve weekly schedule definitions for a provider",
+        "operationId": "list_weekly_schedules",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Provider ID whose weekly schedules are requested",
+              "title": "Provider Id"
+            },
+            "description": "Provider ID whose weekly schedules are requested",
+            "example": "PROV-4401"
+          },
+          {
+            "name": "clinic_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by clinic_id",
+              "title": "Clinic Id"
+            },
+            "description": "Filter by clinic_id",
+            "example": "CLIN-01"
+          },
+          {
+            "name": "day_of_week",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by day_of_week (0=Mon..6=Sun)",
+              "title": "Day Of Week"
+            },
+            "description": "Filter by day_of_week (0=Mon..6=Sun)",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklySchedulesListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/{booking_id}/appointment-slot": {
+      "patch": {
+        "tags": [
+          "bookings"
+        ],
+        "summary": "Change booking appointment slot",
+        "description": "Update booking.appointment_slot_id and related fields",
+        "operationId": "update_booking_slot",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking ID to move",
+              "title": "Booking Id"
+            },
+            "description": "Booking ID to move",
+            "example": "BK-10293"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingSlotUpdateRequest",
+                "description": "Booking slot update payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingSlotUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers/{provider_id}/visit-types": {
+      "post": {
+        "tags": [
+          "provider_visit_types"
+        ],
+        "summary": "Associate a visit type with provider",
+        "description": "Activate a visit type for a provider",
+        "operationId": "create_provider_visit_type",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Provider ID",
+              "title": "Provider Id"
+            },
+            "description": "Provider ID",
+            "example": "PROV-4401"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderVisitTypeCreateRequest",
+                "description": "Provider visit type create payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderVisitTypeModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "provider_visit_types"
+        ],
+        "summary": "List visit types for a provider",
+        "description": "Retrieve visit types that a provider can perform",
+        "operationId": "list_provider_visit_types",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Provider ID",
+              "title": "Provider Id"
+            },
+            "description": "Provider ID",
+            "example": "PROV-4401"
+          },
+          {
+            "name": "only_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, only return rows with active_flag=1",
+              "default": false,
+              "title": "Only Active"
+            },
+            "description": "If true, only return rows with active_flag=1",
+            "example": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderVisitTypesListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/{booking_id}/status": {
+      "patch": {
+        "tags": [
+          "bookings",
+          "booking_status_history"
+        ],
+        "summary": "Update booking status",
+        "description": "Change status for a booking and add history",
+        "operationId": "update_booking_status",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking ID whose status is changing",
+              "title": "Booking Id"
+            },
+            "description": "Booking ID whose status is changing",
+            "example": "BK-10293"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingStatusUpdateRequest",
+                "description": "Status update payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingStatusUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/appointment-slots/{slot_id}": {
+      "patch": {
+        "tags": [
+          "appointment_slots"
+        ],
+        "summary": "Update appointment slot",
+        "description": "Partially update an appointment slot",
+        "operationId": "update_appointment_slot",
+        "parameters": [
+          {
+            "name": "slot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Appointment slot ID to update",
+              "title": "Slot Id"
+            },
+            "description": "Appointment slot ID to update",
+            "example": "SLOT-20260203-0800-1"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentSlotUpdateRequest",
+                "description": "Appointment slot update payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentSlotModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/{booking_id}": {
+      "get": {
+        "tags": [
+          "bookings"
+        ],
+        "summary": "Get booking details by ID",
+        "description": "Retrieve a booking by ID with status fields",
+        "operationId": "get_booking",
+        "parameters": [
+          {
+            "name": "booking_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking ID to retrieve",
+              "title": "Booking Id"
+            },
+            "description": "Booking ID to retrieve",
+            "example": "BK-10293"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppointmentSlotCreateRequest": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Optional slot ID; if omitted, generated like S-uuid",
+            "example": "SLOT-20260203-0800-1"
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID for the slot",
+            "example": "PROV-3344"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID where the slot occurs",
+            "example": "CLIN-01"
+          },
+          "visit_type_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visit Type Id",
+            "description": "Optional visit type ID associated with slot",
+            "example": 5
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode: in_person or telehealth",
+            "example": "in_person"
+          },
+          "start_datetime": {
+            "type": "string",
+            "title": "Start Datetime",
+            "description": "Start datetime (ISO8601)",
+            "example": "2026-02-03T08:00:00"
+          },
+          "end_datetime": {
+            "type": "string",
+            "title": "End Datetime",
+            "description": "End datetime (ISO8601)",
+            "example": "2026-02-03T08:15:00"
+          },
+          "capacity_per_slot": {
+            "type": "integer",
+            "title": "Capacity Per Slot",
+            "description": "Current capacity for this slot (includes overbook capacity)",
+            "example": 3
+          },
+          "base_capacity_per_slot": {
+            "type": "integer",
+            "title": "Base Capacity Per Slot",
+            "description": "Baseline capacity without overbooking",
+            "example": 2
+          },
+          "is_overbook_capable": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Overbook Capable",
+            "description": "1 if slot permits overbooking beyond base capacity",
+            "default": 0,
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_id",
+          "clinic_id",
+          "visit_mode",
+          "start_datetime",
+          "end_datetime",
+          "capacity_per_slot",
+          "base_capacity_per_slot"
+        ],
+        "title": "AppointmentSlotCreateRequest"
+      },
+      "AppointmentSlotModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Appointment slot ID",
+            "example": "SLOT-20260203-0800-1"
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID",
+            "example": "PROV-3344"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-01"
+          },
+          "visit_type_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visit Type Id",
+            "description": "Visit type ID or null",
+            "example": 5
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode",
+            "example": "in_person"
+          },
+          "start_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Datetime",
+            "description": "Slot start datetime",
+            "example": "2026-02-03T08:00:00"
+          },
+          "end_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Datetime",
+            "description": "Slot end datetime",
+            "example": "2026-02-03T08:15:00"
+          },
+          "capacity_per_slot": {
+            "type": "integer",
+            "title": "Capacity Per Slot",
+            "description": "Current capacity per slot",
+            "example": 3
+          },
+          "base_capacity_per_slot": {
+            "type": "integer",
+            "title": "Base Capacity Per Slot",
+            "description": "Base capacity without overbooking",
+            "example": 2
+          },
+          "is_overbook_capable": {
+            "type": "integer",
+            "title": "Is Overbook Capable",
+            "description": "1 if overbook capable, else 0",
+            "example": 1
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id",
+            "description": "User who created slot (implicit 1)",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Created timestamp",
+            "example": "2026-01-02T09:25:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Updated timestamp",
+            "example": "2026-01-02T09:25:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_id",
+          "clinic_id",
+          "visit_mode",
+          "start_datetime",
+          "end_datetime",
+          "capacity_per_slot",
+          "base_capacity_per_slot",
+          "is_overbook_capable",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AppointmentSlotModel"
+      },
+      "AppointmentSlotUpdateRequest": {
+        "properties": {
+          "capacity_per_slot": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity Per Slot",
+            "description": "New capacity_per_slot value",
+            "example": 3
+          },
+          "is_overbook_capable": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Overbook Capable",
+            "description": "1 to allow overbooking, 0 to disallow",
+            "example": 1
+          },
+          "visit_type_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visit Type Id",
+            "description": "Optional new visit_type_id for slot",
+            "example": 5
+          }
+        },
+        "type": "object",
+        "title": "AppointmentSlotUpdateRequest"
+      },
+      "AppointmentSlotWithAvailabilityModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Slot ID",
+            "example": "SLOT-20260103-0900-1"
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID",
+            "example": "PROV-2201"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-01"
+          },
+          "visit_type_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visit Type Id",
+            "description": "Visit type ID or null",
+            "example": 5
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode",
+            "example": "in_person"
+          },
+          "start_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Datetime",
+            "description": "Start datetime",
+            "example": "2026-01-03T09:00:00"
+          },
+          "end_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Datetime",
+            "description": "End datetime",
+            "example": "2026-01-03T09:30:00"
+          },
+          "capacity_per_slot": {
+            "type": "integer",
+            "title": "Capacity Per Slot",
+            "description": "Total capacity for this slot",
+            "example": 2
+          },
+          "base_capacity_per_slot": {
+            "type": "integer",
+            "title": "Base Capacity Per Slot",
+            "description": "Base capacity without overbooking",
+            "example": 2
+          },
+          "is_overbook_capable": {
+            "type": "integer",
+            "title": "Is Overbook Capable",
+            "description": "Overbook capability flag",
+            "example": 0
+          },
+          "current_bookings_count": {
+            "type": "integer",
+            "title": "Current Bookings Count",
+            "description": "Count of non-canceled bookings in this slot",
+            "example": 1
+          },
+          "remaining_capacity": {
+            "type": "integer",
+            "title": "Remaining Capacity",
+            "description": "capacity_per_slot - current_bookings_count",
+            "example": 1
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id",
+            "description": "User who created slot",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Created at",
+            "example": "2025-12-15T10:00:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Updated at",
+            "example": "2025-12-15T10:00:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_id",
+          "clinic_id",
+          "visit_mode",
+          "start_datetime",
+          "end_datetime",
+          "capacity_per_slot",
+          "base_capacity_per_slot",
+          "is_overbook_capable",
+          "current_bookings_count",
+          "remaining_capacity",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AppointmentSlotWithAvailabilityModel"
+      },
+      "AppointmentSlotsListResponse": {
+        "properties": {
+          "appointment_slots": {
+            "items": {
+              "$ref": "#/components/schemas/AppointmentSlotWithAvailabilityModel"
+            },
+            "type": "array",
+            "title": "Appointment Slots",
+            "description": "List of appointment slots",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "appointment_slots"
+        ],
+        "title": "AppointmentSlotsListResponse"
+      },
+      "BillingCodeCreateRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Billing code string",
+            "example": "99213"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Description for the billing code",
+            "example": "Office/outpatient visit, established patient"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "BillingCodeCreateRequest"
+      },
+      "BillingCodeModel": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Billing code",
+            "example": "99213"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Billing code description",
+            "example": "Office/outpatient visit, established patient"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2026-01-05T11:35:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2026-01-05T11:35:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BillingCodeModel"
+      },
+      "BookingCreateRequest": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Optional booking ID; if omitted, generated like BK-xxxxx",
+            "example": "BK-15001"
+          },
+          "appointment_slot_id": {
+            "type": "string",
+            "title": "Appointment Slot Id",
+            "description": "Appointment slot ID to book",
+            "example": "SLOT-20260103-0900-1"
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID (must match slot)",
+            "example": "PROV-2201"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID (must match slot)",
+            "example": "CLIN-01"
+          },
+          "patient_id": {
+            "type": "integer",
+            "title": "Patient Id",
+            "description": "Patient ID for the booking",
+            "example": 1001
+          },
+          "visit_type_id": {
+            "type": "integer",
+            "title": "Visit Type Id",
+            "description": "Visit type ID being booked",
+            "example": 5
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode: in_person or telehealth",
+            "example": "in_person"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Initial booking status",
+            "example": "scheduled"
+          },
+          "insurance_at_booking": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurance At Booking",
+            "description": "Insurance name captured at booking",
+            "example": "BlueCross"
+          },
+          "communication_channel_at_booking": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Communication Channel At Booking",
+            "description": "Communication channel at booking",
+            "example": "sms"
+          },
+          "is_same_day_booking": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Same Day Booking",
+            "description": "1 if booked on same day as appointment date",
+            "default": 0,
+            "example": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "appointment_slot_id",
+          "provider_id",
+          "clinic_id",
+          "patient_id",
+          "visit_type_id",
+          "visit_mode",
+          "status"
+        ],
+        "title": "BookingCreateRequest"
+      },
+      "BookingListItemModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Booking ID",
+            "example": "BK-8891"
+          },
+          "appointment_slot_id": {
+            "type": "string",
+            "title": "Appointment Slot Id",
+            "description": "Slot ID",
+            "example": "SLOT-20260105-0900-1"
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID",
+            "example": "PROV-2201"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-01"
+          },
+          "patient_id": {
+            "type": "integer",
+            "title": "Patient Id",
+            "description": "Patient ID",
+            "example": 1001
+          },
+          "visit_type_id": {
+            "type": "integer",
+            "title": "Visit Type Id",
+            "description": "Visit type ID",
+            "example": 5
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode",
+            "example": "in_person"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Booking status",
+            "example": "scheduled"
+          },
+          "booked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Booked At",
+            "description": "Booked timestamp",
+            "example": "2026-01-02T10:00:00"
+          },
+          "slot_start_datetime": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot Start Datetime",
+            "description": "Start of appointment slot (if joined)",
+            "example": "2026-01-15T13:00:00"
+          },
+          "slot_end_datetime": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot End Datetime",
+            "description": "End of appointment slot (if joined)",
+            "example": "2026-01-15T13:30:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "appointment_slot_id",
+          "provider_id",
+          "clinic_id",
+          "patient_id",
+          "visit_type_id",
+          "visit_mode",
+          "status",
+          "booked_at"
+        ],
+        "title": "BookingListItemModel"
+      },
+      "BookingModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Booking ID",
+            "example": "BK-15001"
+          },
+          "appointment_slot_id": {
+            "type": "string",
+            "title": "Appointment Slot Id",
+            "description": "Appointment slot ID",
+            "example": "SLOT-20260103-0900-1"
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID",
+            "example": "PROV-2201"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-01"
+          },
+          "patient_id": {
+            "type": "integer",
+            "title": "Patient Id",
+            "description": "Patient ID",
+            "example": 1001
+          },
+          "visit_type_id": {
+            "type": "integer",
+            "title": "Visit Type Id",
+            "description": "Visit type ID",
+            "example": 5
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode",
+            "example": "in_person"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Current booking status",
+            "example": "scheduled"
+          },
+          "insurance_at_booking": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurance At Booking",
+            "description": "Insurance at booking",
+            "example": "BlueCross"
+          },
+          "communication_channel_at_booking": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Communication Channel At Booking",
+            "description": "Communication channel at booking",
+            "example": "sms"
+          },
+          "is_same_day_booking": {
+            "type": "integer",
+            "title": "Is Same Day Booking",
+            "description": "Same-day flag",
+            "example": 0
+          },
+          "booked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Booked At",
+            "description": "Time when booking was created",
+            "example": "2026-01-02T09:30:00"
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id",
+            "description": "User who created booking (1)",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2026-01-02T09:30:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2026-01-02T09:30:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "appointment_slot_id",
+          "provider_id",
+          "clinic_id",
+          "patient_id",
+          "visit_type_id",
+          "visit_mode",
+          "status",
+          "is_same_day_booking",
+          "booked_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BookingModel"
+      },
+      "BookingSlotUpdateRequest": {
+        "properties": {
+          "new_appointment_slot_id": {
+            "type": "string",
+            "title": "New Appointment Slot Id",
+            "description": "Target appointment slot ID",
+            "example": "SLOT-20260110-1000-1"
+          },
+          "new_provider_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Provider Id",
+            "description": "Override provider_id (normally matches new slot)",
+            "example": "PROV-2201"
+          },
+          "new_clinic_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Clinic Id",
+            "description": "Override clinic_id (normally matches new slot)",
+            "example": "CLIN-01"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_appointment_slot_id"
+        ],
+        "title": "BookingSlotUpdateRequest"
+      },
+      "BookingSlotUpdateResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Booking ID",
+            "example": "BK-10293"
+          },
+          "appointment_slot_id": {
+            "type": "string",
+            "title": "Appointment Slot Id",
+            "description": "Updated appointment slot ID",
+            "example": "SLOT-20260110-1000-1"
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Updated provider ID",
+            "example": "PROV-2201"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Updated clinic ID",
+            "example": "CLIN-01"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp after update",
+            "example": "2026-01-03T10:05:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "appointment_slot_id",
+          "provider_id",
+          "clinic_id",
+          "updated_at"
+        ],
+        "title": "BookingSlotUpdateResponse"
+      },
+      "BookingStatusHistoryEntryModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Status history record ID",
+            "example": 501
+          },
+          "booking_id": {
+            "type": "string",
+            "title": "Booking Id",
+            "description": "Booking ID",
+            "example": "BK-10293"
+          },
+          "old_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Status",
+            "description": "Previous status",
+            "example": "confirmed"
+          },
+          "new_status": {
+            "type": "string",
+            "title": "New Status",
+            "description": "New status",
+            "example": "scheduled"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Changed At",
+            "description": "Time of change",
+            "example": "2026-01-03T10:00:00"
+          },
+          "changed_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed By User Id",
+            "description": "User who changed status (1)",
+            "example": 1
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Reason for status change",
+            "example": "Rescheduled by clinic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "booking_id",
+          "new_status",
+          "changed_at"
+        ],
+        "title": "BookingStatusHistoryEntryModel"
+      },
+      "BookingStatusUpdateBookingPart": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Booking ID",
+            "example": "BK-10293"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Updated status",
+            "example": "scheduled"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp when status was updated",
+            "example": "2026-01-03T10:00:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "updated_at"
+        ],
+        "title": "BookingStatusUpdateBookingPart"
+      },
+      "BookingStatusUpdateRequest": {
+        "properties": {
+          "new_status": {
+            "type": "string",
+            "title": "New Status",
+            "description": "New booking status",
+            "example": "scheduled"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Why the status changed, stored in booking_status_history.reason",
+            "example": "Rescheduled by patient"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_status"
+        ],
+        "title": "BookingStatusUpdateRequest"
+      },
+      "BookingStatusUpdateResponse": {
+        "properties": {
+          "booking": {
+            "$ref": "#/components/schemas/BookingStatusUpdateBookingPart",
+            "description": "Updated booking",
+            "example": {}
+          },
+          "status_history_entry": {
+            "$ref": "#/components/schemas/BookingStatusHistoryEntryModel",
+            "description": "Created status history entry",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "booking",
+          "status_history_entry"
+        ],
+        "title": "BookingStatusUpdateResponse"
+      },
+      "BookingsListResponse": {
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/BookingListItemModel"
+            },
+            "type": "array",
+            "title": "Bookings",
+            "description": "List of bookings",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "bookings"
+        ],
+        "title": "BookingsListResponse"
+      },
+      "CheckInBookingPart": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Booking ID",
+            "example": "BK-8891"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Updated booking status",
+            "example": "checked_in"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Booking update time",
+            "example": "2026-01-05T09:07:05"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "updated_at"
+        ],
+        "title": "CheckInBookingPart"
+      },
+      "CheckInCreateRequest": {
+        "properties": {
+          "booking_id": {
+            "type": "string",
+            "title": "Booking Id",
+            "description": "Booking ID to check in",
+            "example": "BK-8891"
+          },
+          "arrival_time": {
+            "type": "string",
+            "title": "Arrival Time",
+            "description": "Recorded arrival time (ISO8601)",
+            "example": "2026-01-05T09:07:00"
+          },
+          "room_assignment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Assignment",
+            "description": "Optional room or bay assignment",
+            "example": "Exam Room 3"
+          }
+        },
+        "type": "object",
+        "required": [
+          "booking_id",
+          "arrival_time"
+        ],
+        "title": "CheckInCreateRequest"
+      },
+      "CheckInCreateResponse": {
+        "properties": {
+          "check_in": {
+            "$ref": "#/components/schemas/CheckInModel",
+            "description": "Created check-in",
+            "example": {}
+          },
+          "booking": {
+            "$ref": "#/components/schemas/CheckInBookingPart",
+            "description": "Updated booking",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "check_in",
+          "booking"
+        ],
+        "title": "CheckInCreateResponse"
+      },
+      "CheckInModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Check-in ID",
+            "example": 601
+          },
+          "booking_id": {
+            "type": "string",
+            "title": "Booking Id",
+            "description": "Booking ID",
+            "example": "BK-8891"
+          },
+          "arrival_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Arrival Time",
+            "description": "Arrival timestamp",
+            "example": "2026-01-05T09:07:00"
+          },
+          "room_assignment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Assignment",
+            "description": "Assigned room",
+            "example": "Exam Room 3"
+          },
+          "wait_time_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wait Time Seconds",
+            "description": "Calculated wait time from slot start",
+            "example": 420
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Check-in creation time",
+            "example": "2026-01-05T09:07:05"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Check-in update time",
+            "example": "2026-01-05T09:07:05"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "booking_id",
+          "arrival_time",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CheckInModel"
+      },
+      "ClinicModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Clinic ID (e.g. CLIN-01)",
+            "example": "CLIN-01"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Clinic name",
+            "example": "Downtown Clinic"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location",
+            "description": "Location or address description",
+            "example": "123 Main St, Downtown"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp (ISO8601)",
+            "example": "2025-12-01T10:00:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp (ISO8601)",
+            "example": "2025-12-15T09:30:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ClinicModel"
+      },
+      "ClinicsListResponse": {
+        "properties": {
+          "clinics": {
+            "items": {
+              "$ref": "#/components/schemas/ClinicModel"
+            },
+            "type": "array",
+            "title": "Clinics",
+            "description": "List of clinics",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "clinics"
+        ],
+        "title": "ClinicsListResponse"
+      },
+      "ConflictingBookingItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Conflicting booking ID",
+            "example": "BK-16001"
+          },
+          "appointment_slot_id": {
+            "type": "string",
+            "title": "Appointment Slot Id",
+            "description": "Slot ID that overlaps time off",
+            "example": "SLOT-20260115-1330-1"
+          },
+          "slot_start_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Slot Start Datetime",
+            "description": "Slot start datetime",
+            "example": "2026-01-15T13:30:00"
+          },
+          "slot_end_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Slot End Datetime",
+            "description": "Slot end datetime",
+            "example": "2026-01-15T14:00:00"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Booking status",
+            "example": "confirmed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "appointment_slot_id",
+          "slot_start_datetime",
+          "slot_end_datetime",
+          "status"
+        ],
+        "title": "ConflictingBookingItem"
+      },
+      "ConflictingBookingsResponse": {
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/ConflictingBookingItem"
+            },
+            "type": "array",
+            "title": "Bookings",
+            "description": "Conflicting bookings",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "bookings"
+        ],
+        "title": "ConflictingBookingsResponse"
+      },
+      "DailyRosterGenerateRequest": {
+        "properties": {
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID to generate roster for",
+            "example": "CLIN-01"
+          },
+          "roster_date": {
+            "type": "string",
+            "title": "Roster Date",
+            "description": "Date for the roster (YYYY-MM-DD)",
+            "example": "2026-01-20"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clinic_id",
+          "roster_date"
+        ],
+        "title": "DailyRosterGenerateRequest"
+      },
+      "DailyRosterGetProvider": {
+        "properties": {
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID",
+            "example": "PROV-2201"
+          },
+          "provider_full_name": {
+            "type": "string",
+            "title": "Provider Full Name",
+            "description": "Provider full name",
+            "example": "Dr. John Smith"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/DailyRosterGetProviderSlot"
+            },
+            "type": "array",
+            "title": "Slots",
+            "description": "Slots for provider",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_id",
+          "provider_full_name",
+          "slots"
+        ],
+        "title": "DailyRosterGetProvider"
+      },
+      "DailyRosterGetProviderSlot": {
+        "properties": {
+          "slot_id": {
+            "type": "string",
+            "title": "Slot Id",
+            "description": "Appointment slot ID",
+            "example": "SLOT-20260120-0900-1"
+          },
+          "start_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Datetime",
+            "description": "Slot start datetime",
+            "example": "2026-01-20T09:00:00"
+          },
+          "end_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Datetime",
+            "description": "Slot end datetime",
+            "example": "2026-01-20T09:30:00"
+          },
+          "capacity_per_slot": {
+            "type": "integer",
+            "title": "Capacity Per Slot",
+            "description": "Slot capacity",
+            "example": 2
+          },
+          "booking_counts": {
+            "$ref": "#/components/schemas/DailyRosterGetProviderSlotBookingCounts",
+            "description": "Booking counts by status",
+            "example": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "slot_id",
+          "start_datetime",
+          "end_datetime",
+          "capacity_per_slot",
+          "booking_counts"
+        ],
+        "title": "DailyRosterGetProviderSlot"
+      },
+      "DailyRosterGetProviderSlotBookingCounts": {
+        "properties": {
+          "scheduled": {
+            "type": "integer",
+            "title": "Scheduled",
+            "description": "Number of scheduled bookings",
+            "example": 1
+          },
+          "confirmed": {
+            "type": "integer",
+            "title": "Confirmed",
+            "description": "Number of confirmed bookings",
+            "example": 0
+          },
+          "checked_in": {
+            "type": "integer",
+            "title": "Checked In",
+            "description": "Number of checked_in bookings",
+            "example": 0
+          },
+          "completed": {
+            "type": "integer",
+            "title": "Completed",
+            "description": "Number of completed bookings",
+            "example": 0
+          },
+          "no_show": {
+            "type": "integer",
+            "title": "No Show",
+            "description": "Number of no_show bookings",
+            "example": 0
+          },
+          "canceled_by_patient": {
+            "type": "integer",
+            "title": "Canceled By Patient",
+            "description": "Number of bookings canceled by patient",
+            "example": 0
+          },
+          "canceled_by_clinic": {
+            "type": "integer",
+            "title": "Canceled By Clinic",
+            "description": "Number of bookings canceled by clinic",
+            "example": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "scheduled",
+          "confirmed",
+          "checked_in",
+          "completed",
+          "no_show",
+          "canceled_by_patient",
+          "canceled_by_clinic"
+        ],
+        "title": "DailyRosterGetProviderSlotBookingCounts"
+      },
+      "DailyRosterGetResponse": {
+        "properties": {
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-01"
+          },
+          "roster_date": {
+            "type": "string",
+            "title": "Roster Date",
+            "description": "Date of roster",
+            "example": "2026-01-20"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At",
+            "description": "Generation timestamp",
+            "example": "2026-01-19T18:00:00"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/DailyRosterGetProvider"
+            },
+            "type": "array",
+            "title": "Providers",
+            "description": "Providers in roster",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "clinic_id",
+          "roster_date",
+          "generated_at",
+          "providers"
+        ],
+        "title": "DailyRosterGetResponse"
+      },
+      "DailyRosterSummaryModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Daily roster summary ID",
+            "example": 801
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-01"
+          },
+          "roster_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Roster Date",
+            "description": "Date of roster",
+            "example": "2026-01-20"
+          },
+          "summary_json": {
+            "type": "string",
+            "title": "Summary Json",
+            "description": "JSON string containing structured roster summary",
+            "example": "{\"providers\":[]}"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At",
+            "description": "When the roster was generated",
+            "example": "2026-01-19T18:00:00"
+          },
+          "generated_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated By User Id",
+            "description": "User who generated roster (1)",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "clinic_id",
+          "roster_date",
+          "summary_json",
+          "generated_at"
+        ],
+        "title": "DailyRosterSummaryModel"
+      },
+      "DiagnosisTagCreateRequest": {
+        "properties": {
+          "tag": {
+            "type": "string",
+            "title": "Tag",
+            "description": "Diagnosis tag string",
+            "example": "hypertension"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tag"
+        ],
+        "title": "DiagnosisTagCreateRequest"
+      },
+      "DiagnosisTagModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Diagnosis tag ID",
+            "example": 701
+          },
+          "tag": {
+            "type": "string",
+            "title": "Tag",
+            "description": "Diagnosis tag string",
+            "example": "hypertension"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2026-01-05T11:36:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2026-01-05T11:36:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tag",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DiagnosisTagModel"
+      },
+      "EarliestSlotResponse": {
+        "properties": {
+          "slot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EarliestSlotResponseSlot"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Earliest available slot"
+          }
+        },
+        "type": "object",
+        "title": "EarliestSlotResponse"
+      },
+      "EarliestSlotResponseSlot": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Appointment slot ID chosen as earliest available",
+            "example": "SLOT-20260103-0900-1"
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID for this slot",
+            "example": "PROV-3100"
+          },
+          "provider_full_name": {
+            "type": "string",
+            "title": "Provider Full Name",
+            "description": "Provider full name",
+            "example": "Dr. Jane Smith"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-02"
+          },
+          "visit_type_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visit Type Id",
+            "description": "Visit type ID",
+            "example": 5
+          },
+          "visit_type_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visit Type Name",
+            "description": "Visit type name",
+            "example": "New Patient Visit"
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode",
+            "example": "in_person"
+          },
+          "start_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Datetime",
+            "description": "Slot start datetime",
+            "example": "2026-01-03T09:00:00"
+          },
+          "end_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Datetime",
+            "description": "Slot end datetime",
+            "example": "2026-01-03T09:30:00"
+          },
+          "remaining_capacity": {
+            "type": "integer",
+            "title": "Remaining Capacity",
+            "description": "Remaining capacity after booked patients",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_id",
+          "provider_full_name",
+          "clinic_id",
+          "visit_mode",
+          "start_datetime",
+          "end_datetime",
+          "remaining_capacity"
+        ],
+        "title": "EarliestSlotResponseSlot"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NextSlotForBookingResponse": {
+        "properties": {
+          "slot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NextSlotForBookingResponseSlot"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Next available slot for booking"
+          }
+        },
+        "type": "object",
+        "title": "NextSlotForBookingResponse"
+      },
+      "NextSlotForBookingResponseSlot": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Next available slot ID",
+            "example": "SLOT-20260110-1000-1"
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID (same as original booking)",
+            "example": "PROV-2201"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID for this slot",
+            "example": "CLIN-01"
+          },
+          "visit_type_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visit Type Id",
+            "description": "Visit type ID for this slot",
+            "example": 6
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode for this slot",
+            "example": "telehealth"
+          },
+          "start_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Datetime",
+            "description": "Start datetime",
+            "example": "2026-01-10T10:00:00"
+          },
+          "end_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Datetime",
+            "description": "End datetime",
+            "example": "2026-01-10T10:15:00"
+          },
+          "remaining_capacity": {
+            "type": "integer",
+            "title": "Remaining Capacity",
+            "description": "Remaining capacity",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_id",
+          "clinic_id",
+          "visit_mode",
+          "start_datetime",
+          "end_datetime",
+          "remaining_capacity"
+        ],
+        "title": "NextSlotForBookingResponseSlot"
+      },
+      "PatientCreateRequest": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Patient full name",
+            "example": "John Doe"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "title": "Date Of Birth",
+            "description": "Date of birth in YYYY-MM-DD format",
+            "example": "1985-04-12"
+          },
+          "preferred_communication_channel": {
+            "type": "string",
+            "title": "Preferred Communication Channel",
+            "description": "sms, email, phone, or none",
+            "example": "sms"
+          },
+          "primary_insurance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Insurance",
+            "description": "Primary insurance payer name",
+            "example": "BlueCross"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "date_of_birth",
+          "preferred_communication_channel"
+        ],
+        "title": "PatientCreateRequest"
+      },
+      "PatientModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Patient ID",
+            "example": 1001
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Patient full name",
+            "example": "John Doe"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "title": "Date Of Birth",
+            "description": "Date of birth",
+            "example": "1985-04-12"
+          },
+          "preferred_communication_channel": {
+            "type": "string",
+            "title": "Preferred Communication Channel",
+            "description": "Preferred communication channel",
+            "example": "sms"
+          },
+          "primary_insurance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Insurance",
+            "description": "Primary insurance name",
+            "example": "BlueCross"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2026-01-02T09:20:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2026-01-02T09:20:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "date_of_birth",
+          "preferred_communication_channel",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PatientModel"
+      },
+      "PatientsListResponse": {
+        "properties": {
+          "patients": {
+            "items": {
+              "$ref": "#/components/schemas/PatientModel"
+            },
+            "type": "array",
+            "title": "Patients",
+            "description": "List of patients",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "patients"
+        ],
+        "title": "PatientsListResponse"
+      },
+      "ProviderCreateRequest": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Optional provider ID; if omitted, generated like PROV-xxxx",
+            "example": "PROV-4401"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Provider full legal name",
+            "example": "Dr. Alice Nguyen"
+          },
+          "specialty_id": {
+            "type": "integer",
+            "title": "Specialty Id",
+            "description": "ID of specialty from specialties table",
+            "example": 2
+          },
+          "primary_clinic_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Clinic Id",
+            "description": "Clinic ID where provider primarily practices",
+            "example": "CLIN-02"
+          },
+          "active_flag": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Flag",
+            "description": "1 if provider is active, 0 if inactive",
+            "default": 1,
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "specialty_id"
+        ],
+        "title": "ProviderCreateRequest"
+      },
+      "ProviderModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Provider ID",
+            "example": "PROV-4401"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Provider full name",
+            "example": "Dr. Alice Nguyen"
+          },
+          "specialty_id": {
+            "type": "integer",
+            "title": "Specialty Id",
+            "description": "Associated specialty ID",
+            "example": 2
+          },
+          "primary_clinic_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Clinic Id",
+            "description": "Primary clinic ID or null",
+            "example": "CLIN-02"
+          },
+          "active_flag": {
+            "type": "integer",
+            "title": "Active Flag",
+            "description": "Active status flag",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2026-01-02T09:00:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2026-01-02T09:00:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "specialty_id",
+          "active_flag",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProviderModel"
+      },
+      "ProviderVisitTypeCreateRequest": {
+        "properties": {
+          "visit_type_id": {
+            "type": "integer",
+            "title": "Visit Type Id",
+            "description": "Visit type ID to associate",
+            "example": 5
+          },
+          "active_flag": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Flag",
+            "description": "1 to mark active, 0 inactive",
+            "default": 1,
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "visit_type_id"
+        ],
+        "title": "ProviderVisitTypeCreateRequest"
+      },
+      "ProviderVisitTypeModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Provider-visit-type mapping ID",
+            "example": 201
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID",
+            "example": "PROV-4401"
+          },
+          "visit_type_id": {
+            "type": "integer",
+            "title": "Visit Type Id",
+            "description": "Visit type ID",
+            "example": 5
+          },
+          "visit_type_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visit Type Name",
+            "description": "Visit type name from visit_types",
+            "example": "New Patient Visit"
+          },
+          "active_flag": {
+            "type": "integer",
+            "title": "Active Flag",
+            "description": "Active flag for this mapping",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2026-01-02T09:15:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2026-01-02T09:15:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_id",
+          "visit_type_id",
+          "active_flag",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProviderVisitTypeModel"
+      },
+      "ProviderVisitTypesListResponse": {
+        "properties": {
+          "provider_visit_types": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderVisitTypeModel"
+            },
+            "type": "array",
+            "title": "Provider Visit Types",
+            "description": "List of provider visit types",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_visit_types"
+        ],
+        "title": "ProviderVisitTypesListResponse"
+      },
+      "ProvidersListItemModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Provider ID",
+            "example": "PROV-2201"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Provider full name",
+            "example": "Dr. John Smith"
+          },
+          "specialty_id": {
+            "type": "integer",
+            "title": "Specialty Id",
+            "description": "Specialty ID",
+            "example": 1
+          },
+          "specialty_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specialty Name",
+            "description": "Specialty name from specialties",
+            "example": "Family Medicine"
+          },
+          "primary_clinic_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Clinic Id",
+            "description": "Primary clinic ID",
+            "example": "CLIN-01"
+          },
+          "active_flag": {
+            "type": "integer",
+            "title": "Active Flag",
+            "description": "Active status flag",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-01-10T08:00:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-11-20T14:30:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "specialty_id",
+          "active_flag",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProvidersListItemModel"
+      },
+      "ProvidersListResponse": {
+        "properties": {
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProvidersListItemModel"
+            },
+            "type": "array",
+            "title": "Providers",
+            "description": "List of providers",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "providers"
+        ],
+        "title": "ProvidersListResponse"
+      },
+      "SpecialtiesListResponse": {
+        "properties": {
+          "specialties": {
+            "items": {
+              "$ref": "#/components/schemas/SpecialtyModel"
+            },
+            "type": "array",
+            "title": "Specialties",
+            "description": "List of specialties",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "specialties"
+        ],
+        "title": "SpecialtiesListResponse"
+      },
+      "SpecialtyCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique specialty name",
+            "example": "Family Medicine"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "SpecialtyCreateRequest"
+      },
+      "SpecialtyCreateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Specialty ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Specialty name",
+            "example": "Pediatrics"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-10-01T12:00:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-11-01T08:45:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SpecialtyCreateResponse"
+      },
+      "SpecialtyModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Specialty ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Specialty name",
+            "example": "Pediatrics"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-10-01T12:00:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-11-01T08:45:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SpecialtyModel"
+      },
+      "TimeOffBlockCreateRequest": {
+        "properties": {
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID taking time off",
+            "example": "PROV-2201"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic where time off applies",
+            "example": "CLIN-02"
+          },
+          "start_datetime": {
+            "type": "string",
+            "title": "Start Datetime",
+            "description": "Start of time off (ISO8601)",
+            "example": "2026-01-15T13:00:00"
+          },
+          "end_datetime": {
+            "type": "string",
+            "title": "End Datetime",
+            "description": "End of time off (ISO8601)",
+            "example": "2026-01-15T15:00:00"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Optional reason for time off",
+            "example": "Provider in training"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_id",
+          "clinic_id",
+          "start_datetime",
+          "end_datetime"
+        ],
+        "title": "TimeOffBlockCreateRequest"
+      },
+      "TimeOffBlockModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Time-off block ID",
+            "example": 301
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID",
+            "example": "PROV-2201"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-02"
+          },
+          "start_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Datetime",
+            "description": "Start datetime of time off",
+            "example": "2026-01-15T13:00:00"
+          },
+          "end_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Datetime",
+            "description": "End datetime of time off",
+            "example": "2026-01-15T15:00:00"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Reason for time off",
+            "example": "Admin time"
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id",
+            "description": "User ID who created this block (implicit user 1)",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2026-01-10T10:00:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2026-01-10T10:00:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_id",
+          "clinic_id",
+          "start_datetime",
+          "end_datetime",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "TimeOffBlockModel"
+      },
+      "TimeOffBlocksListResponse": {
+        "properties": {
+          "time_off_blocks": {
+            "items": {
+              "$ref": "#/components/schemas/TimeOffBlockModel"
+            },
+            "type": "array",
+            "title": "Time Off Blocks",
+            "description": "List of time-off blocks",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "time_off_blocks"
+        ],
+        "title": "TimeOffBlocksListResponse"
+      },
+      "UtilizationReportGenerateRequest": {
+        "properties": {
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID for report",
+            "example": "CLIN-03"
+          },
+          "start_date": {
+            "type": "string",
+            "title": "Start Date",
+            "description": "Report start date (YYYY-MM-DD)",
+            "example": "2026-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date",
+            "description": "Report end date (YYYY-MM-DD, inclusive)",
+            "example": "2026-01-31"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clinic_id",
+          "start_date",
+          "end_date"
+        ],
+        "title": "UtilizationReportGenerateRequest"
+      },
+      "UtilizationReportGetProvider": {
+        "properties": {
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID",
+            "example": "PROV-3100"
+          },
+          "total_available_appointment_slots": {
+            "type": "integer",
+            "title": "Total Available Appointment Slots",
+            "description": "Total number of appointment slots",
+            "example": 80
+          },
+          "booked_slots": {
+            "type": "integer",
+            "title": "Booked Slots",
+            "description": "Number of slots having at least one booking",
+            "example": 70
+          },
+          "overbooked_slots": {
+            "type": "integer",
+            "title": "Overbooked Slots",
+            "description": "Number of slots where bookings exceed base capacity",
+            "example": 5
+          },
+          "no_show_count": {
+            "type": "integer",
+            "title": "No Show Count",
+            "description": "Total bookings with status no_show",
+            "example": 3
+          },
+          "same_day_bookings_count": {
+            "type": "integer",
+            "title": "Same Day Bookings Count",
+            "description": "Bookings with is_same_day_booking=1",
+            "example": 10
+          },
+          "average_fill_rate_percentage": {
+            "type": "number",
+            "title": "Average Fill Rate Percentage",
+            "description": "Average fill rate across all slots for provider in range",
+            "example": 87.5
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_id",
+          "total_available_appointment_slots",
+          "booked_slots",
+          "overbooked_slots",
+          "no_show_count",
+          "same_day_bookings_count",
+          "average_fill_rate_percentage"
+        ],
+        "title": "UtilizationReportGetProvider"
+      },
+      "UtilizationReportGetResponse": {
+        "properties": {
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-03"
+          },
+          "start_date": {
+            "type": "string",
+            "title": "Start Date",
+            "description": "Start date",
+            "example": "2026-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date",
+            "description": "End date",
+            "example": "2026-01-31"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At",
+            "description": "Existing report generation timestamp",
+            "example": "2026-02-01T09:00:00"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/UtilizationReportGetProvider"
+            },
+            "type": "array",
+            "title": "Providers",
+            "description": "Utilization per provider",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "clinic_id",
+          "start_date",
+          "end_date",
+          "generated_at",
+          "providers"
+        ],
+        "title": "UtilizationReportGetResponse"
+      },
+      "UtilizationReportModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Utilization report ID",
+            "example": 901
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID",
+            "example": "CLIN-03"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Start date",
+            "example": "2026-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date",
+            "description": "End date",
+            "example": "2026-01-31"
+          },
+          "report_json": {
+            "type": "string",
+            "title": "Report Json",
+            "description": "JSON string with utilization metrics per provider",
+            "example": "{\"providers\":[]}"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At",
+            "description": "Generation timestamp",
+            "example": "2026-02-01T09:00:00"
+          },
+          "generated_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated By User Id",
+            "description": "User who generated report (1)",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "clinic_id",
+          "start_date",
+          "end_date",
+          "report_json",
+          "generated_at"
+        ],
+        "title": "UtilizationReportModel"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VisitNoteBillingCodeItem": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Billing code",
+            "example": "99213"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "VisitNoteBillingCodeItem"
+      },
+      "VisitNoteBillingCodesAttachRequest": {
+        "properties": {
+          "billing_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Billing Codes",
+            "description": "Array of billing code strings to attach",
+            "example": [
+              "99213",
+              "Z00.00"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "billing_codes"
+        ],
+        "title": "VisitNoteBillingCodesAttachRequest"
+      },
+      "VisitNoteBillingCodesAttachResponse": {
+        "properties": {
+          "visit_note_id": {
+            "type": "string",
+            "title": "Visit Note Id",
+            "description": "Visit note ID",
+            "example": "VN-5507-A"
+          },
+          "billing_codes": {
+            "items": {
+              "$ref": "#/components/schemas/VisitNoteBillingCodeItem"
+            },
+            "type": "array",
+            "title": "Billing Codes",
+            "description": "List of billing codes now attached to the visit note",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "visit_note_id",
+          "billing_codes"
+        ],
+        "title": "VisitNoteBillingCodesAttachResponse"
+      },
+      "VisitNoteCreateRequest": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Visit note ID (e.g. VN-5507-A)",
+            "example": "VN-5507-A"
+          },
+          "booking_id": {
+            "type": "string",
+            "title": "Booking Id",
+            "description": "Booking ID associated with this note",
+            "example": "BK-5507"
+          },
+          "note_type": {
+            "type": "string",
+            "title": "Note Type",
+            "description": "Note type identifier",
+            "example": "standard_progress_note"
+          },
+          "locked_flag": {
+            "type": "integer",
+            "title": "Locked Flag",
+            "description": "1 if note is locked, 0 if editable",
+            "example": 1
+          },
+          "metadata_json": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata Json",
+            "description": "JSON string containing metadata such as author, version, or templates",
+            "example": "{\"author\":\"Dr. Smith\",\"version\":1}"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "booking_id",
+          "note_type",
+          "locked_flag"
+        ],
+        "title": "VisitNoteCreateRequest"
+      },
+      "VisitNoteDiagnosisTagItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Diagnosis tag ID",
+            "example": 701
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "VisitNoteDiagnosisTagItem"
+      },
+      "VisitNoteDiagnosisTagsAttachRequest": {
+        "properties": {
+          "diagnosis_tag_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Diagnosis Tag Ids",
+            "description": "Array of diagnosis_tag IDs to attach",
+            "example": [
+              701,
+              702
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "diagnosis_tag_ids"
+        ],
+        "title": "VisitNoteDiagnosisTagsAttachRequest"
+      },
+      "VisitNoteDiagnosisTagsAttachResponse": {
+        "properties": {
+          "visit_note_id": {
+            "type": "string",
+            "title": "Visit Note Id",
+            "description": "Visit note ID",
+            "example": "VN-5507-A"
+          },
+          "diagnosis_tags": {
+            "items": {
+              "$ref": "#/components/schemas/VisitNoteDiagnosisTagItem"
+            },
+            "type": "array",
+            "title": "Diagnosis Tags",
+            "description": "Diagnosis tags now attached to the visit note",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "visit_note_id",
+          "diagnosis_tags"
+        ],
+        "title": "VisitNoteDiagnosisTagsAttachResponse"
+      },
+      "VisitNoteModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Visit note ID",
+            "example": "VN-5507-A"
+          },
+          "booking_id": {
+            "type": "string",
+            "title": "Booking Id",
+            "description": "Associated booking ID",
+            "example": "BK-5507"
+          },
+          "note_type": {
+            "type": "string",
+            "title": "Note Type",
+            "description": "Type of note",
+            "example": "standard_progress_note"
+          },
+          "locked_flag": {
+            "type": "integer",
+            "title": "Locked Flag",
+            "description": "Locked flag (1 locked, 0 unlocked)",
+            "example": 1
+          },
+          "metadata_json": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata Json",
+            "description": "JSON metadata string",
+            "example": "{\"author\":\"Dr. Smith\",\"version\":1}"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2026-01-05T11:30:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Update timestamp",
+            "example": "2026-01-05T11:30:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "booking_id",
+          "note_type",
+          "locked_flag",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "VisitNoteModel"
+      },
+      "VisitTypeCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Unique visit type name",
+            "example": "Annual Wellness Visit"
+          },
+          "default_duration_minutes": {
+            "type": "integer",
+            "title": "Default Duration Minutes",
+            "description": "Default duration for appointments of this type",
+            "example": 30
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "in_person, telehealth, or either",
+            "example": "in_person"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "default_duration_minutes",
+          "visit_mode"
+        ],
+        "title": "VisitTypeCreateRequest"
+      },
+      "VisitTypeCreateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Visit type ID",
+            "example": 5
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Visit type name",
+            "example": "New Patient Visit"
+          },
+          "default_duration_minutes": {
+            "type": "integer",
+            "title": "Default Duration Minutes",
+            "description": "Default duration in minutes",
+            "example": 30
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Supported mode: in_person, telehealth, or either",
+            "example": "either"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-06-01T10:00:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-07-01T10:00:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "default_duration_minutes",
+          "visit_mode",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "VisitTypeCreateResponse"
+      },
+      "VisitTypeModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Visit type ID",
+            "example": 5
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Visit type name",
+            "example": "New Patient Visit"
+          },
+          "default_duration_minutes": {
+            "type": "integer",
+            "title": "Default Duration Minutes",
+            "description": "Default duration in minutes",
+            "example": 30
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Supported mode: in_person, telehealth, or either",
+            "example": "either"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2025-06-01T10:00:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2025-07-01T10:00:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "default_duration_minutes",
+          "visit_mode",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "VisitTypeModel"
+      },
+      "VisitTypesListResponse": {
+        "properties": {
+          "visit_types": {
+            "items": {
+              "$ref": "#/components/schemas/VisitTypeModel"
+            },
+            "type": "array",
+            "title": "Visit Types",
+            "description": "List of visit types",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "visit_types"
+        ],
+        "title": "VisitTypesListResponse"
+      },
+      "WeeklyScheduleCreateRequest": {
+        "properties": {
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic where this schedule applies",
+            "example": "CLIN-01"
+          },
+          "day_of_week": {
+            "type": "integer",
+            "title": "Day Of Week",
+            "description": "0=Monday through 6=Sunday",
+            "example": 0
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time",
+            "description": "Daily start time in HH:MM format",
+            "example": "09:00"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time",
+            "description": "Daily end time in HH:MM format",
+            "example": "17:00"
+          },
+          "lunch_start_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lunch Start Time",
+            "description": "Lunch start time in HH:MM, or null",
+            "example": "12:00"
+          },
+          "lunch_end_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lunch End Time",
+            "description": "Lunch end time in HH:MM, or null",
+            "example": "13:00"
+          },
+          "slot_duration_minutes": {
+            "type": "integer",
+            "title": "Slot Duration Minutes",
+            "description": "Default appointment slot duration in minutes",
+            "example": 30
+          },
+          "capacity_per_slot": {
+            "type": "integer",
+            "title": "Capacity Per Slot",
+            "description": "Number of patients allowed per base slot",
+            "example": 2
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode for slots (in_person or telehealth)",
+            "example": "in_person"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clinic_id",
+          "day_of_week",
+          "start_time",
+          "end_time",
+          "slot_duration_minutes",
+          "capacity_per_slot",
+          "visit_mode"
+        ],
+        "title": "WeeklyScheduleCreateRequest"
+      },
+      "WeeklyScheduleModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Weekly schedule ID",
+            "example": 101
+          },
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id",
+            "description": "Provider ID",
+            "example": "PROV-4401"
+          },
+          "clinic_id": {
+            "type": "string",
+            "title": "Clinic Id",
+            "description": "Clinic ID where schedule applies",
+            "example": "CLIN-01"
+          },
+          "day_of_week": {
+            "type": "integer",
+            "title": "Day Of Week",
+            "description": "0=Monday through 6=Sunday",
+            "example": 0
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time",
+            "description": "Start time HH:MM",
+            "example": "09:00"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time",
+            "description": "End time HH:MM",
+            "example": "17:00"
+          },
+          "lunch_start_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lunch Start Time",
+            "description": "Lunch start time HH:MM or null",
+            "example": "12:00"
+          },
+          "lunch_end_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lunch End Time",
+            "description": "Lunch end time HH:MM or null",
+            "example": "13:00"
+          },
+          "slot_duration_minutes": {
+            "type": "integer",
+            "title": "Slot Duration Minutes",
+            "description": "Slot duration in minutes",
+            "example": 30
+          },
+          "capacity_per_slot": {
+            "type": "integer",
+            "title": "Capacity Per Slot",
+            "description": "Capacity per base slot",
+            "example": 2
+          },
+          "visit_mode": {
+            "type": "string",
+            "title": "Visit Mode",
+            "description": "Visit mode (in_person or telehealth)",
+            "example": "in_person"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp",
+            "example": "2026-01-02T09:05:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp",
+            "example": "2026-01-02T09:05:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_id",
+          "clinic_id",
+          "day_of_week",
+          "start_time",
+          "end_time",
+          "slot_duration_minutes",
+          "capacity_per_slot",
+          "visit_mode",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WeeklyScheduleModel"
+      },
+      "WeeklySchedulesListResponse": {
+        "properties": {
+          "weekly_schedules": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklyScheduleModel"
+            },
+            "type": "array",
+            "title": "Weekly Schedules",
+            "description": "List of weekly schedules",
+            "example": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "weekly_schedules"
+        ],
+        "title": "WeeklySchedulesListResponse"
+      }
+    }
+  }
+}

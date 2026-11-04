@@ -1775,6 +1775,107 @@
       "conclusion": "结构化教师指导后的学生完成任务；本次其余四个分支均未通过任务验收。",
       "source": "data/cases/ablation_case/verified_20261103/booking_and_reservations_5_0/README.txt",
       "download": "data/cases/ablation_case/verified_20261103/booking_and_reservations_5_0/case_data.zip"
+    },
+    {
+      "title": "先扩充时段容量，再完成当天预约",
+      "id": "Appointment · capacity & booking",
+      "task": "Create 15-minute overbooked appointment_slots for provider ID 'PROV-3344' at 'Downtown Clinic' between 08:00 and 09:00 on 2026-02-03 by increasing capacity_per_slot from 2 to 3 and then add a same-day sick visit booking for patient 'Maria Lopez' (DOB 2012-09-03) with status 'scheduled'.",
+      "lede": "同一任务、同一干预前任务状态；切换指导方式，查看实际 prompt 和最终结果。",
+      "stages": [
+        {
+          "label": "指导与结果",
+          "groups": [
+            {
+              "options": [
+                {
+                  "name": "Teacher / Structured",
+                  "status": "成功",
+                  "summary": "将其余三个时段的容量增至 3，再为 Maria Lopez 创建预约，显式设置 is_same_day_booking=1，通过任务验收。",
+                  "code": "update_appointment_slot({\"capacity_per_slot\": 3, \"is_overbook_capable\": 1, \"slot_id\": \"SL-3002\"})\ncreate_booking({\"appointment_slot_id\": \"SL-3004\", \"clinic_id\": \"CLIN-01\", \"is_same_day_booking\": 1, \"patient_id\": 2, \"provider_id\": \"PROV-3344\", \"status\": \"scheduled\", \"visit_mode\": \"in_person\", \"visit_type_id\": 4})\n→ {\"id\": \"BK-20\", \"appointment_slot_id\": \"SL-3004\", \"status\": \"scheduled\", \"is_same_day_booking\": 1}",
+                  "source": "data/cases/ablation_case/verified_20261104/booking_and_scheduling_11_4/teacher_structured/student/trajectory.json",
+                  "tone": "good",
+                  "codeHighlights": [
+                    "is_same_day_booking",
+                    "capacity_per_slot",
+                    "SL-3001",
+                    "SLOT-25"
+                  ],
+                  "quote": "{\n  \"precondition\": \"The agent has identified the clinic (CLIN-01), the provider (PROV-3344), the patient (Maria Lopez, ID: 2), and the visit type (Same-day Sick Visit, ID: 4). It has also retrieved the list of appointment slots for the specified time window.\",\n  \"decision_rule\": \"Iterate through all appointment slots between 08:00 and 09:00 on 2026-02-03 for the given provider and clinic. For each slot, call 'mcp_server_update_appointment_slot' to set 'capacity_per_slot' to 3 and 'is_overbook_capable' to 1. Once all slots are updated, call 'mcp_server_create_booking' using the last available slot (SL-3004) to schedule the sick visit for Maria Lopez with 'is_same_day_booking' set to 1.\",\n  \"expected_transition\": \"The appointment slots SL-3002, SL-3003, and SL-3004 will reflect a capacity of 3. A new booking record (e.g., BK-20) will be created in the system for Maria Lopez.\",\n  \"recovery_check\": \"If an update fails, retry the specific slot update. If the booking creation fails due to capacity, verify the 'remaining_capacity' of the chosen slot and select the next available slot in the 08:00-09:00 window.\"\n}",
+                  "quoteFocus": "Iterate through all appointment slots between 08:00 and 09:00 on 2026-02-03 for the given provider and clinic. For each slot, call 'mcp_server_update_appointment_slot' to set 'capacity_per_slot' to 3 and 'is_overbook_capable' to 1. Once all slots are updated, call 'mcp_server_create_booking' using the last available slot (SL-3004) to schedule the sick visit for Maria Lopez with 'is_same_day_booking' set to 1."
+                }
+              ]
+            },
+            {
+              "options": [
+                {
+                  "name": "Teacher / Free-form",
+                  "status": "失败",
+                  "summary": "时段容量已更新，但创建预约时未设置当天预约标志，返回 is_same_day_booking=0，验收失败。",
+                  "code": "update_appointment_slot({\"capacity_per_slot\": 3, \"slot_id\": \"SL-3002\"})\ncreate_booking({\"appointment_slot_id\": \"SL-3004\", \"clinic_id\": \"CLIN-01\", \"patient_id\": 2, \"provider_id\": \"PROV-3344\", \"status\": \"scheduled\", \"visit_mode\": \"in_person\", \"visit_type_id\": 4})\n→ {\"id\": \"BK-20\", \"appointment_slot_id\": \"SL-3004\", \"status\": \"scheduled\", \"is_same_day_booking\": 0}",
+                  "source": "data/cases/ablation_case/verified_20261104/booking_and_scheduling_11_4/teacher_freeform/student/trajectory.json",
+                  "tone": "bad",
+                  "codeHighlights": [
+                    "is_same_day_booking",
+                    "capacity_per_slot",
+                    "SL-3001",
+                    "SLOT-25"
+                  ],
+                  "quote": "The task is complete. I have successfully updated the appointment slots and scheduled the new booking.\n\n**Summary of Actions:**\n1.  **Clinic & Provider Identification**: Confirmed 'Downtown Clinic' (ID: `CLIN-01`) and provider `PROV-3344`.\n2.  **Slot Capacity Update**: Identified three 15-minute slots between 08:00 and 09:00 on 2026-02-03. I updated the `capacity_per_slot` from 2 to 3 for:\n    *   **SL-3002** (08:15 - 08:30)\n    *   **SL-3003** (08:30 - 08:45)\n    *   **SL-3004** (08:45 - 09:00)\n3.  **Patient & Visit Type Verification**: Located patient 'Maria Lopez' (ID: `2`) and confirmed 'Same-day Sick Visit' (ID: `4`).\n4.  **Booking Creation**: Created a new booking (**BK-20**) for Maria Lopez in slot **SL-3004** with a status of 'scheduled'."
+                },
+                {
+                  "name": "Student / Structured",
+                  "status": "失败",
+                  "summary": "指导判断预约已经完成；实际续跑仍漏设当天预约标志，返回 is_same_day_booking=0，验收失败。",
+                  "code": "update_appointment_slot({\"capacity_per_slot\": 3, \"is_overbook_capable\": 1, \"slot_id\": \"SL-3002\"})\ncreate_booking({\"appointment_slot_id\": \"SL-3004\", \"clinic_id\": \"CLIN-01\", \"patient_id\": 2, \"provider_id\": \"PROV-3344\", \"status\": \"scheduled\", \"visit_mode\": \"in_person\", \"visit_type_id\": 4})\n→ {\"id\": \"BK-20\", \"appointment_slot_id\": \"SL-3004\", \"status\": \"scheduled\", \"is_same_day_booking\": 0}",
+                  "source": "data/cases/ablation_case/verified_20261104/booking_and_scheduling_11_4/student_structured/student/trajectory.json",
+                  "tone": "bad",
+                  "codeHighlights": [
+                    "is_same_day_booking",
+                    "capacity_per_slot",
+                    "SL-3001",
+                    "SLOT-25"
+                  ],
+                  "quote": "{\n  \"precondition\": \"The user wants to update appointment slots for provider 'PROV-3344' at 'Downtown Clinic' (CLIN-01) on 2026-02-03 between 08:00 and 09:00 to have a capacity of 3, and then create a 'scheduled' sick visit booking for patient 'Maria Lopez' (ID: 2) on one of those slots.\",\n  \"decision_rule\": \"The agent has already identified the clinic, retrieved the existing slots (SL-3002, SL-3003, SL-3004), updated their capacity to 3, identified the patient and visit type, and successfully created the booking (BK-20) for the 08:45 slot.\",\n  \"expected_transition\": \"The task is complete as the appointment slots were updated and the booking was successfully created.\",\n  \"recovery_check\": \"Verify that the booking BK-20 exists with status 'scheduled' and that the capacity for slots SL-3002, SL-3003, and SL-3004 is now 3.\"\n}",
+                  "quoteFocus": "The agent has already identified the clinic, retrieved the existing slots (SL-3002, SL-3003, SL-3004), updated their capacity to 3, identified the patient and visit type, and successfully created the booking (BK-20) for the 08:45 slot."
+                },
+                {
+                  "name": "External / GPT-5.6-sol",
+                  "status": "失败",
+                  "summary": "误判 08:00 时段缺失，重复创建已有时段；最终出现五个时段，未满足恰好四个时段的验收条件。",
+                  "code": "create_appointment_slot({\"base_capacity_per_slot\": 2, \"capacity_per_slot\": 3, \"clinic_id\": \"CLIN-01\", \"end_datetime\": \"2026-02-03T08:15:00Z\", \"is_overbook_capable\": 1, \"provider_id\": \"PROV-3344\", \"start_datetime\": \"2026-02-03T08:00:00Z\", \"visit_mode\": \"in_person\", \"visit_type_id\": 4})\ncreate_booking({\"appointment_slot_id\": \"SLOT-25\", \"clinic_id\": \"CLIN-01\", \"is_same_day_booking\": 1, \"patient_id\": 2, \"provider_id\": \"PROV-3344\", \"status\": \"scheduled\", \"visit_mode\": \"in_person\", \"visit_type_id\": 4})\n→ {\"id\": \"BK-20\", \"appointment_slot_id\": \"SLOT-25\", \"status\": \"scheduled\", \"is_same_day_booking\": 1}\nappointment_slots: [\"SL-3001\", \"SLOT-25\", \"SL-3002\", \"SL-3003\", \"SL-3004\"]",
+                  "source": "data/cases/ablation_case/verified_20261104/booking_and_scheduling_11_4/external_structured/student/trajectory.json",
+                  "tone": "bad",
+                  "codeHighlights": [
+                    "is_same_day_booking",
+                    "capacity_per_slot",
+                    "SL-3001",
+                    "SLOT-25"
+                  ],
+                  "quote": "{\n  \"precondition\": \"Downtown Clinic is CLIN-01; Maria Lopez is patient 2; Same-day Sick Visit is visit type 4 with a 15-minute duration. Slots SL-3002 through SL-3004 already satisfy capacity_per_slot=3, base_capacity_per_slot=2, and is_overbook_capable=1, but the 08:00-08:15 slot is missing.\",\n  \"decision_rule\": \"Create exactly one slot for 2026-02-03 08:00-08:15 with provider PROV-3344, clinic CLIN-01, visit_type_id 4, visit_mode in_person, capacity_per_slot 3, base_capacity_per_slot 2, and is_overbook_capable 1. Do not redundantly update the three compliant slots. After creation succeeds, create the booking on any qualifying slot with remaining capacity, explicitly setting patient_id=2, status=scheduled, visit_type_id=4, and is_same_day_booking=1.\",\n  \"expected_transition\": \"The interval contains four contiguous 15-minute overbook-capable slots from 08:00 through 09:00, followed by a scheduled Same-day Sick Visit booking for Maria Lopez whose is_same_day_booking value is 1.\",\n  \"recovery_check\": \"Re-list slots for the interval and confirm all four quarter-hour periods exist with base capacity 2 and current capacity 3. After booking, inspect the returned booking or call get_booking and verify the patient, provider, clinic, visit type, status, selected slot, and is_same_day_booking=1; do not report completion if the same-day flag is 0.\"\n}",
+                  "quoteFocus": "Create exactly one slot for 2026-02-03 08:00-08:15 with provider PROV-3344, clinic CLIN-01, visit_type_id 4, visit_mode in_person, capacity_per_slot 3, base_capacity_per_slot 2, and is_overbook_capable 1. Do not redundantly update the three compliant slots. After creation succeeds, create the booking on any qualifying slot with remaining capacity, explicitly setting patient_id=2, status=scheduled, visit_type_id=4, and is_same_day_booking=1."
+                },
+                {
+                  "name": "Unsteered",
+                  "status": "失败",
+                  "summary": "完成容量更新并创建预约，但未设置当天预约标志，返回 is_same_day_booking=0，验收失败。",
+                  "code": "update_appointment_slot({\"capacity_per_slot\": 3, \"is_overbook_capable\": 1, \"slot_id\": \"SL-3002\"})\ncreate_booking({\"appointment_slot_id\": \"SL-3004\", \"clinic_id\": \"CLIN-01\", \"patient_id\": 2, \"provider_id\": \"PROV-3344\", \"status\": \"scheduled\", \"visit_mode\": \"in_person\", \"visit_type_id\": 4})\n→ {\"id\": \"BK-20\", \"appointment_slot_id\": \"SL-3004\", \"status\": \"scheduled\", \"is_same_day_booking\": 0}",
+                  "source": "data/cases/ablation_case/verified_20261104/booking_and_scheduling_11_4/unsteered/student/trajectory.json",
+                  "tone": "bad",
+                  "codeHighlights": [
+                    "is_same_day_booking",
+                    "capacity_per_slot",
+                    "SL-3001",
+                    "SLOT-25"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "conclusion": "结构化教师指导后的学生完成任务；本次其余四个分支均未通过任务验收。",
+      "source": "data/cases/ablation_case/verified_20261104/booking_and_scheduling_11_4/README.txt",
+      "download": "data/cases/ablation_case/verified_20261104/booking_and_scheduling_11_4/case_data.zip"
     }
   ],
   "recovery": [

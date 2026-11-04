@@ -1,0 +1,2209 @@
+{
+  "model": "case-model",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool.\n\nProcedural guidance. Independently choose and execute actions:\n{\n  \"precondition\": \"Downtown Clinic is CLIN-01; Maria Lopez is patient 2; Same-day Sick Visit is visit type 4 with a 15-minute duration. Slots SL-3002 through SL-3004 already satisfy capacity_per_slot=3, base_capacity_per_slot=2, and is_overbook_capable=1, but the 08:00-08:15 slot is missing.\",\n  \"decision_rule\": \"Create exactly one slot for 2026-02-03 08:00-08:15 with provider PROV-3344, clinic CLIN-01, visit_type_id 4, visit_mode in_person, capacity_per_slot 3, base_capacity_per_slot 2, and is_overbook_capable 1. Do not redundantly update the three compliant slots. After creation succeeds, create the booking on any qualifying slot with remaining capacity, explicitly setting patient_id=2, status=scheduled, visit_type_id=4, and is_same_day_booking=1.\",\n  \"expected_transition\": \"The interval contains four contiguous 15-minute overbook-capable slots from 08:00 through 09:00, followed by a scheduled Same-day Sick Visit booking for Maria Lopez whose is_same_day_booking value is 1.\",\n  \"recovery_check\": \"Re-list slots for the interval and confirm all four quarter-hour periods exist with base capacity 2 and current capacity 3. After booking, inspect the returned booking or call get_booking and verify the patient, provider, clinic, visit type, status, selected slot, and is_same_day_booking=1; do not report completion if the same-day flag is 0.\"\n}"
+    },
+    {
+      "role": "user",
+      "content": "Create 15-minute overbooked appointment_slots for provider ID 'PROV-3344' at 'Downtown Clinic' between 08:00 and 09:00 on 2026-02-03 by increasing capacity_per_slot from 2 to 3 and then add a same-day sick visit booking for patient 'Maria Lopez' (DOB 2012-09-03) with status 'scheduled'."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-a934cac12357953a",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_clinics",
+            "arguments": "{\"name\": \"Downtown Clinic\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-a934cac12357953a",
+      "content": "{\"clinics\": [{\"id\": \"CLIN-01\", \"name\": \"Downtown Clinic\", \"location\": \"123 Main St, CityCenter\", \"created_at\": \"2024-01-01T08:00:00\", \"updated_at\": \"2025-12-01T08:00:00\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-add2ad9bd2060b17",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_appointment_slots",
+            "arguments": "{\"clinic_id\": \"CLIN-01\", \"end_until\": \"2026-02-03T09:00:00Z\", \"provider_id\": \"PROV-3344\", \"start_from\": \"2026-02-03T08:00:00Z\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-add2ad9bd2060b17",
+      "content": "{\"appointment_slots\": [{\"id\": \"SL-3002\", \"provider_id\": \"PROV-3344\", \"clinic_id\": \"CLIN-01\", \"visit_type_id\": 4, \"visit_mode\": \"in_person\", \"start_datetime\": \"2026-02-03T08:15:00\", \"end_datetime\": \"2026-02-03T08:30:00\", \"capacity_per_slot\": 3, \"base_capacity_per_slot\": 2, \"is_overbook_capable\": 1, \"current_bookings_count\": 1, \"remaining_capacity\": 2, \"created_by_user_id\": 1, \"created_at\": \"2025-12-20T10:50:00\", \"updated_at\": \"2025-12-20T10:50:00\"}, {\"id\": \"SL-3003\", \"provider_id\": \"PROV-3344\", \"clinic_id\": \"CLIN-01\", \"visit_type_id\": 4, \"visit_mode\": \"in_person\", \"start_datetime\": \"2026-02-03T08:30:00\", \"end_datetime\": \"2026-02-03T08:45:00\", \"capacity_per_slot\": 3, \"base_capacity_per_slot\": 2, \"is_overbook_capable\": 1, \"current_bookings_count\": 1, \"remaining_capacity\": 2, \"created_by_user_id\": 1, \"created_at\": \"2025-12-20T10:55:00\", \"updated_at\": \"2025-12-20T10:55:00\"}, {\"id\": \"SL-3004\", \"provider_id\": \"PROV-3344\", \"clinic_id\": \"CLIN-01\", \"visit_type_id\": 4, \"visit_mode\": \"in_person\", \"start_datetime\": \"2026-02-03T08:45:00\", \"end_datetime\": \"2026-02-03T09:00:00\", \"capacity_per_slot\": 3, \"base_capacity_per_slot\": 2, \"is_overbook_capable\": 1, \"current_bookings_count\": 0, \"remaining_capacity\": 3, \"created_by_user_id\": 1, \"created_at\": \"2025-12-20T11:00:00\", \"updated_at\": \"2025-12-20T11:00:00\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-bacba437cd11da8d",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_search_patients",
+            "arguments": "{\"date_of_birth\": \"2012-09-03\", \"full_name\": \"Maria Lopez\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-bacba437cd11da8d",
+      "content": "{\"patients\": [{\"id\": 2, \"full_name\": \"Maria Lopez\", \"date_of_birth\": \"2012-09-03\", \"preferred_communication_channel\": \"sms\", \"primary_insurance\": \"Aetna\", \"created_at\": \"2025-12-20T09:05:00\", \"updated_at\": \"2025-12-20T09:05:00\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-9107505eff6547f3",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_visit_types",
+            "arguments": "{\"name\": \"sick visit\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9107505eff6547f3",
+      "content": "{\"visit_types\": [{\"id\": 4, \"name\": \"Same-day Sick Visit\", \"default_duration_minutes\": 15, \"visit_mode\": \"either\", \"created_at\": \"2024-01-05T09:15:00\", \"updated_at\": \"2024-01-05T09:15:00\"}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-a162c049f3a109f5",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_create_appointment_slot",
+            "arguments": "{\"base_capacity_per_slot\": 2, \"capacity_per_slot\": 3, \"clinic_id\": \"CLIN-01\", \"end_datetime\": \"2026-02-03T08:15:00Z\", \"is_overbook_capable\": 1, \"provider_id\": \"PROV-3344\", \"start_datetime\": \"2026-02-03T08:00:00Z\", \"visit_mode\": \"in_person\", \"visit_type_id\": 4}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-a162c049f3a109f5",
+      "content": "{\"id\": \"SLOT-25\", \"provider_id\": \"PROV-3344\", \"clinic_id\": \"CLIN-01\", \"visit_type_id\": 4, \"visit_mode\": \"in_person\", \"start_datetime\": \"2026-02-03T08:00:00\", \"end_datetime\": \"2026-02-03T08:15:00\", \"capacity_per_slot\": 3, \"base_capacity_per_slot\": 2, \"is_overbook_capable\": 1, \"created_by_user_id\": 1, \"created_at\": \"2026-11-03T12:38:06.593820\", \"updated_at\": \"2026-11-03T12:38:06.593820\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-88d0bdbcc59e3c92",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_create_booking",
+            "arguments": "{\"appointment_slot_id\": \"SLOT-25\", \"clinic_id\": \"CLIN-01\", \"is_same_day_booking\": 1, \"patient_id\": 2, \"provider_id\": \"PROV-3344\", \"status\": \"scheduled\", \"visit_mode\": \"in_person\", \"visit_type_id\": 4}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-88d0bdbcc59e3c92",
+      "content": "{\"id\": \"BK-20\", \"appointment_slot_id\": \"SLOT-25\", \"provider_id\": \"PROV-3344\", \"clinic_id\": \"CLIN-01\", \"patient_id\": 2, \"visit_type_id\": 4, \"visit_mode\": \"in_person\", \"status\": \"scheduled\", \"insurance_at_booking\": null, \"communication_channel_at_booking\": null, \"is_same_day_booking\": 1, \"booked_at\": \"2026-11-03T12:38:15.066798\", \"created_by_user_id\": 1, \"created_at\": \"2026-11-03T12:38:15.066798\", \"updated_at\": \"2026-11-03T12:38:15.066798\"}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_find_earliest_available_slot",
+        "description": "Find earliest available slot\n\nSearch slots to find earliest available with capacity\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clinic_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict search to a specific clinic_id",
+              "title": "clinic_id",
+              "type": "string"
+            },
+            "specialty_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter providers by specialty name",
+              "title": "specialty_name",
+              "type": "string"
+            },
+            "visit_type_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter slots by visit type name",
+              "title": "visit_type_name",
+              "type": "string"
+            },
+            "visit_mode": {
+              "type": "string",
+              "description": "Required visit_mode: in_person or telehealth",
+              "title": "visit_mode"
+            },
+            "start_from": {
+              "type": "string",
+              "description": "Earliest allowed slot start (ISO8601)",
+              "title": "start_from"
+            },
+            "end_until": {
+              "type": "string",
+              "description": "Latest allowed slot start (ISO8601)",
+              "title": "end_until"
+            }
+          },
+          "title": "find_earliest_available_slotArguments",
+          "required": [
+            "visit_mode",
+            "start_from",
+            "end_until"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_find_next_available_slot_for_booking",
+        "description": "Next available slot for booking\n\nFind next appointment_slot for the same provider with capacity\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "string",
+              "description": "Existing booking whose provider is used to search",
+              "title": "booking_id"
+            },
+            "visit_type_name": {
+              "type": "string",
+              "description": "Visit type name",
+              "title": "visit_type_name"
+            },
+            "visit_mode": {
+              "type": "string",
+              "description": "Visit mode required",
+              "title": "visit_mode"
+            },
+            "start_from": {
+              "type": "string",
+              "description": "Search window start datetime",
+              "title": "start_from"
+            },
+            "end_until": {
+              "type": "string",
+              "description": "Search window end datetime",
+              "title": "end_until"
+            }
+          },
+          "title": "find_next_available_slot_for_bookingArguments",
+          "required": [
+            "booking_id",
+            "visit_type_name",
+            "visit_mode",
+            "start_from",
+            "end_until"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_conflicting_bookings_for_time_off",
+        "description": "Find bookings conflicting with time-off\n\nList bookings whose slots overlap a time-off window\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"bookings\": [\n    {\n      \"id\": \"Id\",\n      \"appointment_slot_id\": \"Appointment Slot Id\",\n      \"slot_start_datetime\": \"2023-01-01T00:00:00Z\",\n      \"slot_end_datetime\": \"2023-01-01T00:00:00Z\",\n      \"status\": \"Status\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "type": "string",
+              "description": "Provider ID",
+              "title": "provider_id"
+            },
+            "clinic_id": {
+              "type": "string",
+              "description": "Clinic ID",
+              "title": "clinic_id"
+            },
+            "start_datetime": {
+              "type": "string",
+              "description": "Start datetime of time-off window",
+              "title": "start_datetime"
+            },
+            "end_datetime": {
+              "type": "string",
+              "description": "End datetime of time-off window",
+              "title": "end_datetime"
+            }
+          },
+          "title": "list_conflicting_bookings_for_time_offArguments",
+          "required": [
+            "provider_id",
+            "clinic_id",
+            "start_datetime",
+            "end_datetime"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_generate_daily_roster",
+        "description": "Generate and store daily roster\n\nCompute and upsert daily_roster_summaries for a clinic and date\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"clinic_id\": \"Clinic Id\",\n  \"roster_date\": \"2023-01-01\",\n  \"summary_json\": \"Summary Json\",\n  \"generated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clinic_id": {
+              "type": "string",
+              "title": "clinic_id",
+              "description": "Clinic ID to generate roster for",
+              "example": "CLIN-01"
+            },
+            "roster_date": {
+              "type": "string",
+              "title": "roster_date",
+              "description": "Date for the roster (YYYY-MM-DD)",
+              "example": "2026-01-20"
+            }
+          },
+          "title": "generate_daily_rosterArguments",
+          "required": [
+            "clinic_id",
+            "roster_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_daily_roster",
+        "description": "Get a clinic daily roster summary\n\nRetrieve roster summary as structured JSON\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"clinic_id\": \"Clinic Id\",\n  \"roster_date\": \"Roster Date\",\n  \"generated_at\": \"2023-01-01T00:00:00Z\",\n  \"providers\": [\n    {\n      \"provider_id\": \"Provider Id\",\n      \"provider_full_name\": \"Provider Full Name\",\n      \"slots\": [\n        {\n          \"slot_id\": \"Slot Id\",\n          \"start_datetime\": \"2023-01-01T00:00:00Z\",\n          \"end_datetime\": \"2023-01-01T00:00:00Z\",\n          \"capacity_per_slot\": 1,\n          \"booking_counts\": {\n            \"scheduled\": 1,\n            \"confirmed\": 1,\n            \"checked_in\": 1,\n            \"completed\": 1,\n            \"no_show\": 1,\n            \"canceled_by_patient\": 1,\n            \"canceled_by_clinic\": 1\n          }\n        }\n      ]\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clinic_id": {
+              "type": "string",
+              "description": "Clinic ID",
+              "title": "clinic_id"
+            },
+            "roster_date": {
+              "type": "string",
+              "description": "Date for the roster (YYYY-MM-DD)",
+              "title": "roster_date"
+            }
+          },
+          "title": "get_daily_rosterArguments",
+          "required": [
+            "clinic_id",
+            "roster_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_clinics",
+        "description": "List clinics with optional filters\n\nRetrieve clinics with optional name and location filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"clinics\": [\n    {\n      \"id\": \"Id\",\n      \"name\": \"Name\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact clinic name filter",
+              "title": "name",
+              "type": "string"
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter clinics by location string",
+              "title": "location",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of clinics to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_clinicsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_specialties",
+        "description": "List specialties with filters\n\nRetrieve specialties with optional name filter\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"specialties\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial specialty name search",
+              "title": "name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of specialties to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_specialtiesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_specialty",
+        "description": "Create a new specialty\n\nCreate a new specialty record if not existing\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Unique specialty name",
+              "example": "Family Medicine"
+            }
+          },
+          "title": "create_specialtyArguments",
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_provider",
+        "description": "Create a new provider profile\n\nCreate a provider with profile fields\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": \"Id\",\n  \"full_name\": \"Full Name\",\n  \"specialty_id\": 1,\n  \"active_flag\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "id",
+              "description": "Optional provider ID; if omitted, generated like PROV-xxxx",
+              "example": "PROV-4401",
+              "type": "string"
+            },
+            "full_name": {
+              "type": "string",
+              "title": "full_name",
+              "description": "Provider full legal name",
+              "example": "Dr. Alice Nguyen"
+            },
+            "specialty_id": {
+              "type": "integer",
+              "title": "specialty_id",
+              "description": "ID of specialty from specialties table",
+              "example": 2
+            },
+            "primary_clinic_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "primary_clinic_id",
+              "description": "Clinic ID where provider primarily practices",
+              "example": "CLIN-02",
+              "type": "string"
+            },
+            "active_flag": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active_flag",
+              "description": "1 if provider is active, 0 if inactive",
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "create_providerArguments",
+          "required": [
+            "full_name",
+            "specialty_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_providers",
+        "description": "List providers with optional filters\n\nRetrieve providers filtered by various fields\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"providers\": [\n    {\n      \"id\": \"Id\",\n      \"full_name\": \"Full Name\",\n      \"specialty_id\": 1,\n      \"active_flag\": 1,\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "specialty_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter providers by specialty_id",
+              "title": "specialty_id",
+              "type": "integer"
+            },
+            "specialty_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter providers by specialty name",
+              "title": "specialty_name",
+              "type": "string"
+            },
+            "clinic_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by primary_clinic_id",
+              "title": "clinic_id",
+              "type": "string"
+            },
+            "active_flag": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active_flag",
+              "title": "active_flag",
+              "type": "integer"
+            },
+            "full_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial match on full_name",
+              "title": "full_name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of providers to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_providersArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_visit_types",
+        "description": "List visit types\n\nRetrieve visit types with optional filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"visit_types\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"default_duration_minutes\": 1,\n      \"visit_mode\": \"Visit Mode\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial visit type name",
+              "title": "name",
+              "type": "string"
+            },
+            "visit_mode": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by visit_mode (in_person, telehealth, either)",
+              "title": "visit_mode",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of visit types to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_visit_typesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_visit_type",
+        "description": "Create a new visit type\n\nCreate a visit type with duration and mode\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"default_duration_minutes\": 1,\n  \"visit_mode\": \"Visit Mode\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Unique visit type name",
+              "example": "Annual Wellness Visit"
+            },
+            "default_duration_minutes": {
+              "type": "integer",
+              "title": "default_duration_minutes",
+              "description": "Default duration for appointments of this type",
+              "example": 30
+            },
+            "visit_mode": {
+              "type": "string",
+              "title": "visit_mode",
+              "description": "in_person, telehealth, or either",
+              "example": "in_person"
+            }
+          },
+          "title": "create_visit_typeArguments",
+          "required": [
+            "name",
+            "default_duration_minutes",
+            "visit_mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_time_off_block",
+        "description": "Create a provider time-off block\n\nAdd a time_off_block for a provider at a clinic\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"provider_id\": \"Provider Id\",\n  \"clinic_id\": \"Clinic Id\",\n  \"start_datetime\": \"2023-01-01T00:00:00Z\",\n  \"end_datetime\": \"2023-01-01T00:00:00Z\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "type": "string",
+              "title": "provider_id",
+              "description": "Provider ID taking time off",
+              "example": "PROV-2201"
+            },
+            "clinic_id": {
+              "type": "string",
+              "title": "clinic_id",
+              "description": "Clinic where time off applies",
+              "example": "CLIN-02"
+            },
+            "start_datetime": {
+              "type": "string",
+              "title": "start_datetime",
+              "description": "Start of time off (ISO8601)",
+              "example": "2026-01-15T13:00:00"
+            },
+            "end_datetime": {
+              "type": "string",
+              "title": "end_datetime",
+              "description": "End of time off (ISO8601)",
+              "example": "2026-01-15T15:00:00"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reason",
+              "description": "Optional reason for time off",
+              "example": "Provider in training",
+              "type": "string"
+            }
+          },
+          "title": "create_time_off_blockArguments",
+          "required": [
+            "provider_id",
+            "clinic_id",
+            "start_datetime",
+            "end_datetime"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_time_off_blocks",
+        "description": "List time-off blocks\n\nRetrieve provider time_off_blocks with filters\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"time_off_blocks\": [\n    {\n      \"id\": 1,\n      \"provider_id\": \"Provider Id\",\n      \"clinic_id\": \"Clinic Id\",\n      \"start_datetime\": \"2023-01-01T00:00:00Z\",\n      \"end_datetime\": \"2023-01-01T00:00:00Z\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by provider_id",
+              "title": "provider_id",
+              "type": "string"
+            },
+            "clinic_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by clinic_id",
+              "title": "clinic_id",
+              "type": "string"
+            },
+            "start_from": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include blocks ending after this datetime",
+              "title": "start_from",
+              "type": "string"
+            },
+            "end_until": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include blocks starting before this datetime",
+              "title": "end_until",
+              "type": "string"
+            }
+          },
+          "title": "list_time_off_blocksArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_patient",
+        "description": "Create a new patient\n\nCreate a new patient record\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"full_name\": \"Full Name\",\n  \"date_of_birth\": \"2023-01-01\",\n  \"preferred_communication_channel\": \"Preferred Communication Channel\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full_name": {
+              "type": "string",
+              "title": "full_name",
+              "description": "Patient full name",
+              "example": "John Doe"
+            },
+            "date_of_birth": {
+              "type": "string",
+              "title": "date_of_birth",
+              "description": "Date of birth in YYYY-MM-DD format",
+              "example": "1985-04-12"
+            },
+            "preferred_communication_channel": {
+              "type": "string",
+              "title": "preferred_communication_channel",
+              "description": "sms, email, phone, or none",
+              "example": "sms"
+            },
+            "primary_insurance": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "primary_insurance",
+              "description": "Primary insurance payer name",
+              "example": "BlueCross",
+              "type": "string"
+            }
+          },
+          "title": "create_patientArguments",
+          "required": [
+            "full_name",
+            "date_of_birth",
+            "preferred_communication_channel"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_search_patients",
+        "description": "Search patients by name and DOB\n\nRetrieve patients by full_name and/or date_of_birth\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"patients\": [\n    {\n      \"id\": 1,\n      \"full_name\": \"Full Name\",\n      \"date_of_birth\": \"2023-01-01\",\n      \"preferred_communication_channel\": \"Preferred Communication Channel\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact or partial full name filter",
+              "title": "full_name",
+              "type": "string"
+            },
+            "date_of_birth": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "DOB filter in YYYY-MM-DD",
+              "title": "date_of_birth",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of patients to return",
+              "default": 25,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "search_patientsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_appointment_slot",
+        "description": "Create a single appointment slot\n\nCreate one appointment_slots row\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": \"Id\",\n  \"provider_id\": \"Provider Id\",\n  \"clinic_id\": \"Clinic Id\",\n  \"visit_mode\": \"Visit Mode\",\n  \"start_datetime\": \"2023-01-01T00:00:00Z\",\n  \"end_datetime\": \"2023-01-01T00:00:00Z\",\n  \"capacity_per_slot\": 1,\n  \"base_capacity_per_slot\": 1,\n  \"is_overbook_capable\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "id",
+              "description": "Optional slot ID; if omitted, generated like S-uuid",
+              "example": "SLOT-20260203-0800-1",
+              "type": "string"
+            },
+            "provider_id": {
+              "type": "string",
+              "title": "provider_id",
+              "description": "Provider ID for the slot",
+              "example": "PROV-3344"
+            },
+            "clinic_id": {
+              "type": "string",
+              "title": "clinic_id",
+              "description": "Clinic ID where the slot occurs",
+              "example": "CLIN-01"
+            },
+            "visit_type_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "visit_type_id",
+              "description": "Optional visit type ID associated with slot",
+              "example": 5,
+              "type": "integer"
+            },
+            "visit_mode": {
+              "type": "string",
+              "title": "visit_mode",
+              "description": "Visit mode: in_person or telehealth",
+              "example": "in_person"
+            },
+            "start_datetime": {
+              "type": "string",
+              "title": "start_datetime",
+              "description": "Start datetime (ISO8601)",
+              "example": "2026-02-03T08:00:00"
+            },
+            "end_datetime": {
+              "type": "string",
+              "title": "end_datetime",
+              "description": "End datetime (ISO8601)",
+              "example": "2026-02-03T08:15:00"
+            },
+            "capacity_per_slot": {
+              "type": "integer",
+              "title": "capacity_per_slot",
+              "description": "Current capacity for this slot (includes overbook capacity)",
+              "example": 3
+            },
+            "base_capacity_per_slot": {
+              "type": "integer",
+              "title": "base_capacity_per_slot",
+              "description": "Baseline capacity without overbooking",
+              "example": 2
+            },
+            "is_overbook_capable": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_overbook_capable",
+              "description": "1 if slot permits overbooking beyond base capacity",
+              "default": 0,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "create_appointment_slotArguments",
+          "required": [
+            "provider_id",
+            "clinic_id",
+            "visit_mode",
+            "start_datetime",
+            "end_datetime",
+            "capacity_per_slot",
+            "base_capacity_per_slot"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_appointment_slots",
+        "description": "List appointment slots with availability\n\nRetrieve appointment_slots with filters and capacity info\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"appointment_slots\": [\n    {\n      \"id\": \"Id\",\n      \"provider_id\": \"Provider Id\",\n      \"clinic_id\": \"Clinic Id\",\n      \"visit_mode\": \"Visit Mode\",\n      \"start_datetime\": \"2023-01-01T00:00:00Z\",\n      \"end_datetime\": \"2023-01-01T00:00:00Z\",\n      \"capacity_per_slot\": 1,\n      \"base_capacity_per_slot\": 1,\n      \"is_overbook_capable\": 1,\n      \"current_bookings_count\": 1,\n      \"remaining_capacity\": 1,\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by provider_id",
+              "title": "provider_id",
+              "type": "string"
+            },
+            "clinic_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by clinic_id",
+              "title": "clinic_id",
+              "type": "string"
+            },
+            "visit_type_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by visit_type_id",
+              "title": "visit_type_id",
+              "type": "integer"
+            },
+            "visit_mode": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by visit_mode",
+              "title": "visit_mode",
+              "type": "string"
+            },
+            "start_from": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only slots starting at or after this datetime",
+              "title": "start_from",
+              "type": "string"
+            },
+            "end_until": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only slots starting at or before this datetime",
+              "title": "end_until",
+              "type": "string"
+            },
+            "only_with_capacity": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, only slots where remaining capacity>0",
+              "default": false,
+              "title": "only_with_capacity",
+              "type": "boolean"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of slots to return",
+              "default": 100,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pagination offset",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_appointment_slotsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_booking",
+        "description": "Create a booking on a slot\n\nCreate a bookings row for a patient on a slot\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": \"Id\",\n  \"appointment_slot_id\": \"Appointment Slot Id\",\n  \"provider_id\": \"Provider Id\",\n  \"clinic_id\": \"Clinic Id\",\n  \"patient_id\": 1,\n  \"visit_type_id\": 1,\n  \"visit_mode\": \"Visit Mode\",\n  \"status\": \"Status\",\n  \"is_same_day_booking\": 1,\n  \"booked_at\": \"2023-01-01T00:00:00Z\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "id",
+              "description": "Optional booking ID; if omitted, generated like BK-xxxxx",
+              "example": "BK-15001",
+              "type": "string"
+            },
+            "appointment_slot_id": {
+              "type": "string",
+              "title": "appointment_slot_id",
+              "description": "Appointment slot ID to book",
+              "example": "SLOT-20260103-0900-1"
+            },
+            "provider_id": {
+              "type": "string",
+              "title": "provider_id",
+              "description": "Provider ID (must match slot)",
+              "example": "PROV-2201"
+            },
+            "clinic_id": {
+              "type": "string",
+              "title": "clinic_id",
+              "description": "Clinic ID (must match slot)",
+              "example": "CLIN-01"
+            },
+            "patient_id": {
+              "type": "integer",
+              "title": "patient_id",
+              "description": "Patient ID for the booking",
+              "example": 1001
+            },
+            "visit_type_id": {
+              "type": "integer",
+              "title": "visit_type_id",
+              "description": "Visit type ID being booked",
+              "example": 5
+            },
+            "visit_mode": {
+              "type": "string",
+              "title": "visit_mode",
+              "description": "Visit mode: in_person or telehealth",
+              "example": "in_person"
+            },
+            "status": {
+              "type": "string",
+              "title": "status",
+              "description": "Initial booking status",
+              "example": "scheduled"
+            },
+            "insurance_at_booking": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "insurance_at_booking",
+              "description": "Insurance name captured at booking",
+              "example": "BlueCross",
+              "type": "string"
+            },
+            "communication_channel_at_booking": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "communication_channel_at_booking",
+              "description": "Communication channel at booking",
+              "example": "sms",
+              "type": "string"
+            },
+            "is_same_day_booking": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_same_day_booking",
+              "description": "1 if booked on same day as appointment date",
+              "default": 0,
+              "example": 0,
+              "type": "integer"
+            }
+          },
+          "title": "create_bookingArguments",
+          "required": [
+            "appointment_slot_id",
+            "provider_id",
+            "clinic_id",
+            "patient_id",
+            "visit_type_id",
+            "visit_mode",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_bookings",
+        "description": "List bookings with filters\n\nRetrieve bookings filtered by provider, clinic, patient, etc.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"bookings\": [\n    {\n      \"id\": \"Id\",\n      \"appointment_slot_id\": \"Appointment Slot Id\",\n      \"provider_id\": \"Provider Id\",\n      \"clinic_id\": \"Clinic Id\",\n      \"patient_id\": 1,\n      \"visit_type_id\": 1,\n      \"visit_mode\": \"Visit Mode\",\n      \"status\": \"Status\",\n      \"booked_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter bookings by provider_id",
+              "title": "provider_id",
+              "type": "string"
+            },
+            "clinic_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by clinic_id",
+              "title": "clinic_id",
+              "type": "string"
+            },
+            "patient_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by patient_id",
+              "title": "patient_id",
+              "type": "integer"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by booking status",
+              "title": "status",
+              "type": "string"
+            },
+            "appointment_start_from": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Slots starting on/after this datetime",
+              "title": "appointment_start_from",
+              "type": "string"
+            },
+            "appointment_start_until": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Slots starting on/before this datetime",
+              "title": "appointment_start_until",
+              "type": "string"
+            },
+            "include_slot_details": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, join appointment_slots to include time info",
+              "default": false,
+              "title": "include_slot_details",
+              "type": "boolean"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number of bookings to return",
+              "default": 200,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pagination offset",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_bookingsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_check_in_for_booking",
+        "description": "Record a check-in for a booking\n\nCreate a check_in row and update booking status\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"check_in\": {\n    \"id\": 1,\n    \"booking_id\": \"Booking Id\",\n    \"arrival_time\": \"2023-01-01T00:00:00Z\",\n    \"created_at\": \"2023-01-01T00:00:00Z\",\n    \"updated_at\": \"2023-01-01T00:00:00Z\"\n  },\n  \"booking\": {\n    \"id\": \"Id\",\n    \"status\": \"Status\",\n    \"updated_at\": \"2023-01-01T00:00:00Z\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "string",
+              "title": "booking_id",
+              "description": "Booking ID to check in",
+              "example": "BK-8891"
+            },
+            "arrival_time": {
+              "type": "string",
+              "title": "arrival_time",
+              "description": "Recorded arrival time (ISO8601)",
+              "example": "2026-01-05T09:07:00"
+            },
+            "room_assignment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "room_assignment",
+              "description": "Optional room or bay assignment",
+              "example": "Exam Room 3",
+              "type": "string"
+            }
+          },
+          "title": "create_check_in_for_bookingArguments",
+          "required": [
+            "booking_id",
+            "arrival_time"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_visit_note",
+        "description": "Create visit notes metadata\n\nCreate a visit_notes row for a booking\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": \"Id\",\n  \"booking_id\": \"Booking Id\",\n  \"note_type\": \"Note Type\",\n  \"locked_flag\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "title": "id",
+              "description": "Visit note ID (e.g. VN-5507-A)",
+              "example": "VN-5507-A"
+            },
+            "booking_id": {
+              "type": "string",
+              "title": "booking_id",
+              "description": "Booking ID associated with this note",
+              "example": "BK-5507"
+            },
+            "note_type": {
+              "type": "string",
+              "title": "note_type",
+              "description": "Note type identifier",
+              "example": "standard_progress_note"
+            },
+            "locked_flag": {
+              "type": "integer",
+              "title": "locked_flag",
+              "description": "1 if note is locked, 0 if editable",
+              "example": 1
+            },
+            "metadata_json": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "metadata_json",
+              "description": "JSON string containing metadata such as author, version, or templates",
+              "example": "{\"author\":\"Dr. Smith\",\"version\":1}",
+              "type": "string"
+            }
+          },
+          "title": "create_visit_noteArguments",
+          "required": [
+            "id",
+            "booking_id",
+            "note_type",
+            "locked_flag"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_billing_code",
+        "description": "Ensure or create a billing code\n\nCreate a billing_codes row if not existing\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"code\": \"Code\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "title": "code",
+              "description": "Billing code string",
+              "example": "99213"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "Description for the billing code",
+              "example": "Office/outpatient visit, established patient",
+              "type": "string"
+            }
+          },
+          "title": "create_billing_codeArguments",
+          "required": [
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_diagnosis_tag",
+        "description": "Ensure or create a diagnosis tag\n\nCreate a diagnosis_tags row if not existing\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"tag\": \"Tag\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "tag": {
+              "type": "string",
+              "title": "tag",
+              "description": "Diagnosis tag string",
+              "example": "hypertension"
+            }
+          },
+          "title": "create_diagnosis_tagArguments",
+          "required": [
+            "tag"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_generate_utilization_report",
+        "description": "Generate a clinic utilization report\n\nCompute utilization_reports for a clinic and date range\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"clinic_id\": \"Clinic Id\",\n  \"start_date\": \"2023-01-01\",\n  \"end_date\": \"2023-01-01\",\n  \"report_json\": \"Report Json\",\n  \"generated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clinic_id": {
+              "type": "string",
+              "title": "clinic_id",
+              "description": "Clinic ID for report",
+              "example": "CLIN-03"
+            },
+            "start_date": {
+              "type": "string",
+              "title": "start_date",
+              "description": "Report start date (YYYY-MM-DD)",
+              "example": "2026-01-01"
+            },
+            "end_date": {
+              "type": "string",
+              "title": "end_date",
+              "description": "Report end date (YYYY-MM-DD, inclusive)",
+              "example": "2026-01-31"
+            }
+          },
+          "title": "generate_utilization_reportArguments",
+          "required": [
+            "clinic_id",
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_utilization_report",
+        "description": "Get a clinic utilization report\n\nRetrieve utilization_reports and parse report_json\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"clinic_id\": \"Clinic Id\",\n  \"start_date\": \"Start Date\",\n  \"end_date\": \"End Date\",\n  \"generated_at\": \"2023-01-01T00:00:00Z\",\n  \"providers\": [\n    {\n      \"provider_id\": \"Provider Id\",\n      \"total_available_appointment_slots\": 1,\n      \"booked_slots\": 1,\n      \"overbooked_slots\": 1,\n      \"no_show_count\": 1,\n      \"same_day_bookings_count\": 1,\n      \"average_fill_rate_percentage\": 1.0\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clinic_id": {
+              "type": "string",
+              "description": "Clinic ID to load report for",
+              "title": "clinic_id"
+            },
+            "start_date": {
+              "type": "string",
+              "description": "Report start date (YYYY-MM-DD)",
+              "title": "start_date"
+            },
+            "end_date": {
+              "type": "string",
+              "description": "Report end date (YYYY-MM-DD)",
+              "title": "end_date"
+            }
+          },
+          "title": "get_utilization_reportArguments",
+          "required": [
+            "clinic_id",
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_weekly_schedule",
+        "description": "Create provider weekly schedule rule\n\nCreate a recurring weekly schedule row\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"provider_id\": \"Provider Id\",\n  \"clinic_id\": \"Clinic Id\",\n  \"day_of_week\": 1,\n  \"start_time\": \"Start Time\",\n  \"end_time\": \"End Time\",\n  \"slot_duration_minutes\": 1,\n  \"capacity_per_slot\": 1,\n  \"visit_mode\": \"Visit Mode\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "type": "string",
+              "description": "Provider ID to attach this weekly schedule to",
+              "title": "provider_id"
+            },
+            "clinic_id": {
+              "type": "string",
+              "title": "clinic_id",
+              "description": "Clinic where this schedule applies",
+              "example": "CLIN-01"
+            },
+            "day_of_week": {
+              "type": "integer",
+              "title": "day_of_week",
+              "description": "0=Monday through 6=Sunday",
+              "example": 0
+            },
+            "start_time": {
+              "type": "string",
+              "title": "start_time",
+              "description": "Daily start time in HH:MM format",
+              "example": "09:00"
+            },
+            "end_time": {
+              "type": "string",
+              "title": "end_time",
+              "description": "Daily end time in HH:MM format",
+              "example": "17:00"
+            },
+            "lunch_start_time": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "lunch_start_time",
+              "description": "Lunch start time in HH:MM, or null",
+              "example": "12:00",
+              "type": "string"
+            },
+            "lunch_end_time": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "lunch_end_time",
+              "description": "Lunch end time in HH:MM, or null",
+              "example": "13:00",
+              "type": "string"
+            },
+            "slot_duration_minutes": {
+              "type": "integer",
+              "title": "slot_duration_minutes",
+              "description": "Default appointment slot duration in minutes",
+              "example": 30
+            },
+            "capacity_per_slot": {
+              "type": "integer",
+              "title": "capacity_per_slot",
+              "description": "Number of patients allowed per base slot",
+              "example": 2
+            },
+            "visit_mode": {
+              "type": "string",
+              "title": "visit_mode",
+              "description": "Visit mode for slots (in_person or telehealth)",
+              "example": "in_person"
+            }
+          },
+          "title": "create_weekly_scheduleArguments",
+          "required": [
+            "provider_id",
+            "clinic_id",
+            "day_of_week",
+            "start_time",
+            "end_time",
+            "slot_duration_minutes",
+            "capacity_per_slot",
+            "visit_mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_weekly_schedules",
+        "description": "List weekly schedules for a provider\n\nRetrieve weekly schedule definitions for a provider\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"weekly_schedules\": [\n    {\n      \"id\": 1,\n      \"provider_id\": \"Provider Id\",\n      \"clinic_id\": \"Clinic Id\",\n      \"day_of_week\": 1,\n      \"start_time\": \"Start Time\",\n      \"end_time\": \"End Time\",\n      \"slot_duration_minutes\": 1,\n      \"capacity_per_slot\": 1,\n      \"visit_mode\": \"Visit Mode\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "type": "string",
+              "description": "Provider ID whose weekly schedules are requested",
+              "title": "provider_id"
+            },
+            "clinic_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by clinic_id",
+              "title": "clinic_id",
+              "type": "string"
+            },
+            "day_of_week": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by day_of_week (0=Mon..6=Sun)",
+              "title": "day_of_week",
+              "type": "integer"
+            }
+          },
+          "title": "list_weekly_schedulesArguments",
+          "required": [
+            "provider_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_provider_visit_type",
+        "description": "Associate a visit type with provider\n\nActivate a visit type for a provider\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"provider_id\": \"Provider Id\",\n  \"visit_type_id\": 1,\n  \"active_flag\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "type": "string",
+              "description": "Provider ID",
+              "title": "provider_id"
+            },
+            "visit_type_id": {
+              "type": "integer",
+              "title": "visit_type_id",
+              "description": "Visit type ID to associate",
+              "example": 5
+            },
+            "active_flag": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "active_flag",
+              "description": "1 to mark active, 0 inactive",
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          "title": "create_provider_visit_typeArguments",
+          "required": [
+            "provider_id",
+            "visit_type_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_provider_visit_types",
+        "description": "List visit types for a provider\n\nRetrieve visit types that a provider can perform\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"provider_visit_types\": [\n    {\n      \"id\": 1,\n      \"provider_id\": \"Provider Id\",\n      \"visit_type_id\": 1,\n      \"active_flag\": 1,\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "provider_id": {
+              "type": "string",
+              "description": "Provider ID",
+              "title": "provider_id"
+            },
+            "only_active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, only return rows with active_flag=1",
+              "default": false,
+              "title": "only_active",
+              "type": "boolean"
+            }
+          },
+          "title": "list_provider_visit_typesArguments",
+          "required": [
+            "provider_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_booking_status",
+        "description": "Update booking status\n\nChange status for a booking and add history\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"booking\": {\n    \"id\": \"Id\",\n    \"status\": \"Status\",\n    \"updated_at\": \"2023-01-01T00:00:00Z\"\n  },\n  \"status_history_entry\": {\n    \"id\": 1,\n    \"booking_id\": \"Booking Id\",\n    \"new_status\": \"New Status\",\n    \"changed_at\": \"2023-01-01T00:00:00Z\"\n  }\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "string",
+              "description": "Booking ID whose status is changing",
+              "title": "booking_id"
+            },
+            "new_status": {
+              "type": "string",
+              "title": "new_status",
+              "description": "New booking status",
+              "example": "scheduled"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reason",
+              "description": "Why the status changed, stored in booking_status_history.reason",
+              "example": "Rescheduled by patient",
+              "type": "string"
+            }
+          },
+          "title": "update_booking_statusArguments",
+          "required": [
+            "booking_id",
+            "new_status"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_booking_slot",
+        "description": "Change booking appointment slot\n\nUpdate booking.appointment_slot_id and related fields\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": \"Id\",\n  \"appointment_slot_id\": \"Appointment Slot Id\",\n  \"provider_id\": \"Provider Id\",\n  \"clinic_id\": \"Clinic Id\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "string",
+              "description": "Booking ID to move",
+              "title": "booking_id"
+            },
+            "new_appointment_slot_id": {
+              "type": "string",
+              "title": "new_appointment_slot_id",
+              "description": "Target appointment slot ID",
+              "example": "SLOT-20260110-1000-1"
+            },
+            "new_provider_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "new_provider_id",
+              "description": "Override provider_id (normally matches new slot)",
+              "example": "PROV-2201",
+              "type": "string"
+            },
+            "new_clinic_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "new_clinic_id",
+              "description": "Override clinic_id (normally matches new slot)",
+              "example": "CLIN-01",
+              "type": "string"
+            }
+          },
+          "title": "update_booking_slotArguments",
+          "required": [
+            "booking_id",
+            "new_appointment_slot_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_attach_billing_codes_to_visit_note",
+        "description": "Attach billing codes to a visit note\n\nCreate visit_note_billing_codes rows for given codes\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"visit_note_id\": \"Visit Note Id\",\n  \"billing_codes\": [\n    {\n      \"code\": \"Code\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "visit_note_id": {
+              "type": "string",
+              "description": "Visit note ID",
+              "title": "visit_note_id"
+            },
+            "billing_codes": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "billing_codes",
+              "description": "Array of billing code strings to attach",
+              "example": [
+                "99213",
+                "Z00.00"
+              ]
+            }
+          },
+          "title": "attach_billing_codes_to_visit_noteArguments",
+          "required": [
+            "visit_note_id",
+            "billing_codes"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_attach_diagnosis_tags_to_visit_note",
+        "description": "Attach diagnosis tags to a visit note\n\nCreate visit_note_diagnosis_tags rows for given tag IDs\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"visit_note_id\": \"Visit Note Id\",\n  \"diagnosis_tags\": [\n    {\n      \"id\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "visit_note_id": {
+              "type": "string",
+              "description": "Visit note ID",
+              "title": "visit_note_id"
+            },
+            "diagnosis_tag_ids": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array",
+              "title": "diagnosis_tag_ids",
+              "description": "Array of diagnosis_tag IDs to attach",
+              "example": [
+                701,
+                702
+              ]
+            }
+          },
+          "title": "attach_diagnosis_tags_to_visit_noteArguments",
+          "required": [
+            "visit_note_id",
+            "diagnosis_tag_ids"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_appointment_slot",
+        "description": "Update appointment slot\n\nPartially update an appointment slot\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": \"Id\",\n  \"provider_id\": \"Provider Id\",\n  \"clinic_id\": \"Clinic Id\",\n  \"visit_mode\": \"Visit Mode\",\n  \"start_datetime\": \"2023-01-01T00:00:00Z\",\n  \"end_datetime\": \"2023-01-01T00:00:00Z\",\n  \"capacity_per_slot\": 1,\n  \"base_capacity_per_slot\": 1,\n  \"is_overbook_capable\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "slot_id": {
+              "type": "string",
+              "description": "Appointment slot ID to update",
+              "title": "slot_id"
+            },
+            "capacity_per_slot": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "capacity_per_slot",
+              "description": "New capacity_per_slot value",
+              "example": 3,
+              "type": "integer"
+            },
+            "is_overbook_capable": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_overbook_capable",
+              "description": "1 to allow overbooking, 0 to disallow",
+              "example": 1,
+              "type": "integer"
+            },
+            "visit_type_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "visit_type_id",
+              "description": "Optional new visit_type_id for slot",
+              "example": 5,
+              "type": "integer"
+            }
+          },
+          "title": "update_appointment_slotArguments",
+          "required": [
+            "slot_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_get_booking",
+        "description": "Get booking details by ID\n\nRetrieve a booking by ID with status fields\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": \"Id\",\n  \"appointment_slot_id\": \"Appointment Slot Id\",\n  \"provider_id\": \"Provider Id\",\n  \"clinic_id\": \"Clinic Id\",\n  \"patient_id\": 1,\n  \"visit_type_id\": 1,\n  \"visit_mode\": \"Visit Mode\",\n  \"status\": \"Status\",\n  \"is_same_day_booking\": 1,\n  \"booked_at\": \"2023-01-01T00:00:00Z\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "string",
+              "description": "Booking ID to retrieve",
+              "title": "booking_id"
+            }
+          },
+          "title": "get_bookingArguments",
+          "required": [
+            "booking_id"
+          ]
+        }
+      }
+    }
+  ],
+  "temperature": 0,
+  "seed": 42,
+  "max_tokens": 8192,
+  "stop_token_ids": [
+    1,
+    50,
+    106
+  ],
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  }
+}

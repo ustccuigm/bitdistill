@@ -64,5 +64,5 @@
     });
     navigate(0);
   }
-  fetch('data/appendix-showcase.json?v=eebf870a849f').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>nodes.forEach(root=>init(root,data[root.dataset.appendixDeck]))).catch(()=>nodes.forEach(root=>{root.replaceChildren(el('p','','案例暂时无法加载。'));const b=button('重新加载','重新加载案例',()=>location.reload());root.append(b);}));
+  fetch('data/appendix-showcase.json?v=86a25a2e3e50').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>nodes.forEach(root=>init(root,data[root.dataset.appendixDeck]))).catch(()=>nodes.forEach(root=>{root.replaceChildren(el('p','','案例暂时无法加载。'));const b=button('重新加载','重新加载案例',()=>location.reload());root.append(b);}));
 })();
