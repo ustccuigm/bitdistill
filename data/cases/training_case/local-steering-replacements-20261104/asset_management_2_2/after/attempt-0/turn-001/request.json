@@ -1,0 +1,2572 @@
+{
+  "model": "case-model",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an agent operating in an MCP environment. Use the provided function tools to complete the user task. You are already logged in and your user id is 1 when required. Make exactly one concrete tool call per turn, never fabricate a tool response, and use the real observation before deciding the next action. When the task is complete, return a concise final answer without calling another tool."
+    },
+    {
+      "role": "user",
+      "content": "Check out the asset with asset tag 'CAM-NYC-0007' (category 'DSLR Camera') from the location 'NYC Office > Media Closet' to user 'jane.smith@company.com' for the project 'Q3 Brand Shoot', setting the due date to 2025-08-15 and adding a note that the camera must be returned with both batteries and SD card."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-8eee40b633775e70",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_list_assets",
+            "arguments": "{\"asset_tag\": \"CAM-NYC-0007\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-8eee40b633775e70",
+      "content": "{\"assets\": [{\"id\": 2, \"asset_tag\": \"CAM-NYC-0007\", \"serial_number\": \"DSLR-NYC-0007\", \"name\": \"Canon EOS 90D - NYC\", \"category_id\": 2, \"location_id\": 5, \"status\": \"Active\", \"condition\": \"Good\", \"assigned_user_id\": 2, \"purchase_date\": \"2024-03-10\", \"purchase_cost\": 1200.0, \"currency\": \"USD\", \"disposal_date\": null, \"retired_at\": null}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-tool-a1c834376e4e7d65",
+          "type": "function",
+          "function": {
+            "name": "mcp_server_checkout_asset",
+            "arguments": "{\"asset_id\": 2, \"checkout_location_full_path\": \"NYC Office > Media Closet\", \"due_date\": \"2025-08-15\", \"note\": \"The camera must be returned with both batteries and SD card.\", \"project_name\": \"Q3 Brand Shoot\", \"user_email\": \"jane.smith@company.com\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-a1c834376e4e7d65",
+      "content": "{\"checkout_id\": 3, \"asset_id\": 2, \"user_id\": 2, \"project_name\": \"Q3 Brand Shoot\", \"checkout_location_id\": 5, \"due_date\": \"2025-08-15\", \"checked_out_at\": \"2026-11-04T08:03:19.294485\", \"checked_in_at\": null, \"note\": \"The camera must be returned with both batteries and SD card.\"}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_recalculate_asset_depreciation",
+        "description": "Recalculate depreciation for assets\n\nRecalculate book values and record depreciation history.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"processed_assets\": [\n    {\n      \"asset_id\": 1\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "category_name",
+              "description": "Filter assets by category name",
+              "example": "Server Hardware",
+              "type": "string"
+            },
+            "purchased_before": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "purchased_before",
+              "description": "Filter assets purchased before this date",
+              "example": "2023-01-01",
+              "type": "string"
+            },
+            "policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "policy_id",
+              "description": "Override to use this depreciation policy ID",
+              "example": 4,
+              "type": "integer"
+            },
+            "as_of_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "as_of_date",
+              "description": "Date to calculate value as of",
+              "example": "2025-01-01",
+              "type": "string"
+            }
+          },
+          "title": "recalculate_asset_depreciationArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_bulk_import_assets_from_csv",
+        "description": "Bulk import assets from CSV\n\nUpload CSV and map columns to asset fields to create assets.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"imported_count\": 1,\n  \"failed_count\": 1,\n  \"errors\": [\n    {\n      \"row_number\": 1,\n      \"message\": \"Message\"\n    }\n  ],\n  \"asset_ids\": [\n    1\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_name": {
+              "type": "string",
+              "title": "file_name",
+              "description": "Name of the CSV file for reference",
+              "example": "q2_onboarding_laptops.csv"
+            },
+            "file_content_base64": {
+              "type": "string",
+              "title": "file_content_base64",
+              "description": "Base64-encoded CSV file content",
+              "example": "QXNzZXQgVGFnLFNlcmlhbCBOdW1iZXIsVXNlciBFbWFpbCxMb2NhdGlvbixQdXJjaGFzZSBEYXRlLENvc3QsQ29uZGl0aW9uCkxBUC1DSEktMTAyNCxETDc0NDA..."
+            },
+            "category_name": {
+              "type": "string",
+              "title": "category_name",
+              "description": "Category name to assign to all imported assets",
+              "example": "Laptop"
+            },
+            "default_status": {
+              "type": "string",
+              "title": "default_status",
+              "description": "Status value to set on all imported assets",
+              "example": "Active"
+            },
+            "column_mapping": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object",
+              "title": "column_mapping",
+              "description": "Mapping of CSV column headers to asset fields",
+              "example": {
+                "Asset Tag": "asset_tag"
+              }
+            }
+          },
+          "title": "bulk_import_assets_from_csvArguments",
+          "required": [
+            "file_name",
+            "file_content_base64",
+            "category_name",
+            "default_status",
+            "column_mapping"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_bulk_move_assets",
+        "description": "Bulk move assets by filters\n\nMove multiple assets matching from and to location paths.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"moved_asset_ids\": [\n    1\n  ],\n  \"movement_ids\": [\n    1\n  ],\n  \"count\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "from_location_full_path": {
+              "type": "string",
+              "title": "from_location_full_path",
+              "description": "Move assets currently at this location full_path",
+              "example": "Temporary London Storage"
+            },
+            "to_location_full_path": {
+              "type": "string",
+              "title": "to_location_full_path",
+              "description": "Destination location full_path",
+              "example": "London Campus > Building A > Floor 1 > A1-101"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reason",
+              "description": "Movement reason to record for all assets",
+              "example": "New London Campus go-live; moved from temporary storage",
+              "type": "string"
+            }
+          },
+          "title": "bulk_move_assetsArguments",
+          "required": [
+            "from_location_full_path",
+            "to_location_full_path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_bulk_update_maintenance_tickets",
+        "description": "Bulk update maintenance tickets\n\nUpdate status, priority, team, or due_date on multiple tickets.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"updated_ticket_ids\": [\n    1\n  ],\n  \"count\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ticket_ids": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array",
+              "title": "ticket_ids",
+              "description": "List of ticket IDs to update",
+              "example": [
+                6101,
+                6102,
+                6103
+              ]
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New status for all tickets",
+              "example": "In Progress",
+              "type": "string"
+            },
+            "priority": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "priority",
+              "description": "New priority for all tickets",
+              "example": "High",
+              "type": "string"
+            },
+            "assigned_team_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "assigned_team_id",
+              "description": "New team ID for all tickets",
+              "example": 5,
+              "type": "integer"
+            },
+            "due_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "due_date",
+              "description": "New due date (YYYY-MM-DD) for all tickets",
+              "example": "2025-05-15",
+              "type": "string"
+            }
+          },
+          "title": "bulk_update_maintenance_ticketsArguments",
+          "required": [
+            "ticket_ids"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_bulk_add_comment_to_tickets",
+        "description": "Bulk add comment to tickets\n\nAdd the same comment text to each ticket in the given list.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"comment_ids\": [\n    1\n  ],\n  \"count\": 1\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ticket_ids": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array",
+              "title": "ticket_ids",
+              "description": "Ticket IDs to comment on",
+              "example": [
+                6101,
+                6102,
+                6103
+              ]
+            },
+            "comment": {
+              "type": "string",
+              "title": "comment",
+              "description": "Comment text to add to each ticket",
+              "example": "Issue acknowledged by IT on 2025-05-05; diagnostics in progress."
+            }
+          },
+          "title": "bulk_add_comment_to_ticketsArguments",
+          "required": [
+            "ticket_ids",
+            "comment"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_generate_asset_audit_report",
+        "description": "Generate asset audit report\n\nProduce an audit report with movements, assignments, and maintenance events.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"location_root\": \"Location Root\",\n  \"from_date\": \"From Date\",\n  \"to_date\": \"To Date\",\n  \"assets\": [\n    {\n      \"asset_id\": 1,\n      \"asset_tag\": \"Asset Tag\",\n      \"events\": [\n        {\n          \"event_type\": \"Event Type\",\n          \"timestamp\": \"Timestamp\",\n          \"details\": {}\n        }\n      ]\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_root_full_path": {
+              "type": "string",
+              "description": "Full path of root location whose subtree assets are included",
+              "title": "location_root_full_path"
+            },
+            "from_date": {
+              "type": "string",
+              "description": "Start of audit period (YYYY-MM-DD)",
+              "title": "from_date"
+            },
+            "to_date": {
+              "type": "string",
+              "description": "End of audit period (YYYY-MM-DD)",
+              "title": "to_date"
+            },
+            "include_only_with_location_changes": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, only include assets with location change",
+              "default": false,
+              "title": "include_only_with_location_changes",
+              "type": "boolean"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter assets by status",
+              "title": "status",
+              "type": "string"
+            }
+          },
+          "title": "generate_asset_audit_reportArguments",
+          "required": [
+            "location_root_full_path",
+            "from_date",
+            "to_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_users",
+        "description": "List users by filters\n\nRetrieve users by optional email, username, or group name filters.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"users\": [\n    {\n      \"id\": 1,\n      \"username\": \"Username\",\n      \"email\": \"Email\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact user email",
+              "title": "email",
+              "type": "string"
+            },
+            "username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact username",
+              "title": "username",
+              "type": "string"
+            },
+            "group_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter users that belong to the given user group name",
+              "title": "group_name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number of users to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of users to skip for pagination",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_usersArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_user_groups",
+        "description": "List user groups by name\n\nGet user groups optionally filtered by name.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"groups\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact or partial group name",
+              "title": "name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number of groups to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of groups to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_user_groupsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_teams",
+        "description": "List teams by name\n\nRetrieve teams optionally filtering by name.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"teams\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact or partial team name",
+              "title": "name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number of teams to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of teams to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_teamsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_location",
+        "description": "Create a new location\n\nCreate a location with optional parent to build hierarchy.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Location short name",
+              "example": "London Campus"
+            },
+            "parent_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "parent_id",
+              "description": "Parent location ID to nest under",
+              "example": 10,
+              "type": "integer"
+            }
+          },
+          "title": "create_locationArguments",
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_locations",
+        "description": "List locations with filters\n\nRetrieve locations filtered by name or path.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"locations\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact or partial location name",
+              "title": "name",
+              "type": "string"
+            },
+            "full_path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact full_path",
+              "title": "full_path",
+              "type": "string"
+            },
+            "parent_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by parent location ID",
+              "title": "parent_id",
+              "type": "integer"
+            },
+            "starts_with_full_path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return locations whose full_path begins with this path",
+              "title": "starts_with_full_path",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max locations to return",
+              "default": 100,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Locations to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_locationsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_categories",
+        "description": "List asset categories\n\nRetrieve categories optionally filtered by name.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"categories\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact or partial category name",
+              "title": "name",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max categories to return",
+              "default": 50,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Categories to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_categoriesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_depreciation_policy",
+        "description": "Create depreciation policy\n\nCreate a depreciation policy for book value calculation.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"method\": \"Method\",\n  \"useful_life_years\": 1,\n  \"salvage_value_percent\": 1.0\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Policy name",
+              "example": "Server Hardware 5Y SL 5% salvage"
+            },
+            "method": {
+              "type": "string",
+              "title": "method",
+              "description": "Depreciation method",
+              "example": "straight_line"
+            },
+            "useful_life_years": {
+              "type": "integer",
+              "title": "useful_life_years",
+              "description": "Useful life in years",
+              "example": 5
+            },
+            "salvage_value_percent": {
+              "type": "number",
+              "title": "salvage_value_percent",
+              "description": "Salvage value percent",
+              "example": 5.0
+            }
+          },
+          "title": "create_depreciation_policyArguments",
+          "required": [
+            "name",
+            "method",
+            "useful_life_years",
+            "salvage_value_percent"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_depreciation_policies",
+        "description": "List depreciation policies\n\nRetrieve depreciation policies by optional name filter.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"policies\": [\n    {\n      \"id\": 1,\n      \"name\": \"Name\",\n      \"method\": \"Method\",\n      \"useful_life_years\": 1,\n      \"salvage_value_percent\": 1.0\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact or partial policy name",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "title": "list_depreciation_policiesArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_assign_depreciation_policy_to_category",
+        "description": "Assign depreciation policy to category\n\nCreate or update category depreciation policy entry.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"category_id\": 1,\n  \"policy_id\": 1,\n  \"effective_from\": \"Effective From\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category_id": {
+              "type": "integer",
+              "title": "category_id",
+              "description": "Category ID to assign policy",
+              "example": 7
+            },
+            "policy_id": {
+              "type": "integer",
+              "title": "policy_id",
+              "description": "Depreciation policy ID",
+              "example": 4
+            },
+            "effective_from": {
+              "type": "string",
+              "title": "effective_from",
+              "description": "Effective from date (YYYY-MM-DD)",
+              "example": "2023-01-01"
+            }
+          },
+          "title": "assign_depreciation_policy_to_categoryArguments",
+          "required": [
+            "category_id",
+            "policy_id",
+            "effective_from"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_asset",
+        "description": "Create a new asset\n\nCreate an asset record with category, location, and assignment.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"asset_tag\": \"Asset Tag\",\n  \"category_id\": 1,\n  \"status\": \"Status\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_tag": {
+              "type": "string",
+              "title": "asset_tag",
+              "description": "Unique asset tag",
+              "example": "LAP-CHI-1024"
+            },
+            "serial_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "serial_number",
+              "description": "Serial number of the asset",
+              "example": "DL7440-CH1024",
+              "type": "string"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "Human-readable asset name",
+              "example": "Dell Latitude 7440",
+              "type": "string"
+            },
+            "category_name": {
+              "type": "string",
+              "title": "category_name",
+              "description": "Category name to look up category_id",
+              "example": "Laptop"
+            },
+            "location_full_path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "location_full_path",
+              "description": "Location full_path to set location_id",
+              "example": "Chicago HQ > 12th Floor > IT Storage",
+              "type": "string"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Asset lifecycle status",
+              "example": "Active",
+              "type": "string"
+            },
+            "condition": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "condition",
+              "description": "Current physical condition",
+              "example": "New",
+              "type": "string"
+            },
+            "assigned_user_email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "assigned_user_email",
+              "description": "Email of user to assign asset to",
+              "example": "john.doe@company.com",
+              "type": "string"
+            },
+            "purchase_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "purchase_date",
+              "description": "Purchase date (YYYY-MM-DD)",
+              "example": "2025-01-15",
+              "type": "string"
+            },
+            "purchase_cost": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "purchase_cost",
+              "description": "Purchase cost in currency",
+              "example": 1450.0,
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "currency",
+              "description": "Currency code for costs",
+              "example": "USD",
+              "type": "string"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "notes",
+              "description": "Free-form notes",
+              "example": "Q1 2025 Chicago IT stock",
+              "type": "string"
+            }
+          },
+          "title": "create_assetArguments",
+          "required": [
+            "asset_tag",
+            "category_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_assets",
+        "description": "List assets with filters\n\nRetrieve assets with filters like tag, serial, category, location, and user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"assets\": [\n    {\n      \"id\": 1,\n      \"asset_tag\": \"Asset Tag\",\n      \"category_id\": 1,\n      \"status\": \"Status\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_tag": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact asset tag",
+              "title": "asset_tag",
+              "type": "string"
+            },
+            "serial_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact serial number",
+              "title": "serial_number",
+              "type": "string"
+            },
+            "category_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category name",
+              "title": "category_name",
+              "type": "string"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset status",
+              "title": "status",
+              "type": "string"
+            },
+            "location_full_path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by exact location full_path",
+              "title": "location_full_path",
+              "type": "string"
+            },
+            "location_starts_with": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter assets whose location full_path starts with this string",
+              "title": "location_starts_with",
+              "type": "string"
+            },
+            "assigned_user_email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by assigned user email",
+              "title": "assigned_user_email",
+              "type": "string"
+            },
+            "purchased_before": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter assets purchased before this date",
+              "title": "purchased_before",
+              "type": "string"
+            },
+            "purchased_after": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter assets purchased after this date",
+              "title": "purchased_after",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max assets to return",
+              "default": 100,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Assets to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_assetsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_asset_movements",
+        "description": "List asset movements by filters\n\nRetrieve asset movements filtered by asset, location, or date.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"movements\": [\n    {\n      \"id\": 1,\n      \"asset_id\": 1,\n      \"moved_at\": \"2023-01-01T00:00:00Z\",\n      \"created_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter movements by asset ID",
+              "title": "asset_id",
+              "type": "integer"
+            },
+            "location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter movements involving this location as from or to",
+              "title": "location_id",
+              "type": "integer"
+            },
+            "from_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include movements on/after this datetime (ISO8601)",
+              "title": "from_date",
+              "type": "string"
+            },
+            "to_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include movements on/before this datetime (ISO8601)",
+              "title": "to_date",
+              "type": "string"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max movements to return",
+              "default": 500,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Movements to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_asset_movementsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_asset_assignments",
+        "description": "List asset assignments\n\nRetrieve asset assignments records by asset, user, project, or date.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"assignments\": [\n    {\n      \"id\": 1,\n      \"asset_id\": 1,\n      \"assigned_at\": \"2023-01-01T00:00:00Z\",\n      \"created_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset ID",
+              "title": "asset_id",
+              "type": "integer"
+            },
+            "to_user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter assignments where this user received the asset",
+              "title": "to_user_id",
+              "type": "integer"
+            },
+            "project_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by project name",
+              "title": "project_name",
+              "type": "string"
+            },
+            "from_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include assignments on/after this date",
+              "title": "from_date",
+              "type": "string"
+            },
+            "to_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include assignments on/before this date",
+              "title": "to_date",
+              "type": "string"
+            },
+            "only_active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "If true, only include assignments with null unassigned_at",
+              "default": false,
+              "title": "only_active",
+              "type": "boolean"
+            }
+          },
+          "title": "list_asset_assignmentsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_maintenance_ticket",
+        "description": "Create a maintenance ticket\n\nCreate a maintenance ticket for an asset with details.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"asset_id\": 1,\n  \"description\": \"Description\",\n  \"status\": \"Status\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "integer",
+              "title": "asset_id",
+              "description": "Asset ID for which ticket is created",
+              "example": 8001
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "title",
+              "description": "Short ticket title",
+              "example": "Monitor flickering issue",
+              "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "title": "description",
+              "description": "Detailed problem description",
+              "example": "Random flickering and occasional blackout of the display."
+            },
+            "type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "type",
+              "description": "Ticket type",
+              "example": "Corrective",
+              "type": "string"
+            },
+            "priority": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "priority",
+              "description": "Priority level",
+              "example": "High",
+              "type": "string"
+            },
+            "assigned_team_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "assigned_team_name",
+              "description": "Team name to assign ticket to",
+              "example": "Facilities - AV Team",
+              "type": "string"
+            },
+            "due_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "due_date",
+              "description": "Due date for resolving ticket (YYYY-MM-DD)",
+              "example": "2025-02-10",
+              "type": "string"
+            }
+          },
+          "title": "create_maintenance_ticketArguments",
+          "required": [
+            "asset_id",
+            "description"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_list_maintenance_tickets",
+        "description": "List maintenance tickets\n\nRetrieve maintenance tickets by asset, status, priority, team, or group.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"tickets\": [\n    {\n      \"id\": 1,\n      \"asset_id\": 1,\n      \"description\": \"Description\",\n      \"status\": \"Status\",\n      \"created_at\": \"2023-01-01T00:00:00Z\",\n      \"updated_at\": \"2023-01-01T00:00:00Z\"\n    }\n  ]\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter tickets by status",
+              "title": "status",
+              "type": "string"
+            },
+            "priority": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by priority",
+              "title": "priority",
+              "type": "string"
+            },
+            "category_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter tickets whose asset is in this category",
+              "title": "category_name",
+              "type": "string"
+            },
+            "assigned_team_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by assigned team name",
+              "title": "assigned_team_name",
+              "type": "string"
+            },
+            "assigned_user_group_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by group name of the asset's assigned user",
+              "title": "assigned_user_group_name",
+              "type": "string"
+            },
+            "asset_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by asset ID",
+              "title": "asset_id",
+              "type": "integer"
+            },
+            "limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max tickets to return",
+              "default": 100,
+              "title": "limit",
+              "type": "integer"
+            },
+            "offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Tickets to skip",
+              "default": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          "title": "list_maintenance_ticketsArguments"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_maintenance_event",
+        "description": "Create maintenance event for asset\n\nCreate a maintenance event representing work performed on an asset.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"asset_id\": 1,\n  \"event_type\": \"Event Type\",\n  \"performed_at\": \"2023-01-01T00:00:00Z\",\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "integer",
+              "title": "asset_id",
+              "description": "Asset ID that maintenance was performed on",
+              "example": 6001
+            },
+            "ticket_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "ticket_id",
+              "description": "Related ticket ID if any",
+              "example": 6001,
+              "type": "integer"
+            },
+            "event_type": {
+              "type": "string",
+              "title": "event_type",
+              "description": "Type of event",
+              "example": "maintenance_completed"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "Description of work performed",
+              "example": "Replaced HDMI cable and updated monitor firmware.",
+              "type": "string"
+            },
+            "performed_by_team_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "performed_by_team_id",
+              "description": "Team ID that performed maintenance",
+              "example": 2,
+              "type": "integer"
+            },
+            "performed_at": {
+              "type": "string",
+              "title": "performed_at",
+              "description": "Timestamp of event (ISO8601)",
+              "example": "2025-02-09T14:00:00Z"
+            },
+            "metrics_json": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "metrics_json",
+              "description": "JSON string with metrics",
+              "example": "{\"print_hours_since_last\": 100}",
+              "type": "string"
+            }
+          },
+          "title": "create_maintenance_eventArguments",
+          "required": [
+            "asset_id",
+            "event_type",
+            "performed_at"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_workflow_rule",
+        "description": "Create a workflow rule\n\nCreate a workflow rule for asset-based automations.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\",\n  \"is_active\": true,\n  \"trigger_type\": \"Trigger Type\",\n  \"config_json\": \"Config Json\",\n  \"created_at\": \"2023-01-01T00:00:00Z\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "name",
+              "description": "Unique workflow rule name",
+              "example": "3D Printer Preventive Maintenance 500h or 90d"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "Rule description",
+              "example": "Auto-create preventive maintenance for 3D printers at 500 print hours or 90 days since last maintenance.",
+              "type": "string"
+            },
+            "trigger_type": {
+              "type": "string",
+              "title": "trigger_type",
+              "description": "Trigger type identifier used by automation engine",
+              "example": "asset_usage_or_maintenance_interval"
+            },
+            "config_json": {
+              "type": "string",
+              "title": "config_json",
+              "description": "JSON string with trigger configuration and filters",
+              "example": "{\"category_name\":\"3D Printer\"}"
+            },
+            "is_active": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_active",
+              "description": "Whether rule is active",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "create_workflow_ruleArguments",
+          "required": [
+            "name",
+            "trigger_type",
+            "config_json"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_move_asset",
+        "description": "Move an asset to a new location\n\nRecord an asset_movements entry and update asset location.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"movement_id\": 1,\n  \"asset_id\": 1,\n  \"to_location_id\": 1,\n  \"moved_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "integer",
+              "description": "ID of asset to move",
+              "title": "asset_id"
+            },
+            "to_location_id": {
+              "type": "integer",
+              "title": "to_location_id",
+              "description": "Destination location ID",
+              "example": 305
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reason",
+              "description": "Reason for movement",
+              "example": "Moved from Temporary London Storage into A1-101",
+              "type": "string"
+            },
+            "moved_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "moved_at",
+              "description": "Movement timestamp; defaults to now if omitted",
+              "example": "2025-01-25T10:15:00Z",
+              "type": "string"
+            }
+          },
+          "title": "move_assetArguments",
+          "required": [
+            "asset_id",
+            "to_location_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_checkout_asset",
+        "description": "Check out an asset to a user\n\nCreate an asset_checkouts row and associate asset to user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"checkout_id\": 1,\n  \"asset_id\": 1,\n  \"user_id\": 1,\n  \"checked_out_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "integer",
+              "description": "ID of asset to check out",
+              "title": "asset_id"
+            },
+            "user_email": {
+              "type": "string",
+              "title": "user_email",
+              "description": "Email of user receiving the asset",
+              "example": "jane.smith@company.com"
+            },
+            "project_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "project_name",
+              "description": "Name of the project linked to this checkout",
+              "example": "Q3 Brand Shoot",
+              "type": "string"
+            },
+            "checkout_location_full_path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "checkout_location_full_path",
+              "description": "Location full_path where checkout occurs",
+              "example": "NYC Office > Media Closet",
+              "type": "string"
+            },
+            "due_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "due_date",
+              "description": "Due date for return (YYYY-MM-DD)",
+              "example": "2025-08-15",
+              "type": "string"
+            },
+            "note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "note",
+              "description": "Additional instructions or notes",
+              "example": "Return with both batteries and SD card.",
+              "type": "string"
+            },
+            "checked_out_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "checked_out_at",
+              "description": "Checkout timestamp; defaults to now",
+              "example": "2025-08-01T09:00:00Z",
+              "type": "string"
+            }
+          },
+          "title": "checkout_assetArguments",
+          "required": [
+            "asset_id",
+            "user_email"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_set_asset_usage_counter",
+        "description": "Set asset usage counter\n\nCreate or update an asset usage counter entry.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"asset_id\": 1,\n  \"counter_type\": \"Counter Type\",\n  \"value\": 1.0,\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "integer",
+              "description": "Asset ID whose counter is updated",
+              "title": "asset_id"
+            },
+            "counter_type": {
+              "type": "string",
+              "title": "counter_type",
+              "description": "Type of usage metric",
+              "example": "print_hours"
+            },
+            "value": {
+              "type": "number",
+              "title": "value",
+              "description": "Current counter value",
+              "example": 512.5
+            }
+          },
+          "title": "set_asset_usage_counterArguments",
+          "required": [
+            "asset_id",
+            "counter_type",
+            "value"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_asset_photo",
+        "description": "Attach a photo to an asset\n\nUpload a photo BLOB for an asset and optionally mark as primary.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"asset_id\": 1,\n  \"is_primary\": true,\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "integer",
+              "description": "Asset ID to attach photo to",
+              "title": "asset_id"
+            },
+            "file_name": {
+              "type": "string",
+              "title": "file_name",
+              "description": "Original file name",
+              "example": "monitor_current_photo.jpg"
+            },
+            "content_type": {
+              "type": "string",
+              "title": "content_type",
+              "description": "MIME type of the image",
+              "example": "image/jpeg"
+            },
+            "data_base64": {
+              "type": "string",
+              "title": "data_base64",
+              "description": "Base64-encoded binary image data",
+              "example": "/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDA..."
+            },
+            "is_primary": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "is_primary",
+              "description": "Whether this is the primary asset photo",
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          "title": "add_asset_photoArguments",
+          "required": [
+            "asset_id",
+            "file_name",
+            "content_type",
+            "data_base64"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_maintenance_ticket_comment",
+        "description": "Add comment to maintenance ticket\n\nCreate a comment entry linked to a ticket using current user.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"ticket_id\": 1,\n  \"comment\": \"Comment\",\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ticket_id": {
+              "type": "integer",
+              "description": "Ticket ID to comment on",
+              "title": "ticket_id"
+            },
+            "comment": {
+              "type": "string",
+              "title": "comment",
+              "description": "Comment text",
+              "example": "Issue acknowledged by IT on 2025-05-05; diagnostics in progress."
+            }
+          },
+          "title": "add_maintenance_ticket_commentArguments",
+          "required": [
+            "ticket_id",
+            "comment"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_add_maintenance_ticket_attachment",
+        "description": "Attach file to maintenance ticket\n\nUpload a BLOB attachment for a maintenance ticket.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"ticket_id\": 1,\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ticket_id": {
+              "type": "integer",
+              "description": "Ticket ID to attach file to",
+              "title": "ticket_id"
+            },
+            "file_name": {
+              "type": "string",
+              "title": "file_name",
+              "description": "File name of attachment",
+              "example": "monitor_current_photo.jpg"
+            },
+            "content_type": {
+              "type": "string",
+              "title": "content_type",
+              "description": "Attachment MIME type",
+              "example": "image/jpeg"
+            },
+            "data_base64": {
+              "type": "string",
+              "title": "data_base64",
+              "description": "Base64-encoded attachment data",
+              "example": "/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDA..."
+            }
+          },
+          "title": "add_maintenance_ticket_attachmentArguments",
+          "required": [
+            "ticket_id",
+            "file_name",
+            "content_type",
+            "data_base64"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_workflow_rule_action",
+        "description": "Create workflow rule action\n\nCreate a workflow_rule_actions entry for a rule.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"rule_id\": 1,\n  \"action_type\": \"Action Type\",\n  \"config_json\": \"Config Json\",\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "rule_id": {
+              "type": "integer",
+              "description": "Workflow rule ID this action belongs to",
+              "title": "rule_id"
+            },
+            "action_type": {
+              "type": "string",
+              "title": "action_type",
+              "description": "Type of action",
+              "example": "create_maintenance_ticket"
+            },
+            "config_json": {
+              "type": "string",
+              "title": "config_json",
+              "description": "JSON configuration for the action",
+              "example": "{\"ticket_type\":\"Preventive Maintenance\"}"
+            }
+          },
+          "title": "create_workflow_rule_actionArguments",
+          "required": [
+            "rule_id",
+            "action_type",
+            "config_json"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_create_asset_disposal_event",
+        "description": "Record asset disposal event\n\nCreate a disposal event capturing date, method, reason, and approver.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"asset_id\": 1,\n  \"disposal_date\": \"2023-01-01\",\n  \"method\": \"Method\",\n  \"created_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "integer",
+              "description": "Asset ID that was disposed",
+              "title": "asset_id"
+            },
+            "disposal_date": {
+              "type": "string",
+              "title": "disposal_date",
+              "description": "Date of disposal (YYYY-MM-DD)",
+              "example": "2025-04-30"
+            },
+            "method": {
+              "type": "string",
+              "title": "method",
+              "description": "Disposal method",
+              "example": "E-waste recycler"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "reason",
+              "description": "Reason for disposal",
+              "example": "Beyond economical repair",
+              "type": "string"
+            },
+            "approved_by_user_email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "approved_by_user_email",
+              "description": "Email of user who approved disposal",
+              "example": "ops.director@company.com",
+              "type": "string"
+            },
+            "approval_note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "approval_note",
+              "description": "Notes regarding approval",
+              "example": "Approved based on April 2025 hardware review.",
+              "type": "string"
+            }
+          },
+          "title": "create_asset_disposal_eventArguments",
+          "required": [
+            "asset_id",
+            "disposal_date",
+            "method"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_location",
+        "description": "Update a location\n\nUpdate location name or parent for hierarchy changes.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"name\": \"Name\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "type": "integer",
+              "description": "ID of the location to update",
+              "title": "location_id"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "name",
+              "description": "New location name",
+              "example": "Floor 2",
+              "type": "string"
+            },
+            "parent_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "parent_id",
+              "description": "New parent location ID",
+              "example": 150,
+              "type": "integer"
+            }
+          },
+          "title": "update_locationArguments",
+          "required": [
+            "location_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_asset",
+        "description": "Update asset core fields\n\nUpdate mutable asset fields like status, condition, location, and depreciation.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"asset_tag\": \"Asset Tag\",\n  \"status\": \"Status\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "integer",
+              "description": "Asset ID to update",
+              "title": "asset_id"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "New status value",
+              "example": "Retired",
+              "type": "string"
+            },
+            "condition": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "condition",
+              "description": "Updated condition",
+              "example": "Beyond economical repair",
+              "type": "string"
+            },
+            "location_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "location_id",
+              "description": "New location ID",
+              "example": 310,
+              "type": "integer"
+            },
+            "disposal_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "disposal_date",
+              "description": "Disposal date if disposed (YYYY-MM-DD)",
+              "example": "2025-04-30",
+              "type": "string"
+            },
+            "disposal_method": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "disposal_method",
+              "description": "Method of disposal",
+              "example": "E-waste recycler",
+              "type": "string"
+            },
+            "disposal_reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "disposal_reason",
+              "description": "Reason for disposal",
+              "example": "Beyond economical repair",
+              "type": "string"
+            },
+            "retired_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "retired_at",
+              "description": "Timestamp when asset was retired",
+              "example": "2025-04-30T09:00:00Z",
+              "type": "string"
+            },
+            "book_value": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "book_value",
+              "description": "Updated book value",
+              "example": 0.0,
+              "type": "number"
+            },
+            "depreciation_policy_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "depreciation_policy_id",
+              "description": "Policy ID to link",
+              "example": 4,
+              "type": "integer"
+            },
+            "depreciation_start_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "depreciation_start_date",
+              "description": "Date depreciation begins",
+              "example": "2020-01-01",
+              "type": "string"
+            },
+            "salvage_value": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "salvage_value",
+              "description": "Salvage value amount",
+              "example": 250.0,
+              "type": "number"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "notes",
+              "description": "Updated notes",
+              "example": "Unit retired and sent to recycler.",
+              "type": "string"
+            }
+          },
+          "title": "update_assetArguments",
+          "required": [
+            "asset_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "mcp_server_update_maintenance_ticket",
+        "description": "Update maintenance ticket fields\n\nUpdate ticket status, priority, team, type, and dates.\n\n### Responses:\n\n**200**: Successful Response (Success Response)\nContent-Type: application/json\n\n**Example Response:**\n```json\n{\n  \"id\": 1,\n  \"status\": \"Status\",\n  \"updated_at\": \"2023-01-01T00:00:00Z\"\n}\n```",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ticket_id": {
+              "type": "integer",
+              "description": "Ticket ID to update",
+              "title": "ticket_id"
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "title",
+              "description": "Updated title",
+              "example": "Monitor flickering / blackout issue",
+              "type": "string"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "description",
+              "description": "Updated description",
+              "example": "Flickering observed more often when using HDMI input.",
+              "type": "string"
+            },
+            "type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "type",
+              "description": "Updated ticket type",
+              "example": "Corrective",
+              "type": "string"
+            },
+            "priority": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "priority",
+              "description": "Updated priority",
+              "example": "High",
+              "type": "string"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "status",
+              "description": "Updated ticket status",
+              "example": "In Progress",
+              "type": "string"
+            },
+            "assigned_team_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "assigned_team_id",
+              "description": "Updated team ID",
+              "example": 2,
+              "type": "integer"
+            },
+            "due_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "due_date",
+              "description": "Updated due date (YYYY-MM-DD)",
+              "example": "2025-02-12",
+              "type": "string"
+            },
+            "closed_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "closed_at",
+              "description": "Closing timestamp if closing",
+              "example": "2025-02-11T16:00:00Z",
+              "type": "string"
+            }
+          },
+          "title": "update_maintenance_ticketArguments",
+          "required": [
+            "ticket_id"
+          ]
+        }
+      }
+    }
+  ],
+  "temperature": 0.0,
+  "seed": 42,
+  "max_tokens": 8192,
+  "stop_token_ids": [
+    1,
+    50,
+    106
+  ],
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  }
+}

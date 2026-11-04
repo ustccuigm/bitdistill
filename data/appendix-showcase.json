@@ -1499,146 +1499,6 @@
     },
     {
       "batch": "local-steering-20261104",
-      "id": "banking_fintech_3:6",
-      "title": "反复查询补卡记录，却没有发起补卡",
-      "task": "Lock my physical debit card ending in 4321 due to suspected loss and request a replacement card to be mailed to my existing home address on file.",
-      "lede": "卡已锁定后，学生继续调用 list_card_replacement_requests；无指导续跑仍未完成本次补卡请求。",
-      "stages": [
-        {
-          "label": "错误与修正",
-          "groups": [
-            {
-              "options": [
-                {
-                  "name": "无指导学生",
-                  "status": "未满足要求",
-                  "summary": "卡已锁定后，学生继续调用 list_card_replacement_requests；无指导续跑仍未完成本次补卡请求。",
-                  "code": "list_card_replacement_requests({})",
-                  "source": "data/cases/training_case/local-steering-20261104/banking_fintech_3_6/before/response.json",
-                  "tone": "bad",
-                  "codeHighlights": [
-                    "list_card_replacement_requests",
-                    "create_card_replacement_request",
-                    "original_card_id"
-                  ],
-                  "quote": ""
-                }
-              ]
-            },
-            {
-              "options": [
-                {
-                  "name": "Steered student",
-                  "status": "局部修正",
-                  "summary": "教师指出下一步应创建补卡申请。学生改用 create_card_replacement_request，关联尾号 4321 的原卡并说明疑似遗失。",
-                  "code": "create_card_replacement_request({\n  \"original_card_id\": 2,\n  \"reason\": \"suspected loss\"\n})",
-                  "source": "data/cases/training_case/local-steering-20261104/banking_fintech_3_6/after/attempt-4/turn-000/response.json",
-                  "tone": "good",
-                  "codeHighlights": [
-                    "list_card_replacement_requests",
-                    "create_card_replacement_request",
-                    "original_card_id"
-                  ],
-                  "quote": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "Teacher steering",
-          "groups": [
-            {
-              "options": [
-                {
-                  "name": "BF16 teacher",
-                  "status": "单轮指导",
-                  "summary": "以下是实际传给学生的完整 steering prompt；学生自行生成下一次工具调用。",
-                  "code": "{\n  \"precondition\": \"The assistant has already locked the debit card (card_id: 2) and needs to create a replacement request.\",\n  \"decision_rule\": \"The assistant must call 'mcp_server_create_card_replacement_request' with 'original_card_id': 2 and 'reason': 'suspected loss'. It should not call 'list_card_replacement_requests' or 'list_addresses' as the primary next step, as the goal is to perform the action requested by the user.\",\n  \"expected_transition\": \"A new entry in the 'card_replacement_requests' table with 'original_card_id': 2, 'reason': 'suspected loss', and 'status': 'pending'.\",\n  \"recovery_check\": \"Verify that the tool call 'mcp_server_create_card_replacement_request' is executed with the correct parameters before any other listing or informational tools are called.\"\n}",
-                  "source": "data/cases/training_case/local-steering-20261104/banking_fintech_3_6/steering/attempt-4/raw_steering_prompt.txt",
-                  "tone": "neutral",
-                  "codeHighlights": [
-                    "list_card_replacement_requests",
-                    "create_card_replacement_request",
-                    "original_card_id"
-                  ],
-                  "quote": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "局部状态验收",
-          "groups": [
-            {
-              "options": [
-                {
-                  "name": "错误动作之后",
-                  "status": "未通过",
-                  "summary": "验收要求产生新的补卡申请，不能仅凭初始数据库中的旧申请判定本次完成。",
-                  "code": "{\n  \"table\": \"card_replacement_requests\",\n  \"changed_records\": [],\n  \"requirement_met\": false\n}",
-                  "source": "data/cases/training_case/local-steering-20261104/banking_fintech_3_6/evidence.json",
-                  "tone": "bad",
-                  "codeHighlights": [
-                    "list_card_replacement_requests",
-                    "create_card_replacement_request",
-                    "original_card_id"
-                  ],
-                  "quote": ""
-                }
-              ]
-            },
-            {
-              "options": [
-                {
-                  "name": "修正动作之后",
-                  "status": "通过",
-                  "summary": "验收要求产生新的补卡申请，不能仅凭初始数据库中的旧申请判定本次完成。",
-                  "code": "{\n  \"table\": \"card_replacement_requests\",\n  \"accepted_records\": [\n    {\n      \"id\": 3,\n      \"user_id\": 1,\n      \"original_card_id\": 2,\n      \"replacement_card_id\": null,\n      \"mail_to_address_id\": null,\n      \"reason\": \"suspected loss\",\n      \"status\": \"pending\",\n      \"processed_at\": null\n    }\n  ],\n  \"requirement_met\": true\n}",
-                  "source": "data/cases/training_case/local-steering-20261104/banking_fintech_3_6/after/attempt-4/local_gate.json",
-                  "tone": "good",
-                  "codeHighlights": [
-                    "list_card_replacement_requests",
-                    "create_card_replacement_request",
-                    "original_card_id"
-                  ],
-                  "quote": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "撤掉指导后",
-          "groups": [
-            {
-              "options": [
-                {
-                  "name": "Student continuation",
-                  "status": "任务完成",
-                  "summary": "移除指导后，学生完成补卡确认；保留锁卡状态，并使用系统已有的家庭地址处理寄送。",
-                  "code": "list_card_replacement_requests({})\nThe debit card ending in 4321 has been successfully locked, and a replacement card request has been submitted due to suspected loss.",
-                  "source": "data/cases/training_case/local-steering-20261104/banking_fintech_3_6/after/attempt-4/complete_trajectory.json",
-                  "tone": "good",
-                  "codeHighlights": [
-                    "list_card_replacement_requests",
-                    "create_card_replacement_request",
-                    "original_card_id"
-                  ],
-                  "quote": ""
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "conclusion": "教师指出下一步应创建补卡申请。学生改用 create_card_replacement_request，关联尾号 4321 的原卡并说明疑似遗失。 移除指导后，学生完成补卡确认；保留锁卡状态，并使用系统已有的家庭地址处理寄送。",
-      "source": "data/cases/training_case/local-steering-20261104/banking_fintech_3_6/evidence.json",
-      "download": "data/cases/training_case/local-steering-20261104/banking_fintech_3_6/case_data.zip"
-    },
-    {
-      "batch": "local-steering-20261104",
       "id": "b2b_commerce_1:1",
       "title": "写入订单前，要让折扣真正生效",
       "task": "For customer_account 'Joe's Auto Repair' (price_tier 'silver'), create a sales_order with a requested_ship_date of '2026-01-05' containing three order_lines: 10 units of part SKU 'OIL-FLTR-001', 4 units of 'BRK-TOY-001', and 2 units of 'BAT-12V-600CCA', letting the system apply the appropriate discount_rules and setting backorder_status to 'allow' for any lines that cannot be fully filled.",
@@ -1784,11 +1644,11 @@
       "download": "data/cases/training_case/local-steering-20261104/b2b_commerce_1_1/case_data.zip"
     },
     {
-      "batch": "local-steering-20261104",
-      "id": "booking_and_scheduling_4:6",
-      "title": "反复思考如何找病历，却没有执行工具",
-      "task": "Record a rabies vaccination for 'Luna' with vaccine_type 'Rabies 1-year', dose '1.0 mL subcutaneous', administration_date '2025-01-12', and next_due_date '2026-01-12', and associate it with the medical_record created for appointment 'APT-98342'.",
-      "lede": "无指导学生反复思考如何找到病历，耗尽本轮生成预算，始终没有执行接种写入；Luna 没有新增本次记录。",
+      "batch": "local-steering-replacements-20261104",
+      "id": "asset_management_2:2",
+      "title": "借出了相机，却漏记借出地点",
+      "task": "Check out the asset with asset tag 'CAM-NYC-0007' (category 'DSLR Camera') from the location 'NYC Office > Media Closet' to user 'jane.smith@company.com' for the project 'Q3 Brand Shoot', setting the due date to 2025-08-15 and adding a note that the camera must be returned with both batteries and SD card.",
+      "lede": "用户指定从 NYC Office > Media Closet 借出相机。学生填好了人员、项目和归还日期，却遗漏了地点参数。",
       "stages": [
         {
           "label": "错误与修正",
@@ -1797,160 +1657,18 @@
               "options": [
                 {
                   "name": "无指导学生",
-                  "status": "未满足要求",
-                  "summary": "无指导学生反复思考如何找到病历，耗尽本轮生成预算，始终没有执行接种写入；Luna 没有新增本次记录。",
-                  "code": "The user wants to record a rabies vaccination for 'Luna'.\nI have found Luna's ID is 1.\nI have retrieved the appointment details for 'APT-98342'.\nThe appointment 'APT-98342' is for pet_id 1.\nThe user wants to associate the vaccination with the medical record created for appointment 'APT-98342'.\nHowever, I don't have the medical record ID yet. I need to find the medical record associated with appointment 'APT-98342'.\nWait, the prompt says \"associate it with the medical_record created for appointment 'APT-98342'\".\nI should check if there's a medical record for this appointment.\nI'll search for medical records. I don't have a \"list_medical_records\" tool, but I can check if there's a way to find it.\nActually, I can't list medical records. I'll have to see if I can find it by looking at the appointment or if I need to create one.\nWait, the prompt says \"medical_record created for appointment 'APT-98342'\". This implies it already exists.\nI'll try to find the medical record. I don't have a list_medical_records tool.\nWait, I can't list medical records. I'll have to check if I can find it by some other means.\nActually, I'll check the appointment details again. It doesn't list a medical record ID.\nI'll try to find the medical record by looking for it. Since I can't list, I might have to assume it's there or I'll have to find it.\nWait, I can't find it without a list tool.\nLet me check the tools again.\n`mcp_server_get_medical_record_by_id`\n`mcp_server_create_medical_record`\nI'll try to find the medical record. Since I can't list, I'll have to check if I can find it.\nActually, I'll check if there's a way to find it.\nWait, I'll try to find the medical record by searching for it? No, there's no search.\nI'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record\n…（节选；可展开完整记录）",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_6/before/response.json",
-                  "tone": "bad",
-                  "codeHighlights": [
-                    "medical_record",
-                    "create_vaccination",
-                    "2025-01-12",
-                    "2026-01-12"
-                  ],
+                  "status": "地点遗漏",
+                  "summary": "checkout_asset 返回成功，但本次新建记录的 checkout_location_id 为 null，没有记录用户指定的借出地点。",
+                  "code": "checkout_asset({\n  \"asset_id\": 2,\n  \"due_date\": \"2025-08-15\",\n  \"note\": \"The camera must be returned with both batteries and SD card.\",\n  \"project_name\": \"Q3 Brand Shoot\",\n  \"user_email\": \"jane.smith@company.com\"\n})",
                   "quote": "",
-                  "fullCode": "The user wants to record a rabies vaccination for 'Luna'.\nI have found Luna's ID is 1.\nI have retrieved the appointment details for 'APT-98342'.\nThe appointment 'APT-98342' is for pet_id 1.\nThe user wants to associate the vaccination with the medical record created for appointment 'APT-98342'.\nHowever, I don't have the medical record ID yet. I need to find the medical record associated with appointment 'APT-98342'.\nWait, the prompt says \"associate it with the medical_record created for appointment 'APT-98342'\".\nI should check if there's a medical record for this appointment.\nI'll search for medical records. I don't have a \"list_medical_records\" tool, but I can check if there's a way to find it.\nActually, I can't list medical records. I'll have to see if I can find it by looking at the appointment or if I need to create one.\nWait, the prompt says \"medical_record created for appointment 'APT-98342'\". This implies it already exists.\nI'll try to find the medical record. I don't have a list_medical_records tool.\nWait, I can't list medical records. I'll have to check if I can find it by some other means.\nActually, I'll check the appointment details again. It doesn't list a medical record ID.\nI'll try to find the medical record by looking for it. Since I can't list, I might have to assume it's there or I'll have to find it.\nWait, I can't find it without a list tool.\nLet me check the tools again.\n`mcp_server_get_medical_record_by_id`\n`mcp_server_create_medical_record`\nI'll try to find the medical record. Since I can't list, I'll have to check if I can find it.\nActually, I'll check if there's a way to find it.\nWait, I'll try to find the medical record by searching for it? No, there's no search.\nI'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical record by looking at the appointment.\nActually, I'll try to find the medical record by looking at the appointment.\nWait, I'll try to find the medical"
-                }
-              ]
-            },
-            {
-              "options": [
-                {
-                  "name": "Steered student",
-                  "status": "局部修正",
-                  "summary": "教师提示核对预约关联的病历；学生恢复工具调用，查到病历后继续记录接种。",
-                  "code": "get_medical_record_by_id({\n  \"medical_record_id\": 1\n})",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_6/after/attempt-11/turn-000/response.json",
-                  "tone": "good",
-                  "codeHighlights": [
-                    "medical_record",
-                    "create_vaccination",
-                    "2025-01-12",
-                    "2026-01-12"
-                  ],
-                  "quote": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "Teacher steering",
-          "groups": [
-            {
-              "options": [
-                {
-                  "name": "BF16 teacher",
-                  "status": "单轮指导",
-                  "summary": "以下是实际传给学生的完整 steering prompt；学生自行生成下一次工具调用。",
-                  "code": "{\n  \"precondition\": \"The assistant has retrieved the appointment details for 'APT-98342' and identified that it is for pet_id 1, but it does not have the medical_record_id.\",\n  \"decision_rule\": \"If the medical record ID is not present in the appointment object and there is no 'list_medical_records' tool, the assistant should attempt to retrieve the medical record by trying a likely ID (e.g., 1) or searching for a way to link them, but since the task specifies a record 'created for' the appointment, and the assistant is stuck in a loop of reasoning without a list tool, it must proceed to find the record ID.\",\n  \"expected_transition\": \"The assistant should call 'mcp_server_get_medical_record_by_id' with 'medical_record_id': 1 to verify the record associated with appointment 'APT-98342'.\",\n  \"recovery_check\": \"Verify that the retrieved medical record's 'appointment_id' matches 'APT-98342' before calling 'mcp_server_create_vaccination'.\"\n}",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_6/steering/attempt-11/raw_steering_prompt.txt",
-                  "tone": "neutral",
-                  "codeHighlights": [
-                    "medical_record",
-                    "create_vaccination",
-                    "2025-01-12",
-                    "2026-01-12"
-                  ],
-                  "quote": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "局部状态验收",
-          "groups": [
-            {
-              "options": [
-                {
-                  "name": "只读查询",
-                  "status": "状态保持",
-                  "summary": "这一步是只读查询，局部验收确认数据库保持参考状态；是否完成任务由后续新增接种记录检验。",
-                  "code": "{\n  \"persistent_state_unchanged\": true,\n  \"matches_reference_local_state\": true\n}",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_6/after/attempt-11/local_gate.json",
-                  "tone": "neutral",
-                  "codeHighlights": [],
-                  "quote": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "撤掉指导后",
-          "groups": [
-            {
-              "options": [
-                {
-                  "name": "Student continuation",
-                  "status": "任务完成",
-                  "summary": "撤掉指导后，学生新增关联预约 APT-98342 病历的接种记录，包含指定疫苗、剂量、接种日期和下次到期日。",
-                  "code": "create_vaccination({\n  \"administration_date\": \"2025-01-12\",\n  \"dose\": \"1.0 mL subcutaneous\",\n  \"medical_record_id\": 1,\n  \"next_due_date\": \"2026-01-12\",\n  \"pet_id\": 1,\n  \"vaccine_type\": \"Rabies 1-year\"\n})\nThe rabies vaccination for 'Luna' has been successfully recorded.\n\n**Vaccination Details:**\n- **Vaccine Type:** Rabies 1-year\n- **Dose:** 1.0 mL subcutaneous\n- **Administration Date:** 2025-01-12\n- **Next Due Date:** 2026-01-12\n- **Associated Medical Record:** Linked to the record for appointment 'APT-98342'.",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_6/after/attempt-11/complete_trajectory.json",
-                  "tone": "good",
-                  "codeHighlights": [
-                    "medical_record",
-                    "create_vaccination",
-                    "2025-01-12",
-                    "2026-01-12"
-                  ],
-                  "quote": ""
-                }
-              ]
-            },
-            {
-              "options": [
-                {
-                  "name": "完成后的记录",
-                  "status": "整任务通过",
-                  "summary": "以下为撤掉指导后实际新增的任务记录。",
-                  "code": "[\n  {\n    \"id\": 6,\n    \"pet_id\": 1,\n    \"medical_record_id\": 1,\n    \"vaccine_type\": \"Rabies 1-year\",\n    \"dose\": \"1.0 mL subcutaneous\",\n    \"administration_date\": \"2025-01-12\",\n    \"next_due_date\": \"2026-01-12\",\n    \"created_by_user_id\": 1\n  }\n]",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_6/evidence.json",
-                  "tone": "good",
-                  "codeHighlights": [
-                    "medical_record",
-                    "create_vaccination",
-                    "2025-01-12",
-                    "2026-01-12"
-                  ],
-                  "quote": ""
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "conclusion": "教师提示核对预约关联的病历；学生恢复工具调用，查到病历后继续记录接种。 撤掉指导后，学生新增关联预约 APT-98342 病历的接种记录，包含指定疫苗、剂量、接种日期和下次到期日。",
-      "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_6/evidence.json",
-      "download": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_6/case_data.zip"
-    },
-    {
-      "batch": "local-steering-20261104",
-      "id": "booking_and_scheduling_4:8",
-      "title": "重复读取预约，没有走到处方写入",
-      "task": "Create a prescription for pet 'Luna' following appointment 'APT-98342' with medication_name 'Carprofen 50mg', dosage_instructions 'Give 1 tablet by mouth twice daily with food for 7 days', refill_count_remaining set to 1, and link it to both the issuing veterinarian 'Dr. Alex Kim' and the associated medical_record.",
-      "lede": "无指导学生重复 get_appointment_by_id，停留在已有预约信息上，没有新增本次所需的处方。",
-      "stages": [
-        {
-          "label": "错误与修正",
-          "groups": [
-            {
-              "options": [
-                {
-                  "name": "无指导学生",
-                  "status": "未满足要求",
-                  "summary": "无指导学生重复 get_appointment_by_id，停留在已有预约信息上，没有新增本次所需的处方。",
-                  "code": "get_appointment_by_id({\n  \"appointment_id\": \"APT-98342\"\n})",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_8/before/response.json",
+                  "source": "data/cases/training_case/local-steering-replacements-20261104/asset_management_2_2/before/turn-000/response.json",
                   "tone": "bad",
                   "codeHighlights": [
-                    "medical_record_id",
-                    "create_prescription",
-                    "Carprofen 50mg",
-                    "refill_count_remaining"
-                  ],
-                  "quote": ""
+                    "checkout_location_full_path",
+                    "checkout_location_id",
+                    "NYC Office > Media Closet",
+                    "null"
+                  ]
                 }
               ]
             },
@@ -1958,18 +1676,18 @@
               "options": [
                 {
                   "name": "Steered student",
-                  "status": "局部修正",
-                  "summary": "教师把下一步转向预约关联的 medical_record；学生查验病历，再继续处方流程。",
-                  "code": "get_medical_record_by_id({\n  \"medical_record_id\": 1\n})",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_8/after/attempt-9/turn-000/response.json",
+                  "status": "补齐地点",
+                  "summary": "同一上下文和干预前状态下，学生补上 checkout_location_full_path；本次新记录关联到了正确地点 ID 5。",
+                  "code": "checkout_asset({\n  \"asset_id\": 2,\n  \"checkout_location_full_path\": \"NYC Office > Media Closet\",\n  \"due_date\": \"2025-08-15\",\n  \"note\": \"The camera must be returned with both batteries and SD card.\",\n  \"project_name\": \"Q3 Brand Shoot\",\n  \"user_email\": \"jane.smith@company.com\"\n})",
+                  "quote": "",
+                  "source": "data/cases/training_case/local-steering-replacements-20261104/asset_management_2_2/after/attempt-0/turn-000/response.json",
                   "tone": "good",
                   "codeHighlights": [
-                    "medical_record_id",
-                    "create_prescription",
-                    "Carprofen 50mg",
-                    "refill_count_remaining"
-                  ],
-                  "quote": ""
+                    "checkout_location_full_path",
+                    "checkout_location_id",
+                    "NYC Office > Media Closet",
+                    "null"
+                  ]
                 }
               ]
             }
@@ -1983,17 +1701,17 @@
                 {
                   "name": "BF16 teacher",
                   "status": "单轮指导",
-                  "summary": "以下是实际传给学生的完整 steering prompt；学生自行生成下一次工具调用。",
-                  "code": "{\n  \"precondition\": \"The assistant has already retrieved the appointment (APT-98342), the pet (Luna, ID: 1), and the veterinarian (Dr. Alex Kim, ID: 1).\",\n  \"decision_rule\": \"The assistant should now retrieve the medical record associated with appointment APT-98342 to obtain the medical_record_id required for the prescription creation.\",\n  \"expected_transition\": \"The assistant calls 'mcp_server_get_medical_record_by_id' (or searches for the record linked to the appointment) and then proceeds to 'mcp_server_create_prescription'.\",\n  \"recovery_check\": \"If the medical record ID is not directly available from the appointment object, the assistant must find the record linked to pet_id 1 and appointment_id APT-98342 before calling create_prescription.\"\n}",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_8/steering/attempt-9/raw_steering_prompt.txt",
+                  "summary": "教师指出需要把任务中明确给出的地点映射到 checkout_location_full_path。以下是实际传给学生的完整 prompt。",
+                  "code": "{\n  \"precondition\": \"The assistant has identified the correct asset_id (2) from the list_assets tool response but failed to include the required 'checkout_location_full_path' parameter in the checkout_asset tool call.\",\n  \"decision_rule\": \"If the user task specifies a location (e.g., 'NYC Office > Media Closet') and the 'mcp_server_checkout_asset' tool provides a 'checkout_location_full_path' parameter, that parameter must be populated with the exact path provided in the task.\",\n  \"expected_transition\": \"The assistant should call 'mcp_server_checkout_asset' with the arguments: asset_id=2, user_email='jane.smith@company.com', project_name='Q3 Brand Shoot', checkout_location_full_path='NYC Office > Media Closet', due_date='2025-08-15', and note='The camera must be returned with both batteries and SD card.'\",\n  \"recovery_check\": \"Verify that the tool call includes 'checkout_location_full_path' as a key in the arguments object.\"\n}",
+                  "quote": "",
+                  "source": "data/cases/training_case/local-steering-replacements-20261104/asset_management_2_2/steering/attempt-0/raw_steering_prompt.txt",
                   "tone": "neutral",
                   "codeHighlights": [
-                    "medical_record_id",
-                    "create_prescription",
-                    "Carprofen 50mg",
-                    "refill_count_remaining"
-                  ],
-                  "quote": ""
+                    "checkout_location_full_path",
+                    "checkout_location_id",
+                    "NYC Office > Media Closet",
+                    "null"
+                  ]
                 }
               ]
             }
@@ -2005,14 +1723,38 @@
             {
               "options": [
                 {
-                  "name": "只读查询",
-                  "status": "状态保持",
-                  "summary": "局部步骤只读，不改变数据库；完整任务验收再核对新处方及其宠物、病历和兽医关联。",
-                  "code": "{\n  \"persistent_state_unchanged\": true,\n  \"matches_reference_local_state\": true\n}",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_8/after/attempt-9/local_gate.json",
-                  "tone": "neutral",
-                  "codeHighlights": [],
-                  "quote": ""
+                  "name": "错误动作之后",
+                  "status": "未通过",
+                  "summary": "只检查本次新建的借出记录 ID 3；已有历史记录不参与这项验收。",
+                  "code": "[\n  {\n    \"id\": 3,\n    \"asset_id\": 2,\n    \"user_id\": 2,\n    \"project_name\": \"Q3 Brand Shoot\",\n    \"checkout_location_id\": null,\n    \"due_date\": \"2025-08-15\",\n    \"note\": \"The camera must be returned with both batteries and SD card.\"\n  }\n]",
+                  "quote": "",
+                  "source": "data/cases/training_case/local-steering-replacements-20261104/asset_management_2_2/before/local_gate.json",
+                  "tone": "bad",
+                  "codeHighlights": [
+                    "checkout_location_full_path",
+                    "checkout_location_id",
+                    "NYC Office > Media Closet",
+                    "null"
+                  ]
+                }
+              ]
+            },
+            {
+              "options": [
+                {
+                  "name": "修正动作之后",
+                  "status": "通过",
+                  "summary": "新记录的地点从 null 变为 5，人员、项目、归还日期和归还配件说明均符合任务要求。",
+                  "code": "[\n  {\n    \"id\": 3,\n    \"asset_id\": 2,\n    \"user_id\": 2,\n    \"project_name\": \"Q3 Brand Shoot\",\n    \"checkout_location_id\": 5,\n    \"due_date\": \"2025-08-15\",\n    \"note\": \"The camera must be returned with both batteries and SD card.\"\n  }\n]",
+                  "quote": "",
+                  "source": "data/cases/training_case/local-steering-replacements-20261104/asset_management_2_2/after/attempt-0/local_gate.json",
+                  "tone": "good",
+                  "codeHighlights": [
+                    "checkout_location_full_path",
+                    "checkout_location_id",
+                    "NYC Office > Media Closet",
+                    "null"
+                  ]
                 }
               ]
             }
@@ -2025,46 +1767,27 @@
               "options": [
                 {
                   "name": "Student continuation",
-                  "status": "任务完成",
-                  "summary": "移除 steering 后，学生创建 Carprofen 50mg 处方，保留指定的用法、7 天疗程和 1 次可续配次数，并关联 Luna、原病历及 Dr. Alex Kim。",
-                  "code": "list_veterinarians({\n  \"full_name\": \"Dr. Alex Kim\"\n})\nget_veterinarians({\n  \"full_name\": \"Dr. Alex Kim\"\n})\nlist_veterinarians({\n  \"full_name\": \"Dr. Alex Kim\"\n})\ncreate_prescription({\n  \"dosage_instructions\": \"Give 1 tablet by mouth twice daily with food for 7 days\",\n  \"medical_record_id\": 1,\n  \"medication_name\": \"Carprofen 50mg\",\n  \"owner_id\": 1,\n  \"pet_id\": 1,\n  \"refill_count_remaining\": 1,\n  \"veterinarian_id\": 1\n})\nThe prescription for pet 'Luna' has been successfully created.\n\n**Prescription Details:**\n- **Prescription ID:** 5\n- **Medication:** Carprofen 50mg\n- **Dosage Instructions:** Give 1 tablet by mouth twice daily with food for 7 days\n- **Refills Remaining:** 1\n- **Associated Medical Record:** 1\n- **Issuing Veterinarian:** Dr. Alex Kim (ID: 1)",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_8/after/attempt-9/complete_trajectory.json",
+                  "status": "验收通过",
+                  "summary": "后续请求恢复原来的系统提示，不再携带 steering。学生确认借出信息，原任务验收和新记录字段检查均通过。",
+                  "code": "The asset with tag 'CAM-NYC-0007' has been successfully checked out to jane.smith@company.com for the project 'Q3 Brand Shoot'. The checkout is due on 2025-08-15, and the note \"The camera must be returned with both batteries and SD card\" has been added.",
+                  "quote": "",
+                  "source": "data/cases/training_case/local-steering-replacements-20261104/asset_management_2_2/after/attempt-0/complete_trajectory.json",
                   "tone": "good",
                   "codeHighlights": [
-                    "medical_record_id",
-                    "create_prescription",
-                    "Carprofen 50mg",
-                    "refill_count_remaining"
-                  ],
-                  "quote": ""
-                }
-              ]
-            },
-            {
-              "options": [
-                {
-                  "name": "完成后的记录",
-                  "status": "整任务通过",
-                  "summary": "以下为撤掉指导后实际新增的任务记录。",
-                  "code": "[\n  {\n    \"id\": 5,\n    \"pet_id\": 1,\n    \"owner_id\": 1,\n    \"medical_record_id\": 1,\n    \"veterinarian_id\": 1,\n    \"medication_name\": \"Carprofen 50mg\",\n    \"dosage_instructions\": \"Give 1 tablet by mouth twice daily with food for 7 days\",\n    \"refill_count_remaining\": 1,\n    \"created_by_user_id\": 1\n  }\n]",
-                  "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_8/evidence.json",
-                  "tone": "good",
-                  "codeHighlights": [
-                    "medical_record_id",
-                    "create_prescription",
-                    "Carprofen 50mg",
-                    "refill_count_remaining"
-                  ],
-                  "quote": ""
+                    "checkout_location_full_path",
+                    "checkout_location_id",
+                    "NYC Office > Media Closet",
+                    "null"
+                  ]
                 }
               ]
             }
           ]
         }
       ],
-      "conclusion": "教师把下一步转向预约关联的 medical_record；学生查验病历，再继续处方流程。 移除 steering 后，学生创建 Carprofen 50mg 处方，保留指定的用法、7 天疗程和 1 次可续配次数，并关联 Luna、原病历及 Dr. Alex Kim。",
-      "source": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_8/evidence.json",
-      "download": "data/cases/training_case/local-steering-20261104/booking_and_scheduling_4_8/case_data.zip"
+      "conclusion": "这条案例展示地点字段遗漏的修正：接口成功不代表记录完整，关键是检查本次新记录中是否真正保存了指定地点。",
+      "source": "data/cases/training_case/local-steering-replacements-20261104/asset_management_2_2/evidence.json",
+      "download": "data/cases/training_case/local-steering-replacements-20261104/asset_management_2_2/case_data.zip"
     }
   ],
   "ablation": [
