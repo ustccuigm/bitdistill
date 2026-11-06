@@ -19,7 +19,8 @@ from steerdistill.benchmarks.sdar_environment import Environment, state_hash
 from steerdistill.quantization.clip_provenance import model_identity
 from steerdistill.generation_budget import ContextWindowExceeded, apply_budget
 from steerdistill.generation_evidence import (MissingReasoning, enable_thinking, require_reasoning,
-    reasoning_text, content_with_reasoning, save_exchange, generation_files, validate_generation_files)
+    reasoning_text, content_with_reasoning, save_exchange, generation_files, validate_generation_files,
+    response_choices, INCOMPLETE_FINISH_REASONS)
 
 
 def generate(url, model, messages, seed, output_dir=None, training=True):
@@ -39,7 +40,7 @@ def generate(url, model, messages, seed, output_dir=None, training=True):
     with urllib.request.urlopen(request, timeout=600) as response:
         result = json.load(response)
     save_exchange(output_dir, payload, result)
-    choice = result["choices"][0]
+    choice = response_choices(result)[0]
     message = choice["message"]
     text = message.get("content") or ""
     reasoning = require_reasoning(message) if training else reasoning_text(message)
@@ -90,6 +91,11 @@ def rollout(environment, directory, url, model, seed, prefix=None, steer=None, f
                 trajectory["generation_error"] = str(error)
                 snapshots.pop()
                 break
+        if metadata.get("finish_reason") in INCOMPLETE_FINISH_REASONS:
+            trajectory["termination_reason"] = "generation_length" if metadata["finish_reason"] in {"length", "max_tokens"} else "content_filter"
+            trajectory["rejected_generation"] = {"content": text, "generation": metadata}
+            snapshots.pop()
+            break
         trajectory["messages"].append({"role": "assistant", "content": text, "model_prompt": prompt,
                                         "generation": metadata})
         transition = environment.step(text)
@@ -99,9 +105,6 @@ def rollout(environment, directory, url, model, seed, prefix=None, steer=None, f
         trajectory["transitions"].append(transition)
         trajectory["messages"].append({"role": "user", "content": transition["observation"]})
         steer = None
-        if metadata.get("finish_reason") == "length":
-            trajectory["termination_reason"] = "generation_length"
-            break
     run = write_run(directory, trajectory, environment.success)
     run["snapshots"] = snapshots
     return run
@@ -136,6 +139,8 @@ def prefix_at(trajectory, turn):
     prefix = copy.deepcopy(trajectory)
     prefix.pop("termination_reason", None)
     prefix.pop("context_boundary", None)
+    prefix.pop("generation_error", None)
+    prefix.pop("rejected_generation", None)
     count = 0
     for index, message in enumerate(prefix["messages"]):
         if message["role"] == "assistant":
@@ -226,6 +231,12 @@ def revise(environment, initial, plain, directory, args, seed):
                 (trial / "steering.json").write_text(json.dumps(failure, indent=2) + "\n")
                 feedback.append(failure)
                 continue
+            if response[1].get("finish_reason") in INCOMPLETE_FINISH_REASONS:
+                failure = {"accepted": False, "termination_reason": "incomplete_generation",
+                           "response": response[0], "generation": response[1]}
+                (trial / "steering.json").write_text(json.dumps(failure, indent=2) + "\n")
+                feedback.append(failure)
+                continue
             transition = environment.step(response[0])
             local_ok = transition["valid"] and transition["state_hash"] == target["state_hash"]
             (trial / "local_gate.json").write_text(json.dumps({
@@ -249,13 +260,8 @@ def revise(environment, initial, plain, directory, args, seed):
                                        "model_prompt": prompt, "generation": response[1]})
             prefix["transitions"].append(transition)
             prefix["messages"].append({"role": "user", "content": transition["observation"]})
-            if response[1].get("finish_reason") == "length":
-                prefix["termination_reason"] = "generation_length"
-                accepted = write_run(trial / "accepted", prefix, environment.success)
-                accepted["snapshots"] = []
-            else:
-                accepted = rollout(environment, trial / "accepted", args.student_url, args.model, seed,
-                                   prefix=prefix)
+            accepted = rollout(environment, trial / "accepted", args.student_url, args.model, seed,
+                               prefix=prefix)
             accepted["snapshots"] = retained["snapshots"][:turn + 1] + accepted["snapshots"]
             accepted_steers = {t: value for t, value in accepted_steers.items() if t < turn}
             accepted_steps = {t: value for t, value in accepted_steps.items() if t < turn}
@@ -312,7 +318,7 @@ def run_task(item):
             completed = directory / "completed.json"
             if completed.is_file():
                 saved = json.loads(completed.read_text())
-                if saved.get("generation_evidence_version") != 1:
+                if saved.get("generation_evidence_version") != 2:
                     raise ValueError("Existing rollout lacks the current generation contract; use a fresh output directory")
                 validate_generation_files(directory, saved.get("generation_files"))
                 shard = directory / "training_rows.jsonl"
@@ -350,7 +356,7 @@ def run_task(item):
             write_jsonl(temporary, task_rows)
             temporary.replace(shard)
             receipt = {**summary, "rows": len(task_rows), "plain_run": plain["run_dir"],
-                       "generation_evidence_version": 1,
+                       "generation_evidence_version": 2,
                        "generation_files": generation_files(directory),
                        "retained_run": retained["run_dir"], "accepted_interventions": len(steps),
                        "reference_attempts": args.reference_attempts, "steering_retries": args.retries,

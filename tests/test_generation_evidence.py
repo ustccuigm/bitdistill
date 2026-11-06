@@ -138,6 +138,20 @@ class GenerationEvidenceTest(unittest.TestCase):
             self.assertEqual(loaded["completion"], "<think>ACTUAL_THOUGHT</think>")
             self.assertEqual(loaded["completion_tool_calls"], call)
 
+    def test_messages_training_input_keeps_last_assistant_thinking(self):
+        from steerdistill.training.data_loading import _extract_prompt_completion
+        call = [{"id": "1", "type": "function", "function": {"name": "inspect", "arguments": "{}"}}]
+        for key in ("reasoning", "reasoning_content"):
+            for tool_calls in (None, call):
+                with self.subTest(key=key, tool_calls=bool(tool_calls)):
+                    assistant = {"role": "assistant", "content": "act", key: "ACTUAL_THOUGHT"}
+                    if tool_calls: assistant["tool_calls"] = tool_calls
+                    record = {"messages": [{"role": "user", "content": "task"}, assistant]}
+                    loaded = _extract_prompt_completion(record, None)
+                    self.assertEqual(loaded["completion"], "<think>ACTUAL_THOUGHT</think>act")
+                    self.assertEqual(loaded.get("completion_tool_calls"), tool_calls)
+                    self.assertEqual(assistant["content"], "act")
+
     def test_training_bridge_rejects_empty_tool_reasoning_and_keeps_response(self):
         from steerdistill.teacher.response_bridge import bridge_endpoint
         requests = []
@@ -173,11 +187,67 @@ class GenerationEvidenceTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "lacks generation evidence"):
                 validate_run_receipt(root)
             (root / "generations/first").mkdir(parents=True)
+            (root / "generations/first/request.json").write_text("{}")
             (root / "generations/first/response.json").write_text("{}")
             write_run_receipt(root); validate_run_receipt(root)
             (root / "trajectory.json").write_text('{"changed":true}')
             with self.assertRaisesRegex(ValueError, "changed"):
                 validate_run_receipt(root)
+
+    def test_run_receipt_binds_requests_and_complete_exchange_inventory(self):
+        from steerdistill.generation_evidence import write_run_receipt, validate_run_receipt
+        for mutation in ("request", "extra", "missing_request"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                for name in ("trajectory.json", "verify.code.json", "generations/first/request.json", "generations/first/response.json"):
+                    path = root / name
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text("{}")
+                write_run_receipt(root)
+                if mutation == "request":
+                    (root / "generations/first/request.json").write_text('{"enable_thinking":false}')
+                elif mutation == "extra":
+                    (root / "generations/extra").mkdir()
+                    (root / "generations/extra/request.json").write_text('{}')
+                    (root / "generations/extra/response.json").write_text('{}')
+                else:
+                    (root / "generations/first/request.json").unlink()
+                with self.assertRaises(ValueError):
+                    validate_run_receipt(root)
+
+    def test_malformed_generation_is_saved_and_rejected_without_index_error(self):
+        for raw in ({"choices": []}, {"choices": None}, {"choices": [{"message": None}]}):
+            with self.subTest(raw=raw), tempfile.TemporaryDirectory() as folder:
+                with patch("steerdistill.benchmarks.online_rollout.apply_budget", side_effect=lambda u,b:b), \
+                     patch("urllib.request.urlopen", return_value=io.BytesIO(json.dumps(raw).encode())):
+                    with self.assertRaisesRegex(ValueError, "valid assistant choices"):
+                        generate("http://local/v1", "student", [], 42, Path(folder))
+                self.assertEqual(json.loads((Path(folder) / "response.json").read_text()), raw)
+
+    def test_training_bridge_rejects_truncated_response_before_tool_execution(self):
+        from steerdistill.teacher.response_bridge import bridge_endpoint
+        class Upstream(BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.rfile.read(int(self.headers["Content-Length"]))
+                raw = {"choices": [{"message": {"role": "assistant", "content": None, "reasoning": "Make a change",
+                    "tool_calls": [{"function": {"name": "act", "arguments": "{}"}}]}, "finish_reason": "length"}]}
+                data = json.dumps(raw).encode()
+                self.send_response(200); self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
+            def log_message(self, *args): pass
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Upstream)
+        thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
+        try:
+            with tempfile.TemporaryDirectory() as folder, \
+                 patch("steerdistill.teacher.response_bridge.apply_budget", side_effect=lambda u,b:b), \
+                 bridge_endpoint(f"http://127.0.0.1:{server.server_port}", evidence_dir=folder, training=True) as endpoint:
+                request = urllib.request.Request(endpoint + "/chat/completions", data=json.dumps({"model": "test", "messages": [], "tools": [{}]}).encode())
+                with self.assertRaises(urllib.error.HTTPError) as caught:
+                    urllib.request.urlopen(request)
+                self.assertIn("Incomplete training response", caught.exception.read().decode())
+                self.assertEqual(len(list(Path(folder).glob("*/response.json"))), 1)
+                self.assertEqual(list(Path(folder).glob("*/message-*.json")), [])
+        finally:
+            server.shutdown(); server.server_close(); thread.join()
 
     def test_native_resume_rejects_missing_generation_even_with_valid_training_shard(self):
         from steerdistill.generation_evidence import generation_files
@@ -190,7 +260,7 @@ class GenerationEvidenceTest(unittest.TestCase):
             (exchange / "request.json").write_text('{}')
             (exchange / "response.json").write_text('{}')
             shard = run / "training_rows.jsonl";shard.write_text('{}\n')
-            receipt = {"generation_evidence_version": 1, "generation_files": generation_files(run),
+            receipt = {"generation_evidence_version": 2, "generation_files": generation_files(run),
                        "rows_sha256": hashlib.sha256(shard.read_bytes()).hexdigest()}
             (run / "completed.json").write_text(json.dumps(receipt))
             (exchange / "response.json").unlink()

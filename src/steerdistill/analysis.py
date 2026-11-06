@@ -25,7 +25,8 @@ from steerdistill.common import (
 )
 from steerdistill.store import SkillStore
 from steerdistill.generation_budget import apply_budget
-from steerdistill.generation_evidence import enable_thinking, require_reasoning, save_exchange, verifier_summary
+from steerdistill.generation_evidence import (enable_thinking, require_reasoning, save_exchange,
+    verifier_summary, response_choices, INCOMPLETE_FINISH_REASONS)
 
 
 ANALYSIS_SCHEMA = "causal-steer-v2"
@@ -467,7 +468,7 @@ def call_analyzer(api_url: str, api_key: str, model: str, payload: str, output_d
             with urllib.request.urlopen(request, timeout=600) as response:
                 result = json.loads(response.read())
             save_exchange(attempt_dir, payload_body, result)
-            content = result["choices"][0]["message"]["content"]
+            content = response_choices(result)[0]["message"]["content"]
         except (urllib.error.URLError, TimeoutError, KeyError, ValueError) as error:
             last_error = error
             invalid_content = False
@@ -477,7 +478,7 @@ def call_analyzer(api_url: str, api_key: str, model: str, payload: str, output_d
         try:
             analysis = extract_object(content)
             normalize_steer(analysis["steer"])
-            if result["choices"][0].get("finish_reason") == "length":
+            if result["choices"][0].get("finish_reason") in INCOMPLETE_FINISH_REASONS:
                 raise ValueError("Analyzer response was truncated")
             analysis["teacher_reasoning"] = require_reasoning(result["choices"][0]["message"])
             analysis["generation_evidence_dir"] = str(attempt_dir) if attempt_dir is not None else None

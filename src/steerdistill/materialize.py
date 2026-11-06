@@ -18,7 +18,7 @@ from steerdistill.common import (
     write_jsonl,
 )
 from steerdistill.store import SkillStore
-from steerdistill.generation_evidence import content_with_reasoning
+from steerdistill.generation_evidence import content_with_reasoning, INCOMPLETE_FINISH_REASONS
 
 
 def assistant_completion(message: dict) -> str:
@@ -80,7 +80,7 @@ def rows_from_run(
                     "assistant_turn": assistant_turn,
                     "message_index": message_index,
                     # A length-limited response did not generate an EOS token.
-                    "add_eos": (message.get("generation") or {}).get("finish_reason") != "length",
+                    "add_eos": (message.get("generation") or {}).get("finish_reason") not in INCOMPLETE_FINISH_REASONS,
                     "distill_target": {
                         "ordinary_opd": "bf16_teacher_reverse_kl",
                         "skill_recovery": "previous_w4_skill_forward_kl",

@@ -9,6 +9,20 @@ class MissingReasoning(ValueError):
     """An action or Teacher analysis cannot be certified without its reasoning."""
 
 
+INCOMPLETE_FINISH_REASONS = {"length", "max_tokens", "content_filter"}
+
+
+def response_choices(response):
+    """Validate the response envelope before consuming or executing a decision."""
+    choices = response.get("choices") if isinstance(response, dict) else None
+    if not isinstance(choices, list) or not choices or any(
+        not isinstance(choice, dict) or not isinstance(choice.get("message"), dict)
+        for choice in choices
+    ):
+        raise ValueError("Runtime returned no valid assistant choices")
+    return choices
+
+
 def enable_thinking(payload):
     options = dict(payload.get("chat_template_kwargs") or {})
     if options.get("enable_thinking") is False:
@@ -61,8 +75,11 @@ def save_exchange(directory, request, response=None):
     (directory / "request.json").write_text(json.dumps(request, ensure_ascii=False, indent=2) + "\n")
     if response is not None:
         (directory / "response.json").write_text(json.dumps(response, ensure_ascii=False, indent=2) + "\n")
-        choice = response.get("choices", [{}])[0]
-        message = choice.get("message") or {}
+        # Even malformed server responses must be retained for diagnosis.
+        try:
+            message = response_choices(response)[0]["message"]
+        except ValueError:
+            message = {}
         (directory / "reasoning.txt").write_text(reasoning_text(message))
 
 
@@ -87,10 +104,9 @@ def verifier_summary(value):
 def write_run_receipt(run_dir):
     run_dir = Path(run_dir)
     files = [run_dir / "trajectory.json", run_dir / "verify.code.json"]
-    files.extend(sorted((run_dir / "generations").glob("*/response.json")))
-    if len(files) < 3:
-        raise ValueError("Training run has no saved generation responses")
-    receipt = {"version": 1, "files": {
+    exchanges = generation_files(run_dir / "generations")
+    files.extend(run_dir / "generations" / name for name in exchanges)
+    receipt = {"version": 2, "files": {
         str(path.relative_to(run_dir)): hashlib.sha256(path.read_bytes()).hexdigest() for path in files}}
     (run_dir / "generation_evidence.json").write_text(json.dumps(receipt, indent=2) + "\n")
 
@@ -102,10 +118,13 @@ def validate_run_receipt(run_dir):
         raise ValueError("Existing training run lacks generation evidence; use a fresh output directory")
     receipt = json.loads(path.read_text())
     files = receipt.get("files", {})
-    if receipt.get("version") != 1 or not {"trajectory.json", "verify.code.json"} <= files.keys():
+    if not isinstance(files, dict) or receipt.get("version") != 2 or not {"trajectory.json", "verify.code.json"} <= files.keys():
         raise ValueError("Invalid training generation receipt")
-    if not any(name.startswith("generations/") and name.endswith("/response.json") for name in files):
-        raise ValueError("Training generation receipt has no responses")
+    current = generation_files(run_dir / "generations")
+    recorded = {name.removeprefix("generations/"): digest for name, digest in files.items()
+                if name.startswith("generations/")}
+    if current != recorded:
+        raise ValueError("Training generation evidence changed")
     for name, expected in files.items():
         path = (run_dir / name).resolve()
         if not path.is_relative_to(run_dir.resolve()) or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
@@ -119,6 +138,9 @@ def generation_files(directory):
         raise ValueError("Rollout has no saved generation exchanges")
     if not any(path.name == "response.json" for path in paths):
         raise ValueError("Rollout has no saved generation responses")
+    if any(path.name == "response.json" and not path.with_name("request.json").is_file()
+           for path in paths):
+        raise ValueError("Saved generation response has no request")
     return {str(path.relative_to(directory)): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
 
 

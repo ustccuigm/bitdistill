@@ -142,6 +142,8 @@ class NativeRevisionTest(unittest.TestCase):
 
     def test_materialization_does_not_invent_eos_after_length_termination(self):
         for generation, expected in (({"finish_reason": "length"}, False),
+                                     ({"finish_reason": "max_tokens"}, False),
+                                     ({"finish_reason": "content_filter"}, False),
                                      ({"finish_reason": "stop"}, True), (None, True)):
             trajectory = {"scenario": "webshop", "task_id": 1, "messages": [
                 {"role": "user", "content": "task"},
@@ -227,7 +229,47 @@ class NativeRevisionTest(unittest.TestCase):
                 run = steerdistill.benchmarks.online_rollout.rollout(env, Path(folder), "student", "test", 1)
             self.assertEqual(generate.call_count, 1)
             self.assertEqual(run["trajectory"]["termination_reason"], "generation_length")
-            self.assertEqual(env.state, 1)
+            self.assertEqual(env.state, 0)
+            self.assertEqual(run["trajectory"]["transitions"], [])
+            self.assertEqual(run["trajectory"]["rejected_generation"]["content"], "correct")
+            self.assertEqual(run["snapshots"], [])
+
+    def test_incomplete_repair_never_executes_or_passes_local_gate(self):
+        analysis = {"steer": {key: "Check state" for key in
+                    ("precondition", "decision_rule", "expected_transition", "recovery_check")}}
+        for finish in ("length", "max_tokens", "content_filter"):
+            with self.subTest(finish=finish), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                args = SimpleNamespace(benchmark="alfworld", step=1, attempts=1, reference_attempts=1,
+                                       retries=2, output=root, store=root / "store.jsonl",
+                                       student_url="student", teacher_url="teacher", model="test")
+                def generate(url, model, messages, seed, **kwargs):
+                    if url == "teacher": return "correct", {}
+                    if any(m["role"] == "system" for m in messages):
+                        return "correct", {"finish_reason": finish}
+                    return "wrong", {}
+                with patch.object(online_rollout, "Environment", DeterministicEnvironment), \
+                     patch.object(online_rollout, "generate", side_effect=generate), \
+                     patch.object(online_rollout, "grounded_analysis", return_value=analysis):
+                    online_rollout.run_task((args, {"task": {"task_id": 1}}))
+                failures = [json.loads(p.read_text()) for p in root.rglob("steering.json")]
+                self.assertEqual(len(failures), 2)
+                self.assertTrue(all(not row["accepted"] for row in failures))
+                self.assertEqual(list(root.rglob("local_gate.json")), [])
+
+    def test_evaluation_does_not_execute_incomplete_response(self):
+        from steerdistill.benchmarks import evaluate_sdar
+        for finish in ("length", "content_filter"):
+            with self.subTest(finish=finish), tempfile.TemporaryDirectory() as folder:
+                env = DeterministicEnvironment("alfworld", {"task_id": 1})
+                env.turn, env.score = 0, 0
+                args = SimpleNamespace(output=Path(folder), benchmark="alfworld", url="local", model="test", seed=1)
+                with patch.object(evaluate_sdar, "Environment", return_value=env), \
+                     patch.object(evaluate_sdar, "generate", return_value=("correct", {"finish_reason": finish})), \
+                     patch.object(env, "step") as step:
+                    result = evaluate_sdar.evaluate_task((args, {"task_id": 1}))
+                step.assert_not_called()
+                self.assertFalse(result[1])
 
     def test_accepted_action_is_executed_once_and_terminal_feedback_is_retained(self):
         class CountedEnvironment(DeterministicEnvironment):

@@ -10,7 +10,8 @@ import uuid
 import urllib.error
 import urllib.request
 from steerdistill.generation_budget import ContextWindowExceeded, apply_budget
-from steerdistill.generation_evidence import enable_thinking, require_reasoning, reasoning_text, content_with_reasoning, save_exchange
+from steerdistill.generation_evidence import (enable_thinking, require_reasoning, reasoning_text,
+    content_with_reasoning, save_exchange, response_choices, INCOMPLETE_FINISH_REASONS)
 from steerdistill.common import _action_bearing
 
 
@@ -95,6 +96,9 @@ def bridge_endpoint(upstream, seed_namespace="", tokenizer_path=None, evidence_d
                 if self.path.rstrip("/").endswith("/chat/completions"):
                     raw = json.loads(payload)
                     save_exchange(exchange_dir, chat, raw)
+                    choices = response_choices(raw)
+                    if training and any(choice.get("finish_reason") in INCOMPLETE_FINISH_REASONS for choice in choices):
+                        raise ValueError("Incomplete training response rejected before tool execution")
                     preserved = preserve_reasoning(raw, text_tokenizer)
                     for choice in preserved.get("choices", []):
                         message = choice.get("message") or {}

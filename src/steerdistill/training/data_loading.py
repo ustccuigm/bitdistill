@@ -11,6 +11,7 @@ import torch
 from torch.utils.data import Dataset, Subset
 import transformers
 from steerdistill.training.chat_templates import normalize_tool_arguments as _normalize_chat_tool_arguments
+from steerdistill.generation_evidence import content_with_reasoning
 
 try:
     import msgspec
@@ -85,7 +86,7 @@ def _extract_prompt_completion(item, tokenizer):
         assistant = messages[last_assistant]
         record = dict(item)
         record["prompt"] = messages[:last_assistant]
-        record["completion"] = assistant.get("content") or ""
+        record["completion"] = content_with_reasoning(assistant)
         if assistant.get("tool_calls"):
             record["completion_tool_calls"] = assistant["tool_calls"]
         return _extract_prompt_completion(record, tokenizer)

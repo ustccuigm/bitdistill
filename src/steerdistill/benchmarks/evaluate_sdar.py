@@ -14,6 +14,7 @@ from steerdistill.benchmarks.sdar_environment import Environment, state_hash
 
 from steerdistill.quantization.clip_provenance import model_identity
 from steerdistill.generation_budget import ContextWindowExceeded
+from steerdistill.generation_evidence import INCOMPLETE_FINISH_REASONS
 
 
 def evaluate_task(item):
@@ -37,12 +38,12 @@ def evaluate_task(item):
             except ContextWindowExceeded as error:
                 termination = {"reason": "context_length", "error": error.as_error()}
                 break
+            if metadata.get("finish_reason") in INCOMPLETE_FINISH_REASONS:
+                termination = {"reason": "incomplete_generation", "response": response, "generation": metadata}
+                break
             transition = env.step(response)
             trajectory.append({"prompt": prompt, "response": response, "generation": metadata,
                                "transition": transition})
-            if metadata.get("finish_reason") == "length":
-                termination = {"reason": "generation_length"}
-                break
         result = {"task": task, "task_hash": state_hash(task), "data_source": task.get("data_source", args.benchmark),
                   "success": env.success, "score": float(env.score), "trajectory": trajectory,
                   "termination": termination}
@@ -88,7 +89,7 @@ def main():
         if {str(task["task_id"]) for task in all_tasks} != selected:
             raise ValueError("Task selection contains IDs outside the evaluation split")
     args.output.mkdir(parents=True, exist_ok=True)
-    manifest = {"benchmark": args.benchmark, "split": split, "seed": args.seed,
+    manifest = {"generation_contract_version": 2, "benchmark": args.benchmark, "split": split, "seed": args.seed,
                 "runtime": model_identity(args.runtime), "tasks_hash": state_hash(all_tasks),
                 "tasks": len(all_tasks), "temperature": os.getenv("ROLLOUT_TEMPERATURE", "0.7"),
                 "context_window": os.getenv("MODEL_MAX_LENGTH", "32768"),
