@@ -35,6 +35,36 @@ def verify(db):
 
 
 class TransitionPolicyTest(unittest.TestCase):
+    def test_explicit_clock_assignment_and_response_formatting(self):
+        source = ENVIRONMENT.replace("Column(DateTime, default=datetime.utcnow)", "Column(DateTime)")
+        source = source.replace("created_at=order.created_at", "created_at=to_iso(order.created_at) or clock_string()")
+        source += '''
+def to_iso(value):
+    if value is None:
+        return None
+    return value.replace(microsecond=0).isoformat() + "Z"
+def clock_string():
+    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+def empty_response():
+    now_str = clock_string()
+    return Item(created_at=now_str)
+'''
+        self.assertEqual(compile_policy(source, VERIFIER, "s:1")["ignored_columns"], {"orders": ["created_at"]})
+        for suffix in ('\ndef sort(order): return order.created_at\n',
+                       '\ndef overwrite(order, request): order.created_at = request.value\n',
+                       '\ndef extra():\n    now_str = external_input()\n    return Item(created_at=now_str)\n'):
+            self.assertEqual(compile_policy(source + suffix, VERIFIER, "s:1")["ignored_columns"], {})
+
+    def test_formatter_with_business_side_effect_is_not_whitelisted(self):
+        source = ENVIRONMENT.replace("created_at=order.created_at", "created_at=format_date(order.created_at)")
+        source += '\ndef format_date(value):\n    record_business_event(value)\n    return value.isoformat()\n'
+        self.assertEqual(compile_policy(source, VERIFIER, "s:1")["ignored_columns"], {})
+
+    def test_datetime_without_generated_write_is_not_excluded(self):
+        source = ENVIRONMENT.replace("Column(DateTime, default=datetime.utcnow)", "Column(DateTime)")
+        source = source[:source.index('def create():')]
+        self.assertEqual(compile_policy(source, VERIFIER, "s:1")["ignored_columns"], {})
+
     def test_only_generated_unused_clock_metadata_is_excluded(self):
         policy = compile_policy(ENVIRONMENT, VERIFIER, "s:1")
         self.assertEqual(policy["ignored_columns"], {"orders": ["created_at"]})

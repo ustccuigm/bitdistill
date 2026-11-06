@@ -19,6 +19,7 @@ from steerdistill.common import (
     read_json,
 )
 from steerdistill.store import SkillStore
+from steerdistill.transition_verifier import validate_gate_receipt
 
 
 def transition_with_steps(
@@ -130,23 +131,20 @@ def main() -> None:
                     candidate_success=bool(run["success"]),
                     reference_target=reference_trigger,
                 )
-                if reference.get("snapshot_root") and kind != "verified_terminal_success":
+                if matched and kind != "verified_terminal_success":
                     receipt_path = Path(run["run_dir"]) / "local_gate.json"
                     if not receipt_path.is_file():
-                        # A final answer cannot satisfy an expected tool action.
-                        turns = [m for m in run["trajectory"]["messages"] if m.get("role") == "assistant"]
-                        if trigger < len(turns) and not turns[trigger].get("tool_calls"):
-                            matched, kind = False, "premature_termination"
-                        else:
-                            raise ValueError("Tool adapter did not check the intervention before continuation")
-                    else:
-                        receipt = read_json(receipt_path)
-                        if (receipt.get("checked_before_continuation") is not True
-                                or receipt.get("assistant_turn") != trigger
-                                or receipt.get("reference_turn") != reference_trigger
-                                or Path(receipt["reference_run"]).resolve() != reference_path.parent.resolve()
-                                or receipt.get("accepted") != matched):
-                            raise ValueError("Local transition gate evidence mismatch")
+                        raise ValueError("Tool adapter did not check the intervention before continuation")
+                    spec = {
+                        "assistant_turn": trigger, "reference_turn": reference_trigger,
+                        "reference_run": str(reference_path.parent),
+                        "task_key": key, "skill_id": skill["skill_id"],
+                        "skill_version": int(skill["version"]),
+                    }
+                    validate_gate_receipt(
+                        read_json(receipt_path), spec, run["trajectory"]["snapshot_root"],
+                        run["trajectory"]["messages"], run["run_dir"], reference, matched, kind,
+                    )
                 if matched:
                     local_matches.append(run)
                     local_match_kinds[run["run_dir"]] = kind

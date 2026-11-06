@@ -38,15 +38,17 @@ class Runtime(AbstractContextManager):
             command += ["--language-model-only"]
         if config.get("model_type") == "gemma4_unified_text":
             command += ["--enforce-eager"]
+        model_type = config.get("model_type")
+        parser, reasoning = {
+            "qwen3": ("hermes", "qwen3"),
+            "qwen3_5": ("qwen3_xml", "qwen3"),
+            "gemma4_unified_text": ("gemma4", "gemma4"),
+        }[model_type]
+        # Reasoning parsing is also required for text-action environments and
+        # schema-constrained Teacher analysis, independently of tool parsing.
+        command += ["--reasoning-parser", reasoning]
         if self.tool_calls:
-            model_type = config.get("model_type")
-            parser, reasoning = {
-                "qwen3": ("hermes", "qwen3"),
-                "qwen3_5": ("qwen3_xml", "qwen3"),
-                "gemma4_unified_text": ("gemma4", "gemma4"),
-            }[model_type]
-            command += ["--enable-auto-tool-choice", "--tool-call-parser", parser,
-                        "--reasoning-parser", reasoning]
+            command += ["--enable-auto-tool-choice", "--tool-call-parser", parser]
         env = dict(os.environ, CUDA_VISIBLE_DEVICES=self.gpus)
         # Unix socket paths are limited to 107 bytes; run directories can be longer.
         env.setdefault("VLLM_RPC_BASE_PATH", "/tmp")

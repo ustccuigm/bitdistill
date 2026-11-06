@@ -25,6 +25,7 @@ from steerdistill.common import (
 )
 from steerdistill.store import SkillStore
 from steerdistill.generation_budget import apply_budget
+from steerdistill.generation_evidence import enable_thinking, require_reasoning, save_exchange, verifier_summary
 
 
 ANALYSIS_SCHEMA = "causal-steer-v2"
@@ -401,10 +402,11 @@ def grounded_analysis(
     evidence: dict,
     previous: dict | None,
     same_lineage: bool = True,
+    output_dir: Path | None = None,
 ) -> dict:
     """Require the Teacher explanation to remain bound to causal evidence."""
     feedback = []
-    for _ in range(3):
+    for grounding_attempt in range(3):
         payload = dict(evidence)
         if feedback:
             payload["rejected_previous_analysis"] = {
@@ -414,8 +416,10 @@ def grounded_analysis(
         payload["retry_feedback"] = _compact_retry_feedback(
             payload.get("retry_feedback", [])
         )
+        payload["verifier_feedback"] = _local_verifier_feedback(payload.get("verifier_feedback", []))
         analysis = call_analyzer(
-            api_url, api_key, model, json.dumps(payload, ensure_ascii=False)
+            api_url, api_key, model, json.dumps(payload, ensure_ascii=False),
+            output_dir=Path(output_dir) / f"grounding-{grounding_attempt}" if output_dir is not None else None,
         )
         analysis = bind_teacher_analysis(
             analysis,
@@ -436,7 +440,7 @@ def grounded_analysis(
     raise AnalysisRejected(feedback, analysis)
 
 
-def call_analyzer(api_url: str, api_key: str, model: str, payload: str) -> dict:
+def call_analyzer(api_url: str, api_key: str, model: str, payload: str, output_dir: Path | None = None) -> dict:
     payload_body = {
             "model": model,
             "messages": [
@@ -448,17 +452,21 @@ def call_analyzer(api_url: str, api_key: str, model: str, payload: str) -> dict:
             "response_format": {"type": "json_schema", "json_schema": {
                 "name": "causal_steer", "strict": True, "schema": STEER_RESPONSE_SCHEMA}},
         }
+    enable_thinking(payload_body)
     last_error = None
     rejected = []
     invalid_content = False
     for attempt in range(5):
         body = json.dumps(apply_budget(api_url, payload_body, api_key)).encode()
+        attempt_dir = Path(output_dir) / f"attempt-{attempt}" if output_dir is not None else None
+        save_exchange(attempt_dir, payload_body)
         request = urllib.request.Request(
             endpoint(api_url), data=body,
             headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"})
         try:
             with urllib.request.urlopen(request, timeout=600) as response:
                 result = json.loads(response.read())
+            save_exchange(attempt_dir, payload_body, result)
             content = result["choices"][0]["message"]["content"]
         except (urllib.error.URLError, TimeoutError, KeyError, ValueError) as error:
             last_error = error
@@ -469,6 +477,10 @@ def call_analyzer(api_url: str, api_key: str, model: str, payload: str) -> dict:
         try:
             analysis = extract_object(content)
             normalize_steer(analysis["steer"])
+            if result["choices"][0].get("finish_reason") == "length":
+                raise ValueError("Analyzer response was truncated")
+            analysis["teacher_reasoning"] = require_reasoning(result["choices"][0]["message"])
+            analysis["generation_evidence_dir"] = str(attempt_dir) if attempt_dir is not None else None
             return analysis
         except ValueError as error:
             last_error = error
@@ -490,6 +502,25 @@ def _bounded_content(value, limit=1800):
     return text[:half] + "\n...[observation middle omitted]...\n" + text[-half:]
 
 
+def _local_verifier_feedback(feedback):
+    """Retry diagnostics describe the rejected local boundary, never target answers."""
+    result = []
+    for item in feedback or []:
+        if not isinstance(item, dict):
+            continue
+        row = {"accepted": item.get("accepted") is True}
+        reason = item.get("termination_reason") or item.get("reason")
+        if reason in {"analysis_rejected", "context_length", "missing_reasoning", "local_transition_rejected",
+                      "precondition_state_mismatch", "postcondition_state_mismatch", "environment_error"}:
+            row["reason"] = reason
+        # The actual failed decision is observable evidence. Expected actions,
+        # grader results, and future trajectories are deliberately excluded.
+        if isinstance(item.get("response"), str):
+            row["response"] = _bounded_content(item["response"])
+        result.append(row)
+    return result
+
+
 def _compact_retry_feedback(feedback):
     """Keep retry evidence causal without embedding complete trajectories."""
     compact = []
@@ -497,7 +528,15 @@ def _compact_retry_feedback(feedback):
         row = {
             "attempt": item.get("attempt"),
             "steering_prompt": _bounded_content(item.get("steering_prompt", ""), 1200),
-            "local_feedback": item.get("local_feedback", []),
+            "local_feedback": [
+                {"accepted": entry.get("accepted") is True,
+                 "reason": entry.get("reason") if entry.get("reason") in {
+                     "environment_error", "precondition_state_mismatch", "postcondition_state_mismatch",
+                     "read_evidence_missing", "read_result_mismatch", "premature_termination",
+                     "turn_missing", "candidate_not_action", "terminal_verifier_failed",
+                 } else "local_verification_failed"}
+                for entry in item.get("local_feedback", []) if isinstance(entry, dict)
+            ],
             "candidate_trajectories": [],
         }
         for candidate in item.get("candidate_trajectories", []):
@@ -505,6 +544,9 @@ def _compact_retry_feedback(feedback):
                 continue
             assistants = [m for m in candidate.get("messages", [])
                           if m.get("role") == "assistant"]
+            turn = item.get("assistant_turn")
+            # Missing boundaries must not expose the final continuation by default.
+            assistants = assistants[max(0, turn - 2):turn + 1] if type(turn) is int and turn >= 0 else []
             row["candidate_trajectories"].append({
                 "scenario": candidate.get("scenario"),
                 "task_id": candidate.get("task_id"),
@@ -513,7 +555,7 @@ def _compact_retry_feedback(feedback):
                 "assistant_turns": [
                     {"content": _bounded_content(m.get("content", ""), 700),
                      "tool_calls": m.get("tool_calls", [])}
-                    for m in assistants[-3:]
+                    for m in assistants
                 ],
             })
         compact.append(row)
@@ -534,7 +576,10 @@ def trajectory_view(path: str, focus_assistant_turn: int) -> dict:
     # Keep analyzer input well below the 32768-token runtime window. The full
     # immutable trajectories remain on disk for audit and training.
     selected = set(range(min(2, len(messages))))
-    selected.update(range(max(0, focus_message - 2), min(len(messages), focus_message + 3)))
+    stop = focus_message + 1
+    while stop < len(messages) and messages[stop].get("role") != "assistant":
+        stop += 1
+    selected.update(range(max(0, focus_message - 2), stop))
     compact = []
     previous = -2
     for index in sorted(selected):
@@ -548,7 +593,7 @@ def trajectory_view(path: str, focus_assistant_turn: int) -> dict:
         "scenario": value.get("scenario"),
         "task_id": value.get("task_id"),
         "messages": compact,
-        "verifier": verification_evidence(Path(path).parent),
+        "verifier": verifier_summary(verification_evidence(Path(path).parent)),
     }
 
 
@@ -688,6 +733,7 @@ def main() -> None:
         analysis = grounded_analysis(
             args.api_url, args.api_key, args.model, evidence, previous,
             same_lineage=same_lineage,
+            output_dir=args.store.parent / "teacher_analysis" / evidence_id,
         )
         decision = analysis["decision"]
         skill_id = (
@@ -754,6 +800,8 @@ def main() -> None:
             "task_text": pair.get("task_text", ""),
             "status": status,
             "analysis_schema": ANALYSIS_SCHEMA,
+            "teacher_reasoning": analysis.get("teacher_reasoning", ""),
+            "generation_evidence_dir": analysis.get("generation_evidence_dir"),
             "repair_lineage": current_lineage,
             "decision": decision,
             "summary": str(analysis["summary"]),

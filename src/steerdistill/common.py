@@ -94,11 +94,12 @@ def collect_runs(root: Path) -> dict[str, list[dict]]:
 
 
 def api_messages(messages: list[dict]) -> list[dict]:
+    from steerdistill.generation_evidence import content_with_reasoning
     result = []
     for message in messages:
         role = message.get("role")
         if role in {"system", "user", "assistant"}:
-            content = message.get("content")
+            content = content_with_reasoning(message) if role == "assistant" else message.get("content")
             row = {"role": role, "content": "" if content is None else str(content)}
             if role == "assistant" and message.get("tool_calls") is not None:
                 row["tool_calls"] = message.get("tool_calls")
@@ -389,18 +390,26 @@ def local_transition_match(
     target: int,
     expected_decision: str | None = None,
     reference_target: int | None = None,
+    *,
+    require_state: bool = False,
 ) -> tuple[bool, str]:
     """Verify one repaired causal transition without requiring episode success.
 
     Current tool trajectories use immutable database snapshots and read
     evidence. Action identity is not required when effects match. Legacy traces
-    without snapshots retain their original strict action/observation check.
+    without snapshots retain their original strict action/observation check for
+    library callers only. Promotion callers must set require_state and validate
+    the adapter's precontinuation receipt separately.
     """
     candidate_turns = assistant_turns(candidate)
     reference_target = target if reference_target is None else reference_target
     reference_turns = assistant_turns(reference)
-    if target >= len(candidate_turns) or reference_target >= len(reference_turns):
+    if not 0 <= target < len(candidate_turns) or not 0 <= reference_target < len(reference_turns):
         return False, "turn_missing"
+    if not _action_bearing(reference_turns[reference_target]):
+        return False, "reference_not_action"
+    if require_state and (not candidate.get("snapshot_root") or not reference.get("snapshot_root")):
+        return False, "state_evidence_missing"
     if candidate.get("snapshot_root") or reference.get("snapshot_root"):
         if (expected_decision is not None
                 and canonical_decision(reference_turns[reference_target]) != expected_decision):
@@ -462,13 +471,28 @@ def causal_transition_match(
     if expected["kind"] != "final_response":
         return local_transition_match(
             candidate, reference, target, expected_decision=expected_decision,
-            reference_target=reference_target,
+            reference_target=reference_target, require_state=True,
         )
     candidate_turns = assistant_turns(candidate)
     reference_turns = assistant_turns(reference)
     reference_target = target if reference_target is None else reference_target
-    if target >= len(candidate_turns) or reference_target >= len(reference_turns):
+    if not 0 <= target < len(candidate_turns) or not 0 <= reference_target < len(reference_turns):
         return False, "turn_missing"
+    for trajectory, index, turns in ((candidate, target, candidate_turns),
+                                     (reference, reference_target, reference_turns)):
+        if index != len(turns) - 1 or trajectory["messages"][-1] != turns[index]:
+            return False, "target_not_terminal"
+        recorded_turns = [
+            row for row in trajectory.get("trajectory", []) if row.get("role") == "assistant"
+        ]
+        records = [trajectory, turns[index]] + recorded_turns[-1:]
+        for row in records:
+            if (row.get("truncated") or row.get("truncation_info")
+                    or row.get("is_final") is False
+                    or row.get("finish_reason") in {"length", "max_tokens", "content_filter"}
+                    or (row.get("sampling") or {}).get("finish_reason") in {"length", "max_tokens", "content_filter"}
+                    or row.get("termination_reason") in {"max_iterations", "context_length", "generation_length", "local_transition_rejected"}):
+                return False, "terminal_truncated"
     if decision_descriptor(canonical_decision(reference_turns[reference_target]))["kind"] != "final_response":
         return False, "reference_expected_mismatch"
     if decision_descriptor(canonical_decision(candidate_turns[target]))["kind"] != "final_response":

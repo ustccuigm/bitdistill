@@ -51,9 +51,12 @@ class TransitionVerifierTest(unittest.TestCase):
                 (directory / "verify.code.json").write_text(json.dumps({
                     "reward_type": "complete" if directory == teacher_dir else "incomplete",
                     "verify_result": {"execution_status": "success"}}))
-            (candidate_dir / "local_gate.json").write_text(json.dumps({"assistant_turn": 0,
-                "reference_turn": 0, "reference_run": str(teacher_dir), "accepted": True,
-                "checked_before_continuation": True}))
+            gate = root / "gate.json"
+            gate.write_text(json.dumps({"assistant_turn": 0, "reference_turn": 0,
+                "reference_run": str(teacher_dir), "task_key": "s:1", "skill_id": "skill",
+                "skill_version": 1}))
+            with patch.dict(os.environ, STEER_LOCAL_GATE=str(gate)):
+                self.assertTrue(check_boundary(candidate_dir / "snapshots", 1, candidate["messages"], candidate_dir))
             store = SkillStore(root / "store.jsonl")
             expected = canonical_decision(reference["messages"][1])
             step = {"index": 1, "step_id": "step", "assistant_turn": 0, "status": "proposed",
@@ -242,10 +245,11 @@ class TransitionVerifierTest(unittest.TestCase):
             for directory in (reference_dir, candidate_dir):
                 self.snapshot(directory / "snapshots", 0, "pending")
                 self.snapshot(directory / "snapshots", 1, "confirmed" if directory == reference_dir else "pending")
-            reference = self.trajectory(reference_dir / "snapshots", "confirm", "ok")
+            reference = dict(self.trajectory(reference_dir / "snapshots", "confirm", "ok"), scenario="s", task_id=1)
             (reference_dir / "trajectory.json").write_text(json.dumps(reference))
             spec = root / "gate.json"
-            spec.write_text(json.dumps({"reference_run": str(reference_dir), "assistant_turn": 0, "reference_turn": 0}))
+            spec.write_text(json.dumps({"reference_run": str(reference_dir), "assistant_turn": 0, "reference_turn": 0,
+                "task_key": "s:1", "skill_id": "skill", "skill_version": 1}))
             with patch.dict(os.environ, STEER_LOCAL_GATE=str(spec)):
                 self.assertFalse(check_boundary(candidate_dir / "snapshots", 1, reference["messages"], candidate_dir))
             receipt = json.loads((candidate_dir / "local_gate.json").read_text())

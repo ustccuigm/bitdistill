@@ -18,11 +18,12 @@ from steerdistill.common import (
     write_jsonl,
 )
 from steerdistill.store import SkillStore
+from steerdistill.generation_evidence import content_with_reasoning
 
 
 def assistant_completion(message: dict) -> str:
     """Keep native tool calls as a supervised completion when content is empty."""
-    content = message.get("content")
+    content = content_with_reasoning(message)
     if message.get("tool_calls"):
         action = canonical_decision(message)
         return f"{content}\n{action}" if content is not None and str(content) else action
@@ -100,7 +101,7 @@ def rows_from_run(
                     })
                 if message.get("tool_calls"):
                     row["completion_tool_calls"] = message["tool_calls"]
-                    row["completion_content"] = message.get("content") or ""
+                    row["completion_content"] = content_with_reasoning(message)
                 sampled = sampling.get(assistant_turn) or {}
                 token_ids, logprobs = sampled.get("token_ids"), sampled.get("logprobs")
                 if isinstance(token_ids, list) and token_ids:

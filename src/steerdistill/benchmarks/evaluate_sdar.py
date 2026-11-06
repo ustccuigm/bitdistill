@@ -32,7 +32,8 @@ def evaluate_task(item):
         while not env.done:
             prompt = [{"role": "user", "content": env.prompt()}]
             try:
-                response, metadata = generate(args.url, args.model, prompt, args.seed + identity * 1009 + env.turn)
+                response, metadata = generate(args.url, args.model, prompt, args.seed + identity * 1009 + env.turn,
+                                              training=False)
             except ContextWindowExceeded as error:
                 termination = {"reason": "context_length", "error": error.as_error()}
                 break

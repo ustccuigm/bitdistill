@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 from steerdistill.teacher.response_bridge import bridge_endpoint
 from steerdistill.transition_policy import compile_policy
+from steerdistill.generation_evidence import write_run_receipt, validate_run_receipt
 
 
 LOCK = threading.Lock()
@@ -159,10 +160,12 @@ def run_command(
                 terminate_tagged_processes(run_token)
 
 
-def already_done(run_dir: Path) -> dict | None:
+def already_done(run_dir: Path, require_evidence=True) -> dict | None:
     verify = run_dir / "verify.code.json"
     if not verify.is_file():
         return None
+    if require_evidence:
+        validate_run_receipt(run_dir)
     try:
         return json.loads(verify.read_text(encoding="utf-8"))
     except Exception:
@@ -217,7 +220,8 @@ def worker(job, args, endpoint: str) -> dict:
             agent.extend(["--behavior_logprobs", "True"])
         # Bind sampling to each attempt even when the external environment
         # derives its original seed only from the shared prompt.
-        with bridge_endpoint(endpoint, f"{args.seed}:{scenario}:{task_id}:{attempt}", args.tokenizer) as local_endpoint:
+        with bridge_endpoint(endpoint, f"{args.seed}:{scenario}:{task_id}:{attempt}", args.tokenizer,
+                             evidence_dir=run_dir / "generations", training=True) as local_endpoint:
             agent[agent.index("--api_url") + 1] = local_endpoint
             agent_rc, state = run_command(
                 agent,
@@ -234,7 +238,7 @@ def worker(job, args, endpoint: str) -> dict:
             verify_rc, verify_state = run_command(
                 verify, run_dir / "verify.log", args.verify_timeout
             )
-        result = already_done(run_dir)
+        result = already_done(run_dir, require_evidence=False)
 
     reward_type = result.get("reward_type") if result else None
     execution = (result or {}).get("verify_result", {}).get("execution_status")
@@ -245,6 +249,8 @@ def worker(job, args, endpoint: str) -> dict:
     assistants = [row for row in trajectory.get("messages", []) if row.get("role") == "assistant"]
     if not assistants or any(not str(row.get("content") or "").strip() and not row.get("tool_calls") for row in assistants):
         raise RuntimeError(f"Tool environment saved an empty assistant response: {run_dir}")
+    if state != "cached":
+        write_run_receipt(run_dir)
     record = {
         "scenario": scenario, "task_id": task_id, "task": task, "attempt": attempt,
         "endpoint": endpoint, "run_dir": str(run_dir), "status": status,

@@ -218,6 +218,7 @@ class RepairConsumer:
                 record = self.latest_record(key)
                 feedback.append({
                     "attempt": attempt,
+                    "assistant_turn": turn,
                     "steering_prompt": record["skill"],
                     "local_feedback": record.get("local_feedback", []),
                     "candidate_trajectories": [

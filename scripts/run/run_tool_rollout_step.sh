@@ -50,7 +50,7 @@ start_server() {
     echo "vLLM engine port already in use: $engine_port" >&2
     exit 2
   fi
-  local tool_args=()
+  local tool_args=(--reasoning-parser qwen3)
   if grep -q '"model_type"[[:space:]]*:[[:space:]]*"qwen3_5"' "$model/config.json"; then
     tool_args=(--enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 --language-model-only)
   elif grep -q '"model_type"[[:space:]]*:[[:space:]]*"gemma4_unified_text"' "$model/config.json"; then

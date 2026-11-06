@@ -127,21 +127,111 @@ def unchanged_state(snapshot_root, turn):
     return snapshot_state(root / f"turn_{turn:04d}", ignored) == snapshot_state(root / f"turn_{turn + 1:04d}", ignored)
 
 
+def _digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
+                                     ensure_ascii=False).encode()).hexdigest()
+
+
+def _boundary_messages(messages, turn):
+    """Freeze only the prefix available before the first continuation request."""
+    seen = -1
+    boundary = []
+    for message in messages:
+        if message.get("role") == "assistant":
+            seen += 1
+            if seen > turn:
+                break
+        boundary.append(message)
+    if seen < turn:
+        raise ValueError("Local gate target turn is missing")
+    return boundary
+
+
+def _snapshot_evidence(root, turn):
+    evidence = []
+    for index in (turn, turn + 1):
+        directory = Path(root) / f"turn_{index:04d}"
+        # Validate the actual database, not merely a claimed checksum.
+        snapshot_state(directory)
+        manifest_bytes = (directory / "manifest.json").read_bytes()
+        manifest = json.loads(manifest_bytes)
+        evidence.append({
+            "snapshot_dir": str(directory.resolve()),
+            "database": str((directory / manifest["db"]).resolve()),
+            "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
+            "db_sha256": manifest["db_sha256"],
+        })
+    return {"snapshots": evidence, "policy": load_policy(root)}
+
+
+def gate_binding(spec, snapshot_root, messages, output_dir, reference):
+    """Content and identity binding shared by the adapter and offline validator."""
+    turn, reference_turn = spec["assistant_turn"], spec["reference_turn"]
+    if type(turn) is not int or type(reference_turn) is not int or min(turn, reference_turn) < 0:
+        raise ValueError("Invalid local gate turn")
+    if (not spec.get("task_key") or not spec.get("skill_id")
+            or type(spec.get("skill_version")) is not int or spec["skill_version"] < 1):
+        raise ValueError("Local gate requires task and skill-version identity")
+    reference_dir = Path(spec["reference_run"]).resolve()
+    candidate_dir = Path(output_dir).resolve()
+    if Path(snapshot_root).resolve() != candidate_dir / "snapshots":
+        raise ValueError("Candidate snapshots must belong to the candidate run")
+    if Path(reference.get("snapshot_root", "")).resolve() != reference_dir / "snapshots":
+        raise ValueError("Reference snapshots must belong to the reference run")
+    if f"{reference.get('scenario')}:{reference.get('task_id')}" != spec["task_key"]:
+        raise ValueError("Reference task does not match local gate")
+    return {
+        "format": 2,
+        "candidate_run": str(candidate_dir),
+        "reference_run": str(reference_dir),
+        "task_key": spec["task_key"], "skill_id": spec["skill_id"],
+        "skill_version": spec["skill_version"],
+        "assistant_turn": turn, "reference_turn": reference_turn,
+        "candidate_boundary_sha256": _digest(_boundary_messages(messages, turn)),
+        "reference_boundary_sha256": _digest(_boundary_messages(reference["messages"], reference_turn)),
+        "candidate_state": _snapshot_evidence(snapshot_root, turn),
+        "reference_state": _snapshot_evidence(reference_dir / "snapshots", reference_turn),
+    }
+
+
+def validate_gate_receipt(receipt, spec, snapshot_root, messages, output_dir,
+                          reference, accepted, reason):
+    binding = gate_binding(spec, snapshot_root, messages, output_dir, reference)
+    if (any(receipt.get(key) != value for key, value in binding.items())
+            or receipt.get("checked_before_continuation") is not True
+            or receipt.get("accepted") is not accepted
+            or receipt.get("reason") != reason):
+        raise ValueError("Local transition gate evidence mismatch")
+
+
 def check_boundary(snapshot_root, iteration, messages, output_dir):
     spec = json.loads(Path(os.environ["STEER_LOCAL_GATE"]).read_text())
     turn = int(spec["assistant_turn"])
-    if iteration != turn + 1:
+    if iteration < turn + 1:
         return True
     reference_dir = Path(spec["reference_run"])
     reference = json.loads((reference_dir / "trajectory.json").read_text())
     reference_turn = int(spec["reference_turn"])
     reference_action = [message for message in reference["messages"]
                         if message.get("role") == "assistant"][reference_turn]
+    candidate_actions = [message for message in messages if message.get("role") == "assistant"]
+    receipt_path = Path(output_dir, "local_gate.json")
+    if iteration == turn + 1 and len(candidate_actions) != turn + 1:
+        raise ValueError("Local gate was invoked after continuation")
     if not reference_action.get("tool_calls"):
         accepted, reason = False, "expected_terminal_response"
+    elif len(candidate_actions) <= turn or not candidate_actions[turn].get("tool_calls"):
+        accepted, reason = False, "candidate_not_action"
     else:
         accepted, reason = compare_transition(snapshot_root, reference_dir / "snapshots", turn,
             reference_turn, messages, reference["messages"])
-    receipt = dict(spec, accepted=accepted, reason=reason, checked_before_continuation=True)
-    Path(output_dir, "local_gate.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    binding = gate_binding(spec, snapshot_root, messages, output_dir, reference)
+    if iteration > turn + 1:
+        # Never manufacture a precontinuation receipt after missing the boundary.
+        receipt = json.loads(receipt_path.read_text())
+        validate_gate_receipt(receipt, spec, snapshot_root, messages, output_dir,
+                              reference, accepted, reason)
+        return accepted
+    receipt = dict(binding, accepted=accepted, reason=reason, checked_before_continuation=True)
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
     return accepted

@@ -54,6 +54,92 @@ class DeterministicEnvironment:
 
 
 class NativeRevisionTest(unittest.TestCase):
+    def setUp(self):
+        # These tests replace generation with deterministic state-machine actions.
+        # Raw exchange persistence and resume binding have separate integration tests.
+        evidence = patch.object(online_rollout, "generation_files", return_value={"mock-response.json": "fixture"})
+        evidence.start()
+        self.addCleanup(evidence.stop)
+        resume = patch.object(online_rollout, "validate_generation_files")
+        resume.start()
+        self.addCleanup(resume.stop)
+
+    def test_missing_thinking_preserves_completed_prefix(self):
+        from steerdistill.generation_evidence import MissingReasoning
+        with tempfile.TemporaryDirectory() as folder:
+            env = DeterministicEnvironment("alfworld", {"task_id": 1})
+            with patch.object(online_rollout, "generate", side_effect=[("correct", {}), MissingReasoning("empty")]):
+                run = online_rollout.rollout(env, Path(folder), "student", "test", 1)
+            self.assertEqual(run["trajectory"]["termination_reason"], "missing_reasoning")
+            self.assertEqual(len(run["trajectory"]["transitions"]), 1)
+            self.assertTrue((Path(folder) / "trajectory.json").is_file())
+
+    def test_missing_student_thinking_consumes_local_retry_without_execution(self):
+        from steerdistill.generation_evidence import MissingReasoning
+        analysis = {"steer": {key: "Check state" for key in ("precondition", "decision_rule", "expected_transition", "recovery_check")}}
+        def generate(url, model, messages, seed, **kwargs):
+            if url == "teacher": return "correct", {}
+            if any(m["role"] == "system" for m in messages): raise MissingReasoning("empty")
+            return "wrong", {}
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            args = SimpleNamespace(benchmark="alfworld", step=1, attempts=1, reference_attempts=1,
+                                   retries=3, output=root, store=root / "store.jsonl",
+                                   student_url="student", teacher_url="teacher", model="test")
+            with patch.object(online_rollout, "Environment", DeterministicEnvironment), \
+                 patch.object(online_rollout, "generate", side_effect=generate), \
+                 patch.object(online_rollout, "grounded_analysis", return_value=analysis):
+                online_rollout.run_task((args, {"task": {"task_id": 1}}))
+            rejected = [json.loads(p.read_text()) for p in root.rglob("steering.json")]
+            self.assertEqual(len(rejected), 3)
+            self.assertTrue(all(row["termination_reason"] == "missing_reasoning" for row in rejected))
+
+    def test_all_native_routes_reject_mismatched_reference_preconditions(self):
+        for benchmark in ("webshop", "alfworld", "search_qa"):
+            with self.subTest(benchmark=benchmark), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                env = DeterministicEnvironment(benchmark, {"task_id": 1})
+                state = env.snapshot()
+                def run(before, after, success):
+                    return {"run_dir": str(root / after), "success": success, "snapshots": [state],
+                            "trajectory": {"messages": [{"role": "assistant", "content": "action"}],
+                             "transitions": [{"before_alignment_state_hash": before, "alignment_state_hash": after,
+                                               "before_state_hash": before, "state_hash": after, "success": success}]}}
+                plain, reference = run("s0", "failed", False), run("different_initial_state", "s2", True)
+                args = SimpleNamespace(reference_attempts=1, retries=2, teacher_url="teacher", student_url="student",
+                                       model="test", store=root / "store.jsonl", step=1, benchmark=benchmark)
+                with patch.object(online_rollout, "rollout", return_value=reference), \
+                     patch.object(online_rollout, "generate") as generate:
+                    result = online_rollout.revise(env, state, plain, root, args, 42)
+                self.assertEqual(result[-1]["fallback"], "reference_precondition_mismatch")
+                generate.assert_not_called()
+
+    def test_both_successes_cannot_override_different_local_states(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            env = DeterministicEnvironment("search_qa", {"task_id": 1})
+            state = env.snapshot()
+            plain = {"run_dir": str(root / "plain"), "success": False, "snapshots": [state],
+                     "trajectory": {"messages": [{"role": "assistant", "content": "wrong"}],
+                      "transitions": [{"before_alignment_state_hash": "s0", "alignment_state_hash": "failed",
+                                        "before_state_hash": "s0", "state_hash": "failed"}]}}
+            reference = copy.deepcopy(plain)
+            reference.update(run_dir=str(root / "reference"), success=True)
+            reference["trajectory"]["transitions"][0].update(state_hash="reference-final", alignment_state_hash="reference-final", success=True)
+            args = SimpleNamespace(reference_attempts=1, retries=1, teacher_url="teacher", student_url="student",
+                                   model="test", store=root / "store.jsonl", step=1, benchmark="search_qa")
+            analysis = {"steer": {key: "Check state" for key in ("precondition", "decision_rule", "expected_transition", "recovery_check")}}
+            with patch.object(online_rollout, "rollout", return_value=reference) as rollout, \
+                 patch.object(online_rollout, "generate", return_value=("action", {})), \
+                 patch.object(online_rollout, "grounded_analysis", return_value=analysis), \
+                 patch.object(env, "step", return_value={"valid": True, "state_hash": "different-final", "success": True}):
+                result = online_rollout.revise(env, state, plain, root, args, 42)
+            self.assertEqual(result[-1]["fallback"], "steering_exhausted")
+            self.assertEqual(rollout.call_count, 1)  # Reference only; no candidate continuation.
+            gate = json.loads(next(root.rglob("local_gate.json")).read_text())
+            self.assertFalse(gate["accepted"])
+            self.assertTrue(gate["checked_before_continuation"])
+
     def test_materialization_does_not_invent_eos_after_length_termination(self):
         for generation, expected in (({"finish_reason": "length"}, False),
                                      ({"finish_reason": "stop"}, True), (None, True)):
@@ -72,7 +158,7 @@ class NativeRevisionTest(unittest.TestCase):
 
         unsteered = []
 
-        def generate(url, model, messages, seed):
+        def generate(url, model, messages, seed, output_dir=None):
             good = url == "teacher" or any(m["role"] == "system" for m in messages)
             if not good:
                 unsteered.append(messages)
@@ -106,7 +192,7 @@ class NativeRevisionTest(unittest.TestCase):
                                        retries=2, output=root, store=root / "store.jsonl",
                                        student_url="student", teacher_url="teacher", model="test")
                 with patch.object(online_rollout, "Environment", DeterministicEnvironment), \
-                     patch.object(online_rollout, "generate", side_effect=lambda url, *a: (
+                     patch.object(online_rollout, "generate", side_effect=lambda url, *a, **kw: (
                          "correct" if url == "teacher" else "wrong", {})), \
                      patch.object(online_rollout, "grounded_analysis", side_effect=error):
                     if not isinstance(error, AnalysisRejected):
@@ -157,7 +243,7 @@ class NativeRevisionTest(unittest.TestCase):
                               "expected_transition": "advance", "recovery_check": "progress"},
                     "failure_mechanism": "wrong action", "relation_to_prior": "new"}
 
-        def generate(url, model, messages, seed):
+        def generate(url, model, messages, seed, output_dir=None):
             good = url == "teacher" or any(m["role"] == "system" for m in messages)
             return "correct" if good else "wrong", {}
 
@@ -191,7 +277,7 @@ class NativeRevisionTest(unittest.TestCase):
                                    retries=2, output=root, store=root / "store.jsonl",
                                    student_url="student", teacher_url="teacher", model="test")
             with patch.object(online_rollout, "Environment", SameStateEnvironment), \
-                 patch.object(online_rollout, "generate", side_effect=lambda url, *a: (
+                 patch.object(online_rollout, "generate", side_effect=lambda url, *a, **kw: (
                      "correct" if url == "teacher" else "wrong", {})):
                 steerdistill.benchmarks.online_rollout.run_task((args, {"task": {"task_id": 2}}))
             receipt = json.loads((root / "tasks/2/0/completed.json").read_text())
@@ -242,7 +328,7 @@ class NativeRevisionTest(unittest.TestCase):
                                        student_url="student", teacher_url="teacher", model="test")
                 teacher_calls = []
 
-                def generate(url, model, messages, seed):
+                def generate(url, model, messages, seed, output_dir=None):
                     if url == "teacher":
                         teacher_calls.append(messages)
                     steered = any(m["role"] == "system" for m in messages)
@@ -290,7 +376,7 @@ class NativeRevisionTest(unittest.TestCase):
                     "steer": {"precondition": "An unfinished task", "decision_rule": "Choose a valid next step",
                               "expected_transition": "Advance", "recovery_check": "Observe progress"}}
 
-        def generate(url, model, messages, seed):
+        def generate(url, model, messages, seed, output_dir=None):
             steered = any(m["role"] == "system" for m in messages)
             action = "correct" if url == "teacher" or steered else "wrong"
             return f"<think>Choose a step.</think><action>{action}</action>", {"seed": seed}

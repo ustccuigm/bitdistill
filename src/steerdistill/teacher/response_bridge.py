@@ -6,9 +6,12 @@ import json
 from pathlib import Path
 import sys
 import threading
+import uuid
 import urllib.error
 import urllib.request
 from steerdistill.generation_budget import ContextWindowExceeded, apply_budget
+from steerdistill.generation_evidence import enable_thinking, require_reasoning, reasoning_text, content_with_reasoning, save_exchange
+from steerdistill.common import _action_bearing
 
 
 _TOKENIZER_LOCK = threading.Lock()
@@ -46,13 +49,13 @@ def preserve_reasoning(response, tokenizer=None):
             message["content"] = content
             message["tool_calls"] = None
             continue
-        if reasoning and "<think>" not in content:
-            message["content"] = f"<think>{reasoning}</think>{content}"
+        if reasoning_text(message):
+            message["content"] = content_with_reasoning(message)
     return response
 
 
 @contextmanager
-def bridge_endpoint(upstream, seed_namespace="", tokenizer_path=None):
+def bridge_endpoint(upstream, seed_namespace="", tokenizer_path=None, evidence_dir=None, training=False):
     upstream = upstream.rstrip("/").removesuffix("/v1")
     # The environment fans out requests immediately. Loading Transformers lazily
     # in those handlers races its module-level import on this Python runtime.
@@ -64,9 +67,13 @@ def bridge_endpoint(upstream, seed_namespace="", tokenizer_path=None):
 
         def forward(self):
             body = self.rfile.read(int(self.headers.get("Content-Length", "0"))) or None
+            chat = None
+            exchange_dir = Path(evidence_dir) / uuid.uuid4().hex if evidence_dir is not None else None
             try:
                 if body and self.path.rstrip("/").endswith("/chat/completions"):
                     chat = json.loads(body)
+                    if training:
+                        enable_thinking(chat)
                     # Text-based tool environments parse their own action
                     # markup. A native parser must not consume that markup.
                     if not chat.get("tools"):
@@ -78,6 +85,7 @@ def bridge_endpoint(upstream, seed_namespace="", tokenizer_path=None):
                         seed = json.dumps([seed_namespace, chat.get("seed")]).encode()
                         chat["seed"] = int.from_bytes(hashlib.sha256(seed).digest()[:4], "big")
                     body = json.dumps(apply_budget(upstream, chat)).encode()
+                    save_exchange(exchange_dir, chat)
                 request = urllib.request.Request(upstream + self.path, data=body,
                     headers={"Content-Type": "application/json", "Authorization": "Bearer EMPTY"},
                     method=self.command)
@@ -85,7 +93,19 @@ def bridge_endpoint(upstream, seed_namespace="", tokenizer_path=None):
                     payload, status = result.read(), result.status
                     content_type = result.headers.get("Content-Type", "application/json")
                 if self.path.rstrip("/").endswith("/chat/completions"):
-                    payload = json.dumps(preserve_reasoning(json.loads(payload), text_tokenizer)).encode()
+                    raw = json.loads(payload)
+                    save_exchange(exchange_dir, chat, raw)
+                    preserved = preserve_reasoning(raw, text_tokenizer)
+                    for choice in preserved.get("choices", []):
+                        message = choice.get("message") or {}
+                        # Terminal acknowledgements may legitimately be terse. Tool
+                        # decisions must have real reasoning, never a synthesized trace.
+                        if training and _action_bearing(message):
+                            require_reasoning(message)
+                        if exchange_dir is not None:
+                            (exchange_dir / f"message-{choice.get('index', 0)}.json").write_text(
+                                json.dumps(message, ensure_ascii=False, indent=2) + "\n")
+                    payload = json.dumps(preserved).encode()
             except ContextWindowExceeded as error:
                 payload = json.dumps({"error": error.as_error()}).encode()
                 status, content_type = 400, "application/json"

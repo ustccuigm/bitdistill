@@ -18,9 +18,11 @@ from steerdistill.store import SkillStore
 from steerdistill.benchmarks.sdar_environment import Environment, state_hash
 from steerdistill.quantization.clip_provenance import model_identity
 from steerdistill.generation_budget import ContextWindowExceeded, apply_budget
+from steerdistill.generation_evidence import (MissingReasoning, enable_thinking, require_reasoning,
+    reasoning_text, content_with_reasoning, save_exchange, generation_files, validate_generation_files)
 
 
-def generate(url, model, messages, seed):
+def generate(url, model, messages, seed, output_dir=None, training=True):
     payload = {"model": model, "messages": messages, "temperature": float(os.getenv("ROLLOUT_TEMPERATURE", "0.7")),
                "max_tokens": int(os.getenv("MAX_TOKENS", "32768")), "seed": seed}
     benchmark = os.getenv("STEER_BENCHMARK") or os.getenv("BENCHMARK")
@@ -28,17 +30,21 @@ def generate(url, model, messages, seed):
         payload["max_tokens"] = min(payload["max_tokens"], int(os.getenv("ACTION_MAX_TOKENS", "4096")))
         # These environments consume one closed action, not an unbounded suffix.
         payload.update(stop=["</action>"], include_stop_str_in_output=True)
+    if training:
+        enable_thinking(payload)
     apply_budget(url, payload)
+    save_exchange(output_dir, payload)
     request = urllib.request.Request(url.rstrip("/") + "/chat/completions", data=json.dumps(payload).encode(),
                                      headers={"Content-Type": "application/json", "Authorization": "Bearer EMPTY"})
     with urllib.request.urlopen(request, timeout=600) as response:
         result = json.load(response)
+    save_exchange(output_dir, payload, result)
     choice = result["choices"][0]
     message = choice["message"]
     text = message.get("content") or ""
-    reasoning = message.get("reasoning_content") or message.get("reasoning")
-    if reasoning and "<think>" not in text:
-        text = f"<think>{reasoning}</think>{text}"
+    reasoning = require_reasoning(message) if training else reasoning_text(message)
+    if reasoning:
+        text = content_with_reasoning(message)
     if not text.strip():
         raise ValueError("Runtime generated an empty assistant response")
     return text, {"finish_reason": choice.get("finish_reason"), "usage": result.get("usage", {}), "seed": seed,
@@ -72,10 +78,16 @@ def rollout(environment, directory, url, model, seed, prefix=None, steer=None, f
             first_response = None
         else:
             try:
-                text, metadata = generate(url, model, conditioned, seed + turn)
+                text, metadata = generate(url, model, conditioned, seed + turn,
+                                          output_dir=directory / "generations" / f"turn{turn:04d}")
             except ContextWindowExceeded as error:
                 trajectory["termination_reason"] = "context_length"
                 trajectory["context_boundary"] = error.as_error()
+                snapshots.pop()
+                break
+            except MissingReasoning as error:
+                trajectory["termination_reason"] = "missing_reasoning"
+                trajectory["generation_error"] = str(error)
                 snapshots.pop()
                 break
         trajectory["messages"].append({"role": "assistant", "content": text, "model_prompt": prompt,
@@ -162,6 +174,13 @@ def revise(environment, initial, plain, directory, args, seed):
         revision += 1
         prefix = prefix_at(retained["trajectory"], turn)
         before = retained["snapshots"][turn]
+        target = reference["trajectory"]["transitions"][reference_turn]
+        before_hash = before.get("transition_hash", before["semantic_hash"])
+        if not target.get("before_state_hash") or before_hash != target["before_state_hash"]:
+            # A matching destination does not make different initial states an
+            # intervention pair. No retry can repair a mismatched anchor.
+            fallback = "reference_precondition_mismatch"
+            break
         failed_message = [m for m in retained["trajectory"]["messages"] if m["role"] == "assistant"][turn]
         reference_message = [m for m in reference["trajectory"]["messages"] if m["role"] == "assistant"][reference_turn]
         delta = causal_action_delta(canonical_decision(failed_message), canonical_decision(reference_message))
@@ -186,9 +205,11 @@ def revise(environment, initial, plain, directory, args, seed):
             trial.mkdir(parents=True, exist_ok=True)
             try:
                 analysis = grounded_analysis(args.teacher_url, "EMPTY", args.model, payload,
-                                             active_previous, same_lineage=bool(accepted_steps))
+                                             active_previous, same_lineage=bool(accepted_steps),
+                                             output_dir=trial / "teacher_analysis")
                 _, instruction = normalize_steer(analysis["steer"])
-                response = generate(args.student_url, args.model, inject_skill(prompt, instruction), seed + attempted + 500000)
+                response = generate(args.student_url, args.model, inject_skill(prompt, instruction), seed + attempted + 500000,
+                                    output_dir=trial / "student_generation")
             except AnalysisRejected as error:
                 failure = {"accepted": False, "termination_reason": "analysis_rejected",
                            "violations": error.violations, "analysis": error.analysis}
@@ -200,14 +221,25 @@ def revise(environment, initial, plain, directory, args, seed):
                 (trial / "steering.json").write_text(json.dumps(failure, indent=2) + "\n")
                 feedback.append(failure)
                 continue
+            except MissingReasoning as error:
+                failure = {"accepted": False, "termination_reason": "missing_reasoning", "error": str(error)}
+                (trial / "steering.json").write_text(json.dumps(failure, indent=2) + "\n")
+                feedback.append(failure)
+                continue
             transition = environment.step(response[0])
-            target = reference["trajectory"]["transitions"][reference_turn]
-            local_ok = transition["valid"] and (transition["state_hash"] == target["state_hash"]
-                                                or transition["success"] and target["success"])
+            local_ok = transition["valid"] and transition["state_hash"] == target["state_hash"]
+            (trial / "local_gate.json").write_text(json.dumps({
+                "accepted": local_ok, "checked_before_continuation": True,
+                "assistant_turn": turn, "reference_turn": reference_turn,
+                "before_state_hash": before_hash, "reference_before_state_hash": target["before_state_hash"],
+                "after_state_hash": transition["state_hash"], "reference_after_state_hash": target["state_hash"],
+                "reference_run": reference["run_dir"], "execution_valid": transition["valid"],
+            }, indent=2) + "\n")
             (trial / "steering.json").write_text(json.dumps({"analysis": analysis, "raw_steering_prompt": instruction,
                 "response": response[0], "transition": transition, "accepted": local_ok}, indent=2) + "\n")
             if not local_ok:
-                feedback.append({"steer": instruction, "response": response[0], "transition": transition, "expected": target})
+                feedback.append({"accepted": False, "response": response[0],
+                                 "reason": "postcondition_state_mismatch" if transition["valid"] else "environment_error"})
                 continue
             # Continue from the exact verified transition, without replaying its action.
             transition["before_state_hash"] = before.get("transition_hash", before["semantic_hash"])
@@ -280,6 +312,9 @@ def run_task(item):
             completed = directory / "completed.json"
             if completed.is_file():
                 saved = json.loads(completed.read_text())
+                if saved.get("generation_evidence_version") != 1:
+                    raise ValueError("Existing rollout lacks the current generation contract; use a fresh output directory")
+                validate_generation_files(directory, saved.get("generation_files"))
                 shard = directory / "training_rows.jsonl"
                 if hashlib.sha256(shard.read_bytes()).hexdigest() != saved["rows_sha256"]:
                     raise ValueError(f"Corrupt resumed training shard: {shard}")
@@ -315,6 +350,8 @@ def run_task(item):
             write_jsonl(temporary, task_rows)
             temporary.replace(shard)
             receipt = {**summary, "rows": len(task_rows), "plain_run": plain["run_dir"],
+                       "generation_evidence_version": 1,
+                       "generation_files": generation_files(directory),
                        "retained_run": retained["run_dir"], "accepted_interventions": len(steps),
                        "reference_attempts": args.reference_attempts, "steering_retries": args.retries,
                        "rows_sha256": hashlib.sha256(shard.read_bytes()).hexdigest()}

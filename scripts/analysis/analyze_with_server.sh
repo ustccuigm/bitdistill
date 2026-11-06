@@ -23,11 +23,17 @@ if [[ -n "${ANALYZER_ENDPOINT:-}" ]]; then
     --analyzer-policy "$POLICY_ID"
   exit 0
 fi
+PARSER_ARGS=(--reasoning-parser qwen3)
+if grep -q '"model_type"[[:space:]]*:[[:space:]]*"qwen3_5"' "$MODEL/config.json"; then
+  PARSER_ARGS+=(--language-model-only)
+elif grep -q '"model_type"[[:space:]]*:[[:space:]]*"gemma4_unified_text"' "$MODEL/config.json"; then
+  PARSER_ARGS=(--reasoning-parser gemma4 --enforce-eager)
+fi
 CUDA_VISIBLE_DEVICES="$GPU" "${INFERENCE_ENV_ROOT:-$ENV}/bin/python" -m vllm.entrypoints.openai.api_server \
   --model "$MODEL" --served-model-name skill-analyzer \
   --host 127.0.0.1 --port "$PORT" --dtype bfloat16 \
   --max-model-len 32768 --gpu-memory-utilization 0.88 \
-  --max-num-seqs 8 --trust-remote-code >"$LOG_DIR/analyzer-$PORT.log" 2>&1 &
+  --max-num-seqs 8 --trust-remote-code "${PARSER_ARGS[@]}" >"$LOG_DIR/analyzer-$PORT.log" 2>&1 &
 PID=$!
 trap 'kill -TERM "$PID" 2>/dev/null || true; wait "$PID" 2>/dev/null || true' EXIT INT TERM
 for _ in $(seq 1 300); do

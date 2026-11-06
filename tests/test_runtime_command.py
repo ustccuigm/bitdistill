@@ -13,6 +13,21 @@ from steerdistill.benchmarks.runtime import Runtime
 
 
 class RuntimeCommandTest(unittest.TestCase):
+    def test_text_action_and_analyzer_servers_also_parse_reasoning(self):
+        for model_type in ("qwen3", "qwen3_5", "gemma4_unified_text"):
+            with self.subTest(model_type=model_type), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / "config.json").write_text(json.dumps({"model_type": model_type}))
+                process = MagicMock(); process.poll.return_value = 1
+                with patch.dict(os.environ, INFERENCE_ENV_ROOT=directory), \
+                     patch("steerdistill.benchmarks.runtime.subprocess.Popen", return_value=process) as start:
+                    with self.assertRaisesRegex(RuntimeError, "Inference server exited"):
+                        Runtime(root, "analyzer", "0", 0, root / "server.log", tool_calls=False).__enter__()
+                command = start.call_args.args[0]
+                self.assertEqual(command[command.index("--reasoning-parser") + 1],
+                                 "gemma4" if model_type == "gemma4_unified_text" else "qwen3")
+                self.assertNotIn("--tool-call-parser", command)
+
     def test_text_models_and_tool_parsers(self):
         for model_type, parser in (("qwen3", "hermes"), ("qwen3_5", "qwen3_xml"),
                                    ("gemma4_unified_text", "gemma4")):
