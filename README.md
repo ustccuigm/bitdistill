@@ -2,7 +2,7 @@
 
 **Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation**
 
-[Quickstart](#quickstart-qwen3-8b-on-bfcl-v4) · [Setup](#getting-started) · [Data preparation](docs/data/README.md) · [Training](docs/training/README.md) · [Evaluation](docs/evaluation/README.md) · [Case studies](https://ustccuigm.github.io/bitdistill/contents.html)
+[Model weights](#qwen3-8b-4-bit-checkpoints) · [Quickstart](#quickstart-qwen3-8b-on-bfcl-v4) · [Setup](#getting-started) · [Data preparation](docs/data/README.md) · [Training](docs/training/README.md) · [Evaluation](docs/evaluation/README.md) · [Case studies](https://ustccuigm.github.io/bitdistill/contents.html)
 
 SteerDistill trains quantized LLM agents using online trajectories and
 teacher-guided corrections. A frozen teacher provides steering during training;
@@ -21,7 +21,14 @@ checkpoints; model weights and benchmark data are downloaded separately.
 - [Qwen3.5-4B](docs/training/README.md#qwen35-4b)
 - [Gemma 4 12B-it](docs/training/README.md#gemma-4-12b-it)
 
-**Benchmarks:** BFCL V4, tau2-Bench, WebShop, ALFWorld, and Search QA.
+### Qwen3-8B 4-bit checkpoints
+
+| Benchmark | Hugging Face weights |
+| --- | --- |
+| BFCL V4 and τ²-Bench | [steerdistill4bit](https://huggingface.co/c1805301698/steerdistill4bit) |
+| WebShop | [steerdistill4bit-webshop](https://huggingface.co/c1805301698/steerdistill4bit-webshop) |
+| ALFWorld | [steerdistill4bit-alfworld](https://huggingface.co/c1805301698/steerdistill4bit-alfworld) |
+| Search QA | [steerdistill4bit-searchqa](https://huggingface.co/c1805301698/steerdistill4bit-searchqa) |
 
 All model families use the shared quantization and training pipeline. For each
 model, BFCL V4 and tau2-Bench share one post-RL checkpoint and training run;
