@@ -85,6 +85,20 @@ def evaluate_task(item):
         env.close()
 
 
+def validate_split(benchmark, all_tasks):
+    if not all_tasks:
+        raise ValueError("Evaluation split is empty")
+    if len({int(task["task_id"]) for task in all_tasks}) != len(all_tasks):
+        raise ValueError("Duplicate evaluation task IDs would share a result file")
+    if benchmark == "webshop" and len(all_tasks) != 500:
+        raise ValueError("WebShop full evaluation requires all 500 held-out tasks")
+    if benchmark == "search_qa":
+        expected = {"nq", "triviaqa", "popqa", "hotpotqa", "2wikimultihopqa", "musique", "bamboogle"}
+        actual = {task["data_source"].strip().lower() for task in all_tasks}
+        if actual != expected:
+            raise ValueError(f"Search QA requires seven datasets: found {actual}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", choices=("webshop", "alfworld", "search_qa"), required=True)
@@ -105,15 +119,7 @@ def main():
     if (args.benchmark == "alfworld") == (split == "test"):
         parser.error(f"Unsupported split {split} for {args.benchmark}")
     all_tasks = list(tasks(args.benchmark, split))
-    if not all_tasks:
-        raise ValueError("Evaluation split is empty")
-    if args.benchmark == "webshop" and len(all_tasks) != 500:
-        raise ValueError("WebShop full evaluation requires all 500 held-out tasks")
-    if args.benchmark == "search_qa":
-        expected = {"nq", "triviaqa", "popqa", "hotpotqa", "2wikimultihopqa", "musique", "bamboogle"}
-        actual = {task["data_source"].lower() for task in all_tasks}
-        if actual != expected:
-            raise ValueError(f"Search QA requires seven datasets: found {actual}")
+    validate_split(args.benchmark, all_tasks)
     full_task_count = len(all_tasks)
     if args.task_ids:
         selected = json.loads(args.task_ids.read_text())
@@ -158,7 +164,8 @@ def main():
         with multiprocessing.get_context("spawn").Pool(args.workers) as pool:
             for count, (source, success, score) in enumerate(pool.imap_unordered(
                     evaluate_task, ((args, task) for task in all_tasks), chunksize=1), 1):
-                group = scores[source]
+                dataset = source.strip().lower() if args.benchmark == "search_qa" else source
+                group = scores[dataset]
                 group["tasks"] += 1
                 group["successes"] += int(success)
                 group["reward_sum"] += score

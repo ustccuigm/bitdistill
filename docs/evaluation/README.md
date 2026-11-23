@@ -95,7 +95,8 @@ bash scripts/run/run_benchmark.sh eval --model qwen3_8b --benchmark tau2_bench
 ```
 
 For a separately exported checkpoint, set `EVAL_CHECKPOINT` to its directory
-and run the same evaluation command. `EVAL_TASK_IDS` accepts a JSON list of
+and run the standalone `eval` command. A `full` run or the all-benchmark launcher
+selects the checkpoint from the corresponding training receipt. `EVAL_TASK_IDS` accepts a JSON list of
 unique IDs for a subset. ALFWorld IDs are local to each split; when selecting IDs,
 set `ALFWORLD_EVAL_SPLIT` to the intended split.
 

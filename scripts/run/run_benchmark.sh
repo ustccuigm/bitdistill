@@ -82,7 +82,7 @@ case "$MODE" in
     bash "$ROOT/scripts/validate/preflight.sh"
     bash "$ROOT/scripts/run/run_benchmark.sh" quantize
     bash "$ROOT/scripts/run/run_benchmark.sh" train
-    bash "$ROOT/scripts/run/run_benchmark.sh" eval
+    STEER_EVAL_FROM_TRAINING=1 bash "$ROOT/scripts/run/run_benchmark.sh" eval
     ;;
   *) echo "usage: run_benchmark.sh [prepare|quantize|train|eval|full]" >&2; exit 2 ;;
 esac

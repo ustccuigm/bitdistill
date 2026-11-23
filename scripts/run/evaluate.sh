@@ -5,7 +5,7 @@ source "$SCRIPT_DIR/../_bootstrap.sh"
 ROOT="$STEERDISTILL_ROOT"
 source "$ROOT/scripts/lib/run_paths.sh"
 STEP=${1:-latest}
-if [[ -n "${EVAL_CHECKPOINT:-}" ]]; then
+if [[ -n "${EVAL_CHECKPOINT:-}" && "${STEER_EVAL_FROM_TRAINING:-0}" != 1 ]]; then
   EVAL_RUNTIME=$(realpath -e "$EVAL_CHECKPOINT")
   TAG=$(basename "$EVAL_RUNTIME")
 else

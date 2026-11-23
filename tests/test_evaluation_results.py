@@ -65,6 +65,11 @@ class EvaluationResultTest(unittest.TestCase):
         self.assertEqual(environment_action("alfworld", raw), "<think>consider go</think><action>look</action>")
         self.assertEqual(environment_action("alfworld", raw + "<action>go</action>"), "Invalid action")
 
+    def test_duplicate_native_task_ids_are_rejected_before_workers_start(self):
+        from steerdistill.benchmarks.evaluate_sdar import validate_split
+        with self.assertRaisesRegex(ValueError, "Duplicate evaluation task IDs"):
+            validate_split("alfworld", [{"task_id": 3}, {"task_id": "3"}])
+
     def test_native_context_limit_retains_real_evaluation_prefix(self):
         from steerdistill.benchmarks import evaluate_sdar
         from steerdistill.generation_budget import ContextWindowExceeded
