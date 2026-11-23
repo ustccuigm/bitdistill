@@ -21,13 +21,13 @@
          )
 -        inputs = {k: v.cuda() for k, v in inputs.items()}
 +        inputs = {k: v.cpu() for k, v in inputs.items()}
- 
+
          if "T5" in type(self.model).__name__:
              # T5-based retrieval model
 @@ -310,8 +311,80 @@
  app = FastAPI()
- 
- 
+
+
 +class MicroBatchRetriever:
 +    """Coalesce concurrent HTTP requests into real encoder/FAISS batches.
 +
@@ -109,7 +109,7 @@
 @@ -324,12 +397,11 @@
      if not request.topk:
          request.topk = config.retrieval_topk  # fallback to default
- 
+
 -    # Perform retrieval
 -    if request.return_scores:
 -        results, scores = retriever.search(query=request.query, num=request.topk, return_score=True)
@@ -121,7 +121,7 @@
 +    results, scores = await batch_retriever.submit(
 +        request.query, request.topk, request.return_scores
 +    )
- 
+
      # Format response
      resp = []
 @@ -378,7 +450,7 @@
@@ -132,10 +132,10 @@
 +        retrieval_use_fp16=False,
          retrieval_batch_size=512,  # this is unused in the current retrieval implementation, which only supports single query
      )
- 
+
 @@ -386,4 +458,4 @@
      retriever = get_retriever(config)
- 
+
      # 3) Launch the server. By default, it listens on http://127.0.0.1:8000
 -    uvicorn.run(app, host="0.0.0.0", port=args.port)
 +    uvicorn.run(app, host="127.0.0.1", port=args.port)
