@@ -13,7 +13,7 @@ from steerdistill.benchmarks.native_inference import environment_action, sample_
 from steerdistill.benchmarks.online_rollout import generate
 from steerdistill.benchmarks.prepare_sdar_tasks import tasks
 from steerdistill.benchmarks.runtime import Runtime
-from steerdistill.benchmarks.sdar_environment import Environment, state_hash
+from steerdistill.benchmarks.sdar_environment import EvaluationEnvironment as Environment, state_hash
 
 from steerdistill.quantization.clip_provenance import model_identity
 from steerdistill.generation_budget import ContextWindowExceeded

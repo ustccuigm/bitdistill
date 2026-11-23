@@ -68,12 +68,13 @@ licenses. Source revisions and separate environment setup are documented in
 ### Tool-use training
 
 Set `TOOL_ENV_ADAPTER_ROOT`, `TOOL_ENV_BIN`, and `TOOL_ENV_PYTHON` to the
-adapter checkout, executable, and Python 3.12 interpreter. The adapter must
-support `snapshot_dir` and `restore_snapshot`. Apply the context and local
-transition patches in this order from its checkout:
+adapter checkout, executable, and Python 3.12 interpreter. Starting at the
+adapter revision in the environment guide, install snapshot capture and restore,
+then apply the evaluation boundary patches:
 
 ```bash
 cd "$TOOL_ENV_ADAPTER_ROOT"
+patch -p1 < "$STEERDISTILL_ROOT/patches/tool_environment_snapshots.patch"
 patch -p1 < "$STEERDISTILL_ROOT/patches/tool_environment_context.patch"
 patch -p1 < "$STEERDISTILL_ROOT/patches/tool_environment_transition.patch"
 "$TOOL_ENV_PYTHON" -m pip install -e . \

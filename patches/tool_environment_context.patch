@@ -6,19 +6,22 @@
          tool_calls = parse_tool_calls(content)
 -    sampling = {}
 +    sampling = {"finish_reason": choice.finish_reason}
-     response_extra = getattr(response, "model_extra", None) or {}
-     rollout_role = response_extra.get("bitdistiller_rollout_role")
-     qir_metadata = response_extra.get("bitdistiller_qir_metadata")
-@@ -819,13 +819,34 @@
+     if config.behavior_logprobs:
+         entries = choice.logprobs.content if choice.logprobs is not None else None
+         if entries is None:
+@@ -802,16 +802,37 @@
+                     messages,
+                     trajectory,
+                     tools_exposed_to_model,
 -                    os.environ.get("AWM_RUN_TOKEN", ""),
 +                    os.environ.get("TOOL_ENV_RUN_TOKEN", ""),
                  )
- 
+
 +        termination_reason = "max_iterations"
 +        truncation_info = None
          for iteration in range(iteration + 1, config.max_iterations + 1):
              logger.info(f"\n--- Iteration {iteration}/{config.max_iterations} ---")
- 
+
 -            content, tool_calls, sampling = await generate_response(
 -                llm_client, model, messages, config, use_vllm_extras=use_vllm_extras,
 -                native_tools=tools,
@@ -46,11 +49,11 @@
 +            if response_truncated:
 +                termination_reason = "generation_length"
 +                truncation_info = {"finish_reason": "length"}
- 
+
              if config.verbose:
                  preview = content[:500] + "..." if len(content) > 500 else content
-@@ -839,7 +860,9 @@
- 
+@@ -825,7 +846,9 @@
+
              # no tool calls -> task complete
              if not tool_calls:
 -                logger.info("No tool calls detected - task complete.")
@@ -60,7 +63,7 @@
                  logger.info(f"\n{'=' * 40} Final Answer {'=' * 40}")
                  logger.info(content)
                  logger.info("=" * 80)
-@@ -848,7 +871,7 @@
+@@ -834,7 +857,7 @@
                      "role": "assistant",
                      "content": content,
                      "tool_calls": [],
@@ -68,8 +71,10 @@
 +                    "is_final": not response_truncated,
                      "sampling": sampling,
                  }
-                 if sampling.get("rollout_role") is not None:
-@@ -944,6 +967,9 @@
+                 trajectory.append(trajectory_entry)
+@@ -920,8 +943,11 @@
+                     messages,
+                     trajectory,
                      tools_exposed_to_model,
 -                    os.environ.get("AWM_RUN_TOKEN", ""),
 +                    os.environ.get("TOOL_ENV_RUN_TOKEN", ""),
@@ -79,8 +84,8 @@
 +                break
          else:
              logger.warning("Max iterations reached without completion.")
- 
-@@ -962,6 +988,9 @@
+
+@@ -940,6 +966,9 @@
              "temperature": config.temperature,
              "behavior_logprobs": config.behavior_logprobs,
              "total_iterations": iteration,

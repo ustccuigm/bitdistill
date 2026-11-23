@@ -3,7 +3,7 @@ import argparse
 import json
 import os
 from pathlib import Path
-from steerdistill.benchmarks.sdar_environment import Environment, configure
+from steerdistill.benchmarks.sdar_environment import EvaluationEnvironment as Environment, configure
 
 
 def json_value(value):

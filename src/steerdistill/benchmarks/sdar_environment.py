@@ -67,6 +67,8 @@ def sas_at_facts(sas, positive_facts):
 
 
 class Environment:
+    action_history_limit = None
+
     def __init__(self, benchmark, task, max_steps=None):
         self.root = configure()
         self.benchmark = benchmark
@@ -99,7 +101,7 @@ class Environment:
         )
         _WEB_SERVERS[server_key] = self.env.server
         self.observation, _ = self.env.reset(session=int(self.task["task_id"]))
-        self.description = self.env.server.user_sessions[self.env.session]["goal"]["instruction_text"]
+        self.description = self.env.get_instruction_text()
 
     def _alfworld_init(self):
         import textworld
@@ -171,19 +173,22 @@ class Environment:
         from agent_system.memory import SimpleMemory, SearchMemory
         memory = SearchMemory() if self.benchmark == "search_qa" else SimpleMemory()
         memory.reset(batch_size=1)
-        recent = self.history[-2:] if self.benchmark == "alfworld" else self.history
+        recent = self.history
+        if self.action_history_limit and self.benchmark == "alfworld":
+            recent = recent[-self.action_history_limit:]
         for row in recent:
             if self.benchmark == "search_qa":
                 memory.store({"search": [row["response"]], "information": [row["after"]]})
             else:
                 observation = self._format_web_observation(row["before"]) if self.benchmark == "webshop" else row["before"]
-                memory.store({"text_obs": [observation], "action": [row["action"]]})
+                action = row["action"] if self.action_history_limit else row["response"]
+                memory.store({"text_obs": [observation], "action": [action]})
         if self.benchmark == "search_qa":
             if not self.history:
                 return SEARCH_TEMPLATE_NO_HIS.format(task_description=self.description)
             context, _ = memory.fetch(len(self.history), obs_key="information", action_key="search")
             return SEARCH_TEMPLATE.format(task_description=self.description, memory_context=context[0], step_count=len(self.history))
-        context, lengths = memory.fetch(2, obs_key="text_obs", action_key="action") if self.history else ([""], [0])
+        context, lengths = memory.fetch(self.action_history_limit or len(self.history), obs_key="text_obs", action_key="action") if self.history else ([""], [0])
         fields = dict(task_description=self.description, current_observation=self.observation,
                       step_count=len(self.history), current_step=len(self.history) + 1,
                       history_length=lengths[0], action_history=context[0])
@@ -393,3 +398,13 @@ class Environment:
             self.env.server.user_sessions.pop(self.env.session, None)
         if hasattr(self.env, "close"):
             self.env.close()
+
+
+class EvaluationEnvironment(Environment):
+    """Render WebShop and ALFWorld observations with the executed-action history."""
+
+    action_history_limit = 2
+
+    def _webshop_init(self):
+        super()._webshop_init()
+        self.description = self.env.server.user_sessions[self.env.session]["goal"]["instruction_text"]

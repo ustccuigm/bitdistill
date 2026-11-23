@@ -69,7 +69,7 @@ Install this package without replacing the benchmark environment's dependencies:
 
 The tool-use adapter has a separate Python 3.12 environment. Its compatibility
 constraint is in [`requirements/tool-environment.txt`](../requirements/tool-environment.txt).
-Apply the two patches and install it as described in the benchmark guide.
+Apply the patches and install it as described in the benchmark guide.
 WebShop requires a JDK and Pyserini; the reference setup uses OpenJDK 21.
 ALFWorld requires TextWorld and Fast Downward. Search QA requires a running
 dense retrieval service.
