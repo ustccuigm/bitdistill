@@ -57,9 +57,9 @@ tokenizer, and safetensors weights. Set overrides before sourcing
 | --- | --- | --- |
 | BFCL V4 | [Official evaluator](https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard), [tool-use training data](https://huggingface.co/datasets/Snowflake/AgentWorldModel-1K), [tool adapter](https://github.com/Snowflake-Labs/agent-world-model) | Training records, prompt manifest, generated environment tables, patched adapter; `SERPAPI_API_KEY` for web-search evaluation |
 | tau2-Bench | [Official environment and evaluator](https://github.com/sierra-research/tau2-bench) | Shared tool-use training inputs; configured user simulator for evaluation |
-| WebShop | [Environment and data instructions](https://github.com/princeton-nlp/WebShop), [SDAR integration](https://github.com/ZJU-REAL/SDAR) | SDAR catalog, search index, JDK and Pyserini |
-| ALFWorld | [Environment and data instructions](https://github.com/alfworld/alfworld), [SDAR integration](https://github.com/ZJU-REAL/SDAR) | Game files, TextWorld, and Fast Downward planner |
-| Search QA | [Search-R1](https://github.com/PeterGriffinJin/Search-R1), [NQ/HotpotQA training data](https://huggingface.co/datasets/PeterJinGo/nq_hotpotqa_train) | Training and evaluation Parquet files, retrieval corpus/index, running retrieval service |
+| WebShop | [Environment and data instructions](https://github.com/princeton-nlp/WebShop), [environment adapter](https://github.com/ZJU-REAL/SDAR) | WebShop-small catalog, search index, JDK and Pyserini |
+| ALFWorld | [Environment and data instructions](https://github.com/alfworld/alfworld), [environment adapter](https://github.com/ZJU-REAL/SDAR) | Game files, TextWorld, and Fast Downward planner |
+| Search QA | [Retrieval data and index](https://github.com/PeterGriffinJin/Search-R1), [NQ/HotpotQA training data](https://huggingface.co/datasets/PeterJinGo/nq_hotpotqa_train) | Training and evaluation Parquet files, retrieval corpus/index, running retrieval service |
 
 Follow upstream download and installation instructions and retain their
 licenses. Source revisions and separate environment setup are documented in
@@ -103,7 +103,7 @@ same training inputs and the corresponding trained checkpoint.
 Set the following in `configs/local.env` above its final `source` command:
 
 ```bash
-SDAR_ROOT="$STEER_ASSET_ROOT/vendor/SDAR"
+BENCHMARK_ENVIRONMENTS_ROOT="/path/to/benchmark-environments"
 ALFWORLD_DATA="$STEER_ASSET_ROOT/benchmarks/alfworld/data"
 SEARCH_TRAIN_PARQUET="$STEER_ASSET_ROOT/benchmarks/search_qa/train.parquet"
 SEARCH_EVAL_PARQUET="$STEER_ASSET_ROOT/benchmarks/search_qa/test.parquet"
@@ -112,11 +112,20 @@ SEARCH_RETRIEVER_URL=http://127.0.0.1:8000/retrieve
 ```
 
 `prepare` exports initial policy contexts from the native training environment
-when its `rl_train.jsonl` is absent. WebShop uses the SDAR catalog and training
+when its `rl_train.jsonl` is absent. WebShop uses the WebShop-small catalog and training
 goals from index 500 onward. ALFWorld uses its training game collection.
 Search QA uses NQ and HotpotQA training records; answers remain task metadata
-and are excluded from calibration prompts. Start the Search-R1 retrieval
-service before online training or evaluation.
+and are excluded from calibration prompts. Start the dense retrieval
+service before online training or evaluation. In `configs/local.env`, set
+`SEARCH_INDEX_PATH`, `SEARCH_CORPUS_PATH`, and `SEARCH_ENCODER_PATH` to the
+matching Wikipedia index, passage JSONL, and E5-base-v2 encoder. Set
+`SEARCH_RETRIEVER_PYTHON` to the retrieval environment's interpreter
+(with CPU FAISS, PyTorch, Transformers, datasets, FastAPI and Uvicorn).
+From the repository root, run the local service in a separate shell:
+
+```bash
+bash scripts/run/serve_search.sh
+```
 
 ### Calibration input
 
@@ -143,7 +152,7 @@ teacher steering.
 | BFCL V4 | Official scoring categories and Overall score. Install `requirements/bfcl-memory.txt` and cache the sentence encoder for memory categories. Web search requires `SERPAPI_API_KEY`. |
 | tau2-Bench | Airline, retail, and telecom base splits, four trials per task. Set `TAU2_USER_MODEL` and optional JSON `TAU2_USER_ARGS`, or use `TAU2_USER_MODEL_PATH` with `TAU2_USER_GPU`. |
 | WebShop | Held-out goal IDs 0-499, using environment success. |
-| ALFWorld | Unseen evaluation games (`eval_out_of_distribution`). |
+| ALFWorld | Separate success rates for seen and unseen games. The paper metric uses the unseen split (`eval_out_of_distribution`). |
 | Search QA | NQ, TriviaQA, PopQA, HotpotQA, 2WikiMultiHopQA, MuSiQue, and Bamboogle; per-dataset exact match and its unweighted mean. |
 
 The selected data files determine the available evaluation tasks. Supply all
@@ -172,17 +181,11 @@ The benchmark keys are `bfcl_v4`, `tau2_bench`, `webshop`, `alfworld`, and
 runs them sequentially, without training the shared tool-use model twice:
 
 ```bash
-set -e
-for model in qwen3_8b qwen3_5_4b gemma4_12b; do
-  bash scripts/run/run_benchmark.sh full --model "$model" --benchmark bfcl_v4
-  bash scripts/run/run_benchmark.sh eval --model "$model" --benchmark tau2_bench
-  for benchmark in webshop alfworld search_qa; do
-    bash scripts/run/run_benchmark.sh full --model "$model" --benchmark "$benchmark"
-  done
-done
+bash scripts/run/run_benchmarks.sh
 ```
 
-For this loop, retain the template's `${MODEL_FAMILY:-...}` and
+Pass one or more model keys to run only those models, for example
+`bash scripts/run/run_benchmarks.sh qwen3_8b`. Retain the template's `${MODEL_FAMILY:-...}` and
 `${BENCHMARK:-...}` assignments so each invocation can select its route.
 Use the per-model checkpoint variables, and do not set shared derived values
 such as `RUN_ROOT`, `MODEL_SOURCE_PATH`, or `TEACHER_MODEL` across routes.

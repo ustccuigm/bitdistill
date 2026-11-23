@@ -93,6 +93,9 @@ evaluation. Evaluation uses the latest completed student checkpoint without
 teacher guidance. Artifacts are written under
 `$STEER_ASSET_ROOT/runs/qwen3_8b/bfcl_v4/`; see [training outputs](docs/training/README.md#outputs).
 
+To run all five benchmarks for this model, including the shared tool-use checkpoint, run
+`bash scripts/run/run_benchmarks.sh qwen3_8b`.
+
 ## Workflow guides
 
 | Guide | Contents |
@@ -104,8 +107,6 @@ teacher guidance. Artifacts are written under
 
 ## Acknowledgments and license
 
-We thank the authors of BitDistiller, the benchmark environments, and the
-inference libraries used by this project. Attribution and component terms are
-listed in [third-party notices](docs/third_party_notices.md).
+Attribution and component terms are listed in [third-party notices](docs/third_party_notices.md).
 SteerDistill is distributed under the [MIT License](LICENSE); model and dataset
 licenses remain with their respective providers.

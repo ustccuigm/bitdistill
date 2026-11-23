@@ -1,0 +1,141 @@
+--- a/retriever.py
++++ b/retriever.py
+@@ -1,4 +1,5 @@
+ import json
++import asyncio
+ import warnings
+ from typing import List, Optional
+ import argparse
+@@ -36,7 +37,7 @@
+     # model_config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+     model = AutoModel.from_pretrained(model_path, trust_remote_code=True)
+     model.eval()
+-    model.cuda()
++    model.cpu()
+     if use_fp16:
+         model = model.half()
+     tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True, trust_remote_code=True)
+@@ -87,7 +88,7 @@
+         inputs = self.tokenizer(
+             query_list, max_length=self.max_length, padding=True, truncation=True, return_tensors="pt"
+         )
+-        inputs = {k: v.cuda() for k, v in inputs.items()}
++        inputs = {k: v.cpu() for k, v in inputs.items()}
+ 
+         if "T5" in type(self.model).__name__:
+             # T5-based retrieval model
+@@ -310,8 +311,80 @@
+ app = FastAPI()
+ 
+ 
++class MicroBatchRetriever:
++    """Coalesce concurrent HTTP requests into real encoder/FAISS batches.
++
++    The original endpoint invoked the GPU encoder once per request from
++    FastAPI's thread pool.  Hundreds of Search-QA environments therefore
++    serialized unpredictably and timed out.  A single worker keeps CUDA access
++    ordered while ``DenseRetriever.batch_search`` performs vectorized forward
++    passes.  This changes neither the encoder, index, top-k, nor returned docs.
++    """
++
++    def __init__(self, backend, max_batch_size: int = 128, wait_ms: float = 10.0):
++        self.backend = backend
++        self.max_batch_size = max_batch_size
++        self.wait_s = wait_ms / 1000.0
++        self.queue = asyncio.Queue()
++        self.task = None
++
++    async def start(self):
++        if self.task is None:
++            self.task = asyncio.create_task(self._worker())
++
++    async def submit(self, query: str, topk: int, return_scores: bool):
++        loop = asyncio.get_running_loop()
++        future = loop.create_future()
++        await self.queue.put((query, topk, return_scores, future))
++        return await future
++
++    async def _worker(self):
++        while True:
++            first = await self.queue.get()
++            batch = [first]
++            deadline = asyncio.get_running_loop().time() + self.wait_s
++            while len(batch) < self.max_batch_size:
++                timeout = deadline - asyncio.get_running_loop().time()
++                if timeout <= 0:
++                    break
++                try:
++                    batch.append(await asyncio.wait_for(self.queue.get(), timeout))
++                except asyncio.TimeoutError:
++                    break
++
++            # Calls in the benchmark use the same top-k, but grouping keeps the
++            # endpoint correct for independent clients as well.
++            groups = {}
++            for item in batch:
++                groups.setdefault((item[1], item[2]), []).append(item)
++            for (topk, return_scores), items in groups.items():
++                try:
++                    queries = [item[0] for item in items]
++                    results, scores = await asyncio.to_thread(
++                        self.backend.batch_search, queries, topk, True
++                    )
++                    for item, docs, doc_scores in zip(items, results, scores):
++                        value = (docs, doc_scores) if return_scores else (docs, None)
++                        if not item[3].done():
++                            item[3].set_result(value)
++                except Exception as exc:
++                    for item in items:
++                        if not item[3].done():
++                            item[3].set_exception(exc)
++
++
++batch_retriever = None
++
++
++@app.on_event("startup")
++async def start_batch_retriever():
++    global batch_retriever
++    batch_retriever = MicroBatchRetriever(retriever)
++    await batch_retriever.start()
++
++
+ @app.post("/retrieve")
+-def retrieve_endpoint(request: QueryRequest):
++async def retrieve_endpoint(request: QueryRequest):
+     """
+     Endpoint that accepts a single query and performs retrieval.
+     Input format:
+@@ -324,12 +397,11 @@
+     if not request.topk:
+         request.topk = config.retrieval_topk  # fallback to default
+ 
+-    # Perform retrieval
+-    if request.return_scores:
+-        results, scores = retriever.search(query=request.query, num=request.topk, return_score=True)
+-    else:
+-        results = retriever.search(query=request.query, num=request.topk, return_score=False)
+-        scores = None
++    # Perform retrieval in a vectorized micro-batch rather than issuing one
++    # GPU encoder forward per HTTP request.
++    results, scores = await batch_retriever.submit(
++        request.query, request.topk, request.return_scores
++    )
+ 
+     # Format response
+     resp = []
+@@ -378,7 +450,7 @@
+         retrieval_model_path=args.retriever_model,
+         retrieval_pooling_method="mean",
+         retrieval_query_max_length=256,
+-        retrieval_use_fp16=True,
++        retrieval_use_fp16=False,
+         retrieval_batch_size=512,  # this is unused in the current retrieval implementation, which only supports single query
+     )
+ 
+@@ -386,4 +458,4 @@
+     retriever = get_retriever(config)
+ 
+     # 3) Launch the server. By default, it listens on http://127.0.0.1:8000
+-    uvicorn.run(app, host="0.0.0.0", port=args.port)
++    uvicorn.run(app, host="127.0.0.1", port=args.port)

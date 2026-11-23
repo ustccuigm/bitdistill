@@ -21,11 +21,11 @@ training records. Each export is performed once and shared by all three models.
   source scripts/_bootstrap.sh
   source scripts/lib/load_config.sh
 
-  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.prepare_sdar_tasks \
+  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks export \
     --benchmark webshop --split train --output "$WEBSHOP_RL_TRAIN_DATA"
-  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.prepare_sdar_tasks \
+  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks export \
     --benchmark alfworld --split train --output "$ALFWORLD_RL_TRAIN_DATA"
-  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.prepare_sdar_tasks \
+  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks export \
     --benchmark search_qa --split train --output "$SEARCH_QA_RL_TRAIN_DATA"
 )
 ```

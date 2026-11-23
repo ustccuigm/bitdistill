@@ -53,7 +53,7 @@ training environment's CUDA dependencies.
 ## Benchmark environments
 
 Set `BENCHMARK_ENV_ROOT` to the environment containing the official BFCL and
-tau2 packages and the SDAR environment dependencies needed by the selected
+tau2 packages and the environment dependencies needed by the selected
 route. Install them following their upstream documentation linked in
 [benchmarks.md](benchmarks.md). The recorded BFCL/tau2 environment uses
 Transformers 4.56.1, tokenizers 0.22.2, and huggingface-hub 0.36.2.
@@ -72,7 +72,7 @@ constraint is in [`requirements/tool-environment.txt`](../requirements/tool-envi
 Apply the two patches and install it as described in the benchmark guide.
 WebShop requires a JDK and Pyserini; the reference setup uses OpenJDK 21.
 ALFWorld requires TextWorld and Fast Downward. Search QA requires a running
-Search-R1 retrieval service.
+dense retrieval service.
 
 ## External source revisions
 
@@ -82,7 +82,7 @@ These revisions were recorded with the existing integration setup:
 | --- | --- | --- |
 | Tool-use adapter | `85e322f69279e3b3325b7377ec3bab788514e9cb` | [Repository](https://github.com/Snowflake-Labs/agent-world-model) |
 | Tool adapter's `mcp-adapted-bench` submodule | `2dff8bdfc35082e5b6980c4954b6074159a15854` | Adapter submodule |
-| SDAR | `d511f043afe9199b8576fc99ea52e12d84841f32` | [Repository](https://github.com/ZJU-REAL/SDAR) |
+| Benchmark environment adapter | `d511f043afe9199b8576fc99ea52e12d84841f32` | [Repository](https://github.com/ZJU-REAL/SDAR) |
 | BFCL sentence encoder | `1110a243fdf4706b3f48f1d95db1a4f5529b4d41` | [Model](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) |
 
 Record the installed BFCL, tau2, and other external repository revisions with

@@ -5,19 +5,25 @@ source "$SCRIPT_DIR/../_bootstrap.sh"
 ROOT="$STEERDISTILL_ROOT"
 source "$ROOT/scripts/lib/run_paths.sh"
 STEP=${1:-latest}
-if [[ "$STEP" == latest ]]; then
-  RECEIPT="$STEER_ONLINE_ROOT/latest.json"
+if [[ -n "${EVAL_CHECKPOINT:-}" ]]; then
+  EVAL_RUNTIME=$(realpath -e "$EVAL_CHECKPOINT")
+  TAG=$(basename "$EVAL_RUNTIME")
 else
-  [[ "$STEP" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid evaluation step: $STEP" >&2; exit 2; }
-  RECEIPT="$STEER_ONLINE_ROOT/steps/$(printf 'step%06d' "$STEP")/complete.json"
+  if [[ "$STEP" == latest ]]; then
+    RECEIPT="$STEER_ONLINE_ROOT/latest.json"
+  else
+    [[ "$STEP" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid evaluation step: $STEP" >&2; exit 2; }
+    RECEIPT="$STEER_ONLINE_ROOT/steps/$(printf 'step%06d' "$STEP")/complete.json"
+  fi
+  [[ -s "$RECEIPT" ]] || { echo "Missing trained runtime receipt: $RECEIPT" >&2; exit 2; }
+  SELECTION=$("$ENV_ROOT/bin/python" "$ROOT/scripts/lib/resolve_online_checkpoint.py" \
+    --root "$STEER_ONLINE_ROOT" --step "$STEP")
+  mapfile -t SELECTED <<< "$SELECTION"
+  EVAL_RUNTIME=${SELECTED[0]}
+  TAG=${SELECTED[1]}
 fi
-[[ -s "$RECEIPT" ]] || { echo "Missing trained runtime receipt: $RECEIPT" >&2; exit 2; }
-SELECTION=$("$ENV_ROOT/bin/python" "$ROOT/scripts/lib/resolve_online_checkpoint.py" \
-  --root "$STEER_ONLINE_ROOT" --step "$STEP")
-mapfile -t SELECTED <<< "$SELECTION"
-export EVAL_RUNTIME=${SELECTED[0]}
-TAG=${SELECTED[1]}
-export EVAL_OUTPUT_DIR="$RUN_ROOT/eval/$TAG"
+export EVAL_RUNTIME
+export EVAL_OUTPUT_DIR="${EVAL_OUTPUT_DIR:-$RUN_ROOT/eval/$TAG}"
 export EVAL_MODEL_NAME="$MODEL_SERVING_NAME"
 [[ -s "$EVAL_RUNTIME/quant_config.json" ]] || { echo "Missing trained runtime: $EVAL_RUNTIME" >&2; exit 2; }
 COMMAND=${BENCHMARK_EVAL_COMMAND:-}
@@ -45,10 +51,26 @@ fi
 if [[ -n "$COMMAND" ]]; then
   bash -lc "$COMMAND" 2>&1 | tee "$EVAL_OUTPUT_DIR/eval.log"
 elif [[ "$BENCHMARK_ENGINE" == sdar ]]; then
-  "$BENCHMARK_ENV_ROOT/bin/python" "$ROOT/src/steerdistill/benchmarks/evaluate_sdar.py" \
-    --benchmark "$BENCHMARK" --runtime "$EVAL_RUNTIME" --model "$EVAL_MODEL_NAME" \
-    --output "$EVAL_OUTPUT_DIR" --gpus "${EVAL_GPU_IDS:-0}" \
-    --workers "${EVAL_WORKERS:-4}" "${TASK_ARGS[@]}" 2>&1 | tee "$EVAL_OUTPUT_DIR/eval.log"
+  splits=(test)
+  if [[ "$BENCHMARK" == alfworld ]]; then
+    case "${ALFWORLD_EVAL_SPLIT:-both}" in
+      both) splits=(eval_in_distribution eval_out_of_distribution) ;;
+      eval_in_distribution|eval_out_of_distribution) splits=("$ALFWORLD_EVAL_SPLIT") ;;
+      *) echo "Invalid ALFWORLD_EVAL_SPLIT" >&2; exit 2 ;;
+    esac
+  fi
+  if (( ${#splits[@]} > 1 )) && [[ -n "${EVAL_TASK_IDS:-}" ]]; then
+    echo "Select ALFWORLD_EVAL_SPLIT for split-local task IDs" >&2
+    exit 2
+  fi
+  for split in "${splits[@]}"; do
+    output="$EVAL_OUTPUT_DIR"
+    if [[ "$BENCHMARK" == alfworld ]]; then output="$output/$split"; fi
+    "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks evaluate \
+      --benchmark "$BENCHMARK" --runtime "$EVAL_RUNTIME" --model "$EVAL_MODEL_NAME" --split "$split" \
+      --output "$output" --gpus "${EVAL_GPU_IDS:-0}" \
+      --workers "${EVAL_WORKERS:-4}" "${TASK_ARGS[@]}" 2>&1 | tee -a "$EVAL_OUTPUT_DIR/eval.log"
+  done
 else
   case "$BENCHMARK" in
     bfcl_v4) EVAL_SCRIPT=evaluate_bfcl.py ;;

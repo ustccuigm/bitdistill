@@ -32,7 +32,7 @@ def acquire_planner():
 
 
 def configure():
-    root = Path(os.environ["SDAR_ROOT"])
+    root = Path(os.getenv("BENCHMARK_ENVIRONMENTS_ROOT") or os.environ["SDAR_ROOT"])
     sys.path.insert(0, str(root))
     return root
 
@@ -99,7 +99,7 @@ class Environment:
         )
         _WEB_SERVERS[server_key] = self.env.server
         self.observation, _ = self.env.reset(session=int(self.task["task_id"]))
-        self.description = self.env.get_instruction_text()
+        self.description = self.env.server.user_sessions[self.env.session]["goal"]["instruction_text"]
 
     def _alfworld_init(self):
         import textworld
@@ -171,18 +171,19 @@ class Environment:
         from agent_system.memory import SimpleMemory, SearchMemory
         memory = SearchMemory() if self.benchmark == "search_qa" else SimpleMemory()
         memory.reset(batch_size=1)
-        for row in self.history:
+        recent = self.history[-2:] if self.benchmark == "alfworld" else self.history
+        for row in recent:
             if self.benchmark == "search_qa":
                 memory.store({"search": [row["response"]], "information": [row["after"]]})
             else:
                 observation = self._format_web_observation(row["before"]) if self.benchmark == "webshop" else row["before"]
-                memory.store({"text_obs": [observation], "action": [row["response"]]})
+                memory.store({"text_obs": [observation], "action": [row["action"]]})
         if self.benchmark == "search_qa":
             if not self.history:
                 return SEARCH_TEMPLATE_NO_HIS.format(task_description=self.description)
             context, _ = memory.fetch(len(self.history), obs_key="information", action_key="search")
             return SEARCH_TEMPLATE.format(task_description=self.description, memory_context=context[0], step_count=len(self.history))
-        context, lengths = memory.fetch(len(self.history), obs_key="text_obs", action_key="action") if self.history else ([""], [0])
+        context, lengths = memory.fetch(2, obs_key="text_obs", action_key="action") if self.history else ([""], [0])
         fields = dict(task_description=self.description, current_observation=self.observation,
                       step_count=len(self.history), current_step=len(self.history) + 1,
                       history_length=lengths[0], action_history=context[0])

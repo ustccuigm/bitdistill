@@ -12,6 +12,59 @@ from steerdistill.benchmarks.evaluate_bfcl import register_model, serializable_m
 
 
 class EvaluationResultTest(unittest.TestCase):
+    def test_searchqa_executes_first_action_and_keeps_original_generation(self):
+        from steerdistill.benchmarks import evaluate_sdar
+        from unittest.mock import Mock
+
+        response = "<think><answer>guess</answer></think><search>query</search><answer>guess</answer>"
+        env = Mock(done=False, success=False, score=0., turn=0)
+        def step(text):
+            env.done = True
+            return {"action": text}
+        env.step.side_effect = step
+        env.prompt.return_value = "question"
+        with tempfile.TemporaryDirectory() as directory:
+            args = SimpleNamespace(benchmark="search_qa", output=Path(directory), url="local", model="test", seed=42)
+            with patch.object(evaluate_sdar, "Environment", return_value=env), \
+                 patch.object(evaluate_sdar, "generate", return_value=(response, {"finish_reason": "stop"})):
+                evaluate_sdar.evaluate_task((args, {"task_id": 1}))
+            env.step.assert_called_once_with("<search>query</search>")
+            saved = json.loads((args.output / "tasks/1.json").read_text())
+            self.assertEqual(saved["trajectory"][0]["response"], response)
+
+    def test_searchqa_action_order_and_incomplete_reasoning(self):
+        from steerdistill.benchmarks.evaluate_sdar import search_action_input
+        for text, expected in [
+            ("<answer>A</answer><search>B</search>", "<answer>A</answer>"),
+            ("<search>A</search><search>B</search>", "<search>A</search>"),
+            ("<think><answer>guess</answer>", "Invalid action"),
+            ("<search>unfinished", "Invalid action"),
+            ("<think>plan</think>\n<search>A</search>", "\n<search>A</search>"),
+            ("<answer>A</answer> trailing text", "<answer>A</answer> trailing text"),
+        ]:
+            with self.subTest(text=text):
+                self.assertEqual(search_action_input(text), expected)
+
+    def test_native_inference_preserves_thinking_and_caps_context(self):
+        from io import BytesIO
+        from steerdistill.benchmarks import native_inference
+        result = {"choices": [{"text": "<answer>x</answer>", "finish_reason": "stop"}], "usage": {}}
+        with patch.object(native_inference, "read_json",
+                          return_value={"tokens": [1, 2], "max_model_len": 64}) as tokenize, \
+             patch("urllib.request.urlopen", return_value=BytesIO(json.dumps(result).encode())) as send:
+            text, metadata = native_inference.sample_action("http://local/v1", "student", [], 42, 0.0)
+        self.assertTrue(tokenize.call_args.args[1]["chat_template_kwargs"]["enable_thinking"])
+        payload = json.loads(send.call_args.args[0].data)
+        self.assertEqual(payload["prompt"], [1, 2])
+        self.assertEqual((payload["max_tokens"], payload["seed"], payload["temperature"]), (62, 42, 0.0))
+        self.assertEqual((text, metadata["finish_reason"]), ("<answer>x</answer>", "stop"))
+
+    def test_native_environment_receives_only_action_after_thinking(self):
+        from steerdistill.benchmarks.native_inference import environment_action
+        raw = "<think>consider <action>go</action></think><action>look</action>"
+        self.assertEqual(environment_action("alfworld", raw), "<think>consider go</think><action>look</action>")
+        self.assertEqual(environment_action("alfworld", raw + "<action>go</action>"), "Invalid action")
+
     def test_native_context_limit_retains_real_evaluation_prefix(self):
         from steerdistill.benchmarks import evaluate_sdar
         from steerdistill.generation_budget import ContextWindowExceeded

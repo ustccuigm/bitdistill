@@ -15,7 +15,7 @@ CLIP_OUTPUT=${2:-$CLIP_PATH}
 CALIB_DATA=${3:-$BENCHMARK_CLIP_DATA}
 [[ -s "$MODEL/config.json" ]] || { echo "missing BF16 source model config: $MODEL" >&2; exit 2; }
 if [[ "$BENCHMARK_ENGINE" == sdar && ! -s "$BENCHMARK_RL_TRAIN_DATA" ]]; then
-  "$BENCHMARK_ENV_ROOT/bin/python" "$ROOT/src/steerdistill/benchmarks/prepare_sdar_tasks.py" \
+  "$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks export \
     --benchmark "$BENCHMARK" --split train --output "$BENCHMARK_RL_TRAIN_DATA"
 fi
 [[ -s "$CALIB_DATA" ]] || { echo "missing $BENCHMARK calibration/RL data: $CALIB_DATA" >&2; exit 2; }

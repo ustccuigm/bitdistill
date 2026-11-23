@@ -56,20 +56,20 @@ Uses the WebShop-specific checkpoint and the 500 held-out shopping goals.
 The catalog, search index, JDK, and Pyserini must be installed.
 
 ```bash
-"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.evaluate_sdar \
+"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks evaluate \
   --benchmark webshop --runtime /path/to/quantized-webshop-checkpoint \
   --model steerdistill --output /path/to/results/webshop --gpus 0 --workers 4
 ```
 
 ### ALFWorld
 
-Uses the ALFWorld-specific checkpoint and unseen evaluation games. Install
+The benchmark launcher evaluates seen and unseen games in separate directories. The Python command below selects unseen games. Set `--split eval_in_distribution` for seen games. Install
 the game data, TextWorld, and Fast Downward planner.
 
 ```bash
-"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.evaluate_sdar \
-  --benchmark alfworld --runtime /path/to/quantized-alfworld-checkpoint \
-  --model steerdistill --output /path/to/results/alfworld --gpus 0 --workers 4
+"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks evaluate \
+  --benchmark alfworld --split eval_out_of_distribution --runtime /path/to/quantized-alfworld-checkpoint \
+  --model steerdistill --output /path/to/results/alfworld/eval_out_of_distribution --gpus 0 --workers 4
 ```
 
 ### Search QA
@@ -77,10 +77,10 @@ the game data, TextWorld, and Fast Downward planner.
 Uses the Search-QA-specific checkpoint. Start the retrieval service configured
 by `SEARCH_RETRIEVER_URL` and provide all seven evaluation datasets: NQ,
 TriviaQA, PopQA, HotpotQA, 2WikiMultiHopQA, MuSiQue, and Bamboogle. Results
-include per-dataset exact match and their unweighted mean.
+include per-dataset exact match, the unweighted mean (`score`), and the percentage correct across all questions (`micro_em`). Each turn executes the first complete action when the student emits multiple actions.
 
 ```bash
-"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks.evaluate_sdar \
+"$BENCHMARK_ENV_ROOT/bin/python" -m steerdistill.benchmarks evaluate \
   --benchmark search_qa --runtime /path/to/quantized-search-qa-checkpoint \
   --model steerdistill --output /path/to/results/search_qa --gpus 0 --workers 4
 ```
@@ -93,6 +93,17 @@ alternative from a fresh shell; change the model and benchmark as needed:
 bash scripts/run/run_benchmark.sh eval --model qwen3_8b --benchmark bfcl_v4
 bash scripts/run/run_benchmark.sh eval --model qwen3_8b --benchmark tau2_bench
 ```
+
+For a separately exported checkpoint, set `EVAL_CHECKPOINT` to its directory
+and run the same evaluation command. `EVAL_TASK_IDS` accepts a JSON list of
+unique IDs for a subset. ALFWorld IDs are local to each split; when selecting IDs,
+set `ALFWORLD_EVAL_SPLIT` to the intended split.
+
+The Qwen3-8B native evaluation uses thinking, one sample per task, and up to
+8,192 new tokens within a 16,384-token context. Sampling temperature is 0.4
+for WebShop and ALFWorld and 0 for Search QA. WebShop and ALFWorld retain the
+two most recent executed actions and observations. For this model, a comma-separated
+`--gpus` list starts one evaluation replica per GPU.
 
 Set `EVAL_STEP` in `configs/local.env` to select a specific completed update.
 The [all-configuration example](../../docs/benchmarks.md#running-all-configurations)
