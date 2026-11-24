@@ -24,8 +24,9 @@ either, scripts retain the environment-variable configuration interface.
 
 The quantization stage takes the benchmark-specific BF16 checkpoint produced
 by RL as input. It initializes both the frozen teacher and the student master
-weights from this checkpoint. This repository does not distribute those
-post-RL checkpoints.
+weights from this checkpoint.
+
+Download the [Qwen3-8B checkpoints](../README.md#qwen3-8b-checkpoints) and set the matching BF16 path in `configs/local.env`.
 
 | Model | Registry key | Base model | Required checkpoint architecture |
 | --- | --- | --- | --- |

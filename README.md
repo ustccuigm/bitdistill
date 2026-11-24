@@ -2,7 +2,7 @@
 
 **Quantizing LLM Agents via Online Teacher-Steered Trajectory Distillation**
 
-[Model weights](#qwen3-8b-4-bit-checkpoints) · [Quickstart](#quickstart-qwen3-8b-on-bfcl-v4) · [Setup](#getting-started) · [Data preparation](docs/data/README.md) · [Training](docs/training/README.md) · [Evaluation](docs/evaluation/README.md) · [Case studies](https://ustccuigm.github.io/bitdistill/contents.html)
+[Model weights](#qwen3-8b-checkpoints) · [Quickstart](#quickstart-qwen3-8b-on-bfcl-v4) · [Setup](#getting-started) · [Data preparation](docs/data/README.md) · [Training](docs/training/README.md) · [Evaluation](docs/evaluation/README.md) · [Case studies](https://ustccuigm.github.io/bitdistill/contents.html)
 
 SteerDistill trains quantized LLM agents using online trajectories and
 teacher-guided corrections. A frozen teacher provides steering during training;
@@ -10,8 +10,7 @@ the trained quantized student acts independently at inference time.
 
 This repository starts from benchmark-specific, post-RL BF16 checkpoints and
 provides data preparation, clipping calibration, quantized model export,
-online distillation, and benchmark evaluation. Supply your own post-RL
-checkpoints; model weights and benchmark data are downloaded separately.
+online distillation, and benchmark evaluation.
 
 ## Models and benchmarks
 
@@ -21,14 +20,16 @@ checkpoints; model weights and benchmark data are downloaded separately.
 - [Qwen3.5-4B](docs/training/README.md#qwen35-4b)
 - [Gemma 4 12B-it](docs/training/README.md#gemma-4-12b-it)
 
-### Qwen3-8B 4-bit checkpoints
+<a id="qwen3-8b-4-bit-checkpoints"></a>
 
-| Benchmark | Hugging Face weights |
-| --- | --- |
-| BFCL V4 and τ²-Bench | [Qwen3-8B-AWM-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-AWM-W4A16) |
-| WebShop | [Qwen3-8B-WebShop-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-WebShop-W4A16) |
-| ALFWorld | [Qwen3-8B-ALFWorld-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-ALFWorld-W4A16) |
-| Search QA | [Qwen3-8B-SearchQA-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-SearchQA-W4A16) |
+### Qwen3-8B checkpoints
+
+| Benchmark | BF16 (post-RL) | SteerDistill W4A16 |
+| --- | --- | --- |
+| BFCL V4 and τ²-Bench | [Qwen3-8B-AWM](https://huggingface.co/c1805301698/Qwen3-8B-AWM) | [Qwen3-8B-AWM-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-AWM-W4A16) |
+| WebShop | [Qwen3-8B-WebShop](https://huggingface.co/c1805301698/Qwen3-8B-WebShop) | [Qwen3-8B-WebShop-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-WebShop-W4A16) |
+| ALFWorld | [Qwen3-8B-ALFWorld](https://huggingface.co/c1805301698/Qwen3-8B-ALFWorld) | [Qwen3-8B-ALFWorld-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-ALFWorld-W4A16) |
+| Search QA | [Qwen3-8B-SearchQA](https://huggingface.co/c1805301698/Qwen3-8B-SearchQA) | [Qwen3-8B-SearchQA-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-SearchQA-W4A16) |
 
 All model families use the shared quantization and training pipeline. For each
 model, BFCL V4 and tau2-Bench share one post-RL checkpoint and training run;
