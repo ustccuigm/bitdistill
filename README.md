@@ -25,10 +25,10 @@ checkpoints; model weights and benchmark data are downloaded separately.
 
 | Benchmark | Hugging Face weights |
 | --- | --- |
-| BFCL V4 and τ²-Bench | [steerdistill4bit](https://huggingface.co/c1805301698/steerdistill4bit) |
-| WebShop | [steerdistill4bit-webshop](https://huggingface.co/c1805301698/steerdistill4bit-webshop) |
-| ALFWorld | [steerdistill4bit-alfworld](https://huggingface.co/c1805301698/steerdistill4bit-alfworld) |
-| Search QA | [steerdistill4bit-searchqa](https://huggingface.co/c1805301698/steerdistill4bit-searchqa) |
+| BFCL V4 and τ²-Bench | [Qwen3-8B-AWM-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-AWM-W4A16) |
+| WebShop | [Qwen3-8B-WebShop-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-WebShop-W4A16) |
+| ALFWorld | [Qwen3-8B-ALFWorld-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-ALFWorld-W4A16) |
+| Search QA | [Qwen3-8B-SearchQA-W4A16](https://huggingface.co/c1805301698/Qwen3-8B-SearchQA-W4A16) |
 
 All model families use the shared quantization and training pipeline. For each
 model, BFCL V4 and tau2-Bench share one post-RL checkpoint and training run;
